@@ -17,7 +17,7 @@ link_directories(
 #file(GLOB SOURCES CONFIGURE_DEPENDS "src/*")
 #add_executable(confluxdb main.cpp ${SOURCES})
 
-add_executable(confluxdb main.cpp
+add_executable(confluxdb main.c
         src/confluxstorage.cpp
         include/confluxstorage.h
         include/confluxindex.h
