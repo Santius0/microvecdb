@@ -5,9 +5,7 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
-#include <stddef.h>
 
     // Forward declaration for the key-value store structure
     typedef struct kv_store_t kv_store_t;

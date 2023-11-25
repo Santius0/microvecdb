@@ -4,18 +4,18 @@
 #include <rocksdb/c.h>
 #include <string.h>
 
-// Define the key-value store structure
+//Key-value store structure
 struct kv_store_t {
     rocksdb_t *db;
     rocksdb_options_t *options;
     rocksdb_readoptions_t *read_options;
     rocksdb_writeoptions_t *write_options;
-    const char *db_path;
+    char *db_path;
 };
 
 kv_store_t* kv_store_init(const char* path) {
     // Allocate memory for the kv_store_t instance
-    kv_store_t* store = (kv_store_t*)malloc(sizeof(kv_store_t));
+    kv_store_t* store = malloc(sizeof(kv_store_t));
     if (!store) return NULL;
 
     // Initialize RocksDB
