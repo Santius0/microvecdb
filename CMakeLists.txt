@@ -18,15 +18,12 @@ link_directories(
 #add_executable(confluxdb main.cpp ${SOURCES})
 
 add_executable(confluxdb main.c
-        src/confluxstorage.cpp
-        include/confluxstorage.h
-        include/confluxindex.h
-        src/confluxindex.cpp
         include/kv_store.h
         src/kv_store.c
-        include/vector_db.h
         include/vector_index.h
         src/vector_index.c
+        include/vector_db.h
+        src/vector_db.c
 )
 
 if(OpenMP_CXX_FOUND OR OpenMP_C_FOUND)
