@@ -24,7 +24,7 @@ void vector_index_test() {
 
     // Create a FlatL2 index
     FaissIndex* index;
-    faiss_IndexFlatL2_new(&index);
+    faiss_IndexFlatL2_new_with(&index, d);
 
     // Add vectors to the index
     faiss_Index_add(index, nb, xb);
