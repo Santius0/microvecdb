@@ -5,17 +5,11 @@
 extern "C" {
 #endif
 
-#include "kv_store.h" // Include the key-value store header
-    // Forward declarations for vector index related structures and functions
-    // will go here, e.g., vector_index.h
+#include "kv_store.h"
+#include <stddef.h>
 
     // Define a structure for the vector database
-    typedef struct vector_db_t {
-        kv_store_t* kv_store;       // Key-Value store component
-        // vector_index_t* vector_index; // Vector index component, assuming a structure for vector indexing
-
-        // Additional fields can be added here as needed
-    } vector_db_t;
+    typedef struct vector_db_t vector_db_t;
 
     // Initialize the vector database
     // This function will allocate and initialize both the key-value store and the vector index
