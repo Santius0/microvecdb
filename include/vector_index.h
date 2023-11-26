@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+    #include <stdlib.h>
+    #include <stdio.h>
     #include <faiss/c_api/IndexFlat_c.h>
 
     void vector_index_test();

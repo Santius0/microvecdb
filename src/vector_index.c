@@ -1,8 +1,5 @@
 #include "vector_index.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-
 void vector_index_test() {
     // Define the dimensionality of the vectors and the number of vectors
     int d = 64;  // dimension
