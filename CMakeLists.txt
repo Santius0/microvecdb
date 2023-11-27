@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 project(confluxdb)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 11)
 
 find_package(OpenMP)
 
@@ -24,6 +24,7 @@ add_executable(confluxdb main.c
         src/vector_index.c
         include/vector_db.h
         src/vector_db.c
+        include/tests.h
 )
 
 if(OpenMP_CXX_FOUND OR OpenMP_C_FOUND)
