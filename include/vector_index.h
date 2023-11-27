@@ -5,11 +5,27 @@
 extern "C" {
 #endif
 
-    #include <stdlib.h>
-    #include <stdio.h>
-    #include <faiss/c_api/IndexFlat_c.h>
+    #include <faiss/c_api/Index_c.h>
+    #include <stdbool.h>
 
-    void vector_index_test();
+    typedef enum vector_index_types {
+        FLAT,
+        IVF
+    } vector_index_types;
+
+    typedef struct vector_index {
+        FaissIndex *faiss_index;        // actual faiss index
+        uint64_t dims;                  // num dimensions of members in this index
+        vector_index_types type;        // type of the vector index
+    } vector_index;
+
+    // Function declarations
+    vector_index* create_vector_index(vector_index_types type, uint64_t dims);
+    void free_vector_index(vector_index* vi);
+    bool vector_index_add(vector_index* vi, size_t n, const float* data);
+    bool vector_index_remove(vector_index* vi, size_t n, const FaissIDSelector* ids);
+    bool vector_index_save(const vector_index* vi, const char* path);
+    vector_index* vector_index_load(const char* path);
 
 #ifdef __cplusplus
 }

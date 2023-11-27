@@ -1,53 +1,68 @@
 #include "vector_index.h"
+#include <faiss/c_api/IndexFlat_c.h>
+#include <faiss/c_api/IndexIVFFlat_c.h>
+#include <faiss/c_api/Clustering_c.h>
+#include <faiss/c_api/index_io_c.h>
+#include <stdlib.h>
+#include <string.h>
 
-void vector_index_test() {
-    // Define the dimensionality of the vectors and the number of vectors
-    int d = 64;  // dimension
-    int nb = 10000;  // database size
-    int nq = 100;  // number of queries
-    int k = 4;  // number of nearest neighbors
+vector_index* create_vector_index(vector_index_types type, uint64_t dims) {
+    vector_index* vi = malloc(sizeof(vector_index));
+    if (!vi) return NULL;
 
-    // Allocate memory for the vectors
-    float *xb = (float*)malloc(d * nb * sizeof(float));
-    float *xq = (float*)malloc(d * nq * sizeof(float));
+    vi->dims = dims;
+    vi->type = type;
 
-    // Initialize the vectors (Here, just random values for example)
-    for (int i = 0; i < nb; i++) {
-        for (int j = 0; j < d; j++)
-            xb[d * i + j] = drand48();
+    switch (type) {
+        case IVF:
+            // For simplicity, using a flat quantizer and a fixed nlist value
+            const int nlist = 100;
+            FaissIndex* quantizer;
+            faiss_IndexFlatL2_new_with(&quantizer, dims);
+            faiss_IndexIVFFlat_new_with_metric(&vi->faiss_index, quantizer, dims, nlist, METRIC_L2);
+            faiss_Index_free(quantizer); // The index copies the quantizer
+        default:
+            faiss_IndexFlatL2_new_with(&vi->faiss_index, dims);
     }
 
-    for (int i = 0; i < nq; i++) {
-        for (int j = 0; j < d; j++)
-            xq[d * i + j] = drand48();
+    return vi;
+}
+
+void free_vector_index(vector_index* vi) {
+    if (!vi) return;
+    if (vi->faiss_index) faiss_Index_free(vi->faiss_index);
+    free(vi);
+}
+
+bool vector_index_add(vector_index* vi, size_t n, const float* data) {
+    if (!vi || !vi->faiss_index || !data) return false;
+    faiss_Index_add(vi->faiss_index, n, data);
+    return true;
+}
+
+bool vector_index_remove(vector_index* vi, size_t n, const FaissIDSelector* ids) {
+    if (!vi || !vi->faiss_index || !ids) return false;
+    faiss_Index_remove_ids(vi->faiss_index, ids, n);
+    return true;
+}
+
+bool vector_index_save(const vector_index* vi, const char* path) {
+    if (!vi || !vi->faiss_index || !path) return false;
+    faiss_write_index_fname(vi->faiss_index, path);
+    return true;
+}
+
+vector_index* vector_index_load(const char* path) {
+    if (!path) return NULL;
+    vector_index* vi = malloc(sizeof(vector_index));
+    if (!vi) return NULL;
+
+    faiss_read_index_fname(path, 0, &vi->faiss_index);
+    if (!vi->faiss_index) {
+        free_vector_index(vi);
+        return NULL;
     }
-
-    // Create a FlatL2 index
-    FaissIndex* index;
-    faiss_IndexFlatL2_new_with(&index, d);
-
-    // Add vectors to the index
-    faiss_Index_add(index, nb, xb);
-
-    // Allocate memory for search results
-    int64_t *I = (int64_t*)malloc(k * nq * sizeof(int64_t));
-    float *D = (float*)malloc(k * nq * sizeof(float));
-
-    // Search the index
-    faiss_Index_search(index, nq, xq, k, D, I);
-
-    // Display the results
-    printf("Search results:\n");
-    for(int i = 0; i < nq; i++) {
-        printf("Query %d:\n", i);
-        for(int j = 0; j < k; j++)
-            printf("    %3ld  %.6f\n", I[i * k + j], D[i * k + j]);
-    }
-
-    // Clean up
-    free(xb);
-    free(xq);
-    free(I);
-    free(D);
-    faiss_Index_free(index);
+    vi->type = FLAT;
+    vi->dims = 100;
+    return vi;
 }
