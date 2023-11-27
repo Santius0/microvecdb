@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <stdlib.h>
 
     // Forward declaration for the key-value store structure
     typedef struct kv_store_t kv_store_t;
@@ -13,7 +14,7 @@ extern "C" {
     // Function to initialize the key-value store
     // The implementation will create a singleton database object.
     // If the database is already created, it will return the existing instance.
-    kv_store_t* kv_store_init(const char* path);
+    kv_store_t* kv_store_init(const char* path, const bool create_new, const bool overwrite);
 
     // Function to initialize the key-value store
     void kv_store_free(kv_store_t* store);
@@ -35,8 +36,9 @@ extern "C" {
     // Returns true on success, false if the key does not exist.
     bool kv_store_remove(const kv_store_t* store, const char* key);
 
-    // Placeholder for future custom implementation
-    // Here you would define interfaces for your custom database engine.
+    void* serialize_data(const void* data, size_t data_size, size_t* serialized_size);
+
+    void* deserialize_data(const void* serialized_data, size_t serialized_size, size_t* data_size);
 
 #ifdef __cplusplus
 }

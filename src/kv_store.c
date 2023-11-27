@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <rocksdb/c.h>
 #include <string.h>
+#include <sys/stat.h>
 
 //Key-value store structure
 struct kv_store_t {
@@ -13,17 +14,39 @@ struct kv_store_t {
     char *db_path;
 };
 
-kv_store_t* kv_store_init(const char* path) {
-    // Allocate memory for the kv_store_t instance
-    kv_store_t* store = malloc(sizeof(kv_store_t));
-    if (!store) return NULL;
+kv_store_t* kv_store_init(const char* path, const bool create_new, const bool overwrite){
 
-    // Initialize RocksDB
+    struct stat st = {0};
+
+    if (stat(path, &st) == -1) {       // dir does not exist so must create dir
+        if (!create_new) {             // but create_new set to false
+            fprintf(stderr, "Error: Database does not exist at path: %s\n", path);
+            return NULL;
+        }
+    } else {                            // dir exists so must either load from dir or overwrite
+        if (create_new && !overwrite) { // cannot create_new with existing dir unless overwrite set to true
+            fprintf(stderr, "Error: Database already exists at path: %s\n", path);
+            return NULL;
+        }
+    }
+
+    kv_store_t* store = malloc(sizeof(kv_store_t)); // Allocate memory for the kv_store_t instance
+    if (!store) {
+        fprintf(stderr, "Memory Allocation Error: Failed to allocate (%lu) for kv_store\n", sizeof(kv_store_t));
+        return NULL;
+    }
+
     store->db_path = strdup(path);
     store->options = rocksdb_options_create(); // Using default options for now
     store->read_options = rocksdb_readoptions_create();
     store->write_options = rocksdb_writeoptions_create();
     rocksdb_options_set_create_if_missing(store->options, 1);
+
+    if (create_new && overwrite) {
+        // Delete the old database if it exists and overwrite is true
+        rocksdb_destroy_db(store->options, path, NULL);
+    }
+
     char* err = NULL;
     store->db = rocksdb_open(store->options, store->db_path, &err);
     if(err) {
@@ -36,21 +59,11 @@ kv_store_t* kv_store_init(const char* path) {
 
 void kv_store_free(kv_store_t* store) {
     if (store) {
-        if (store->db) {
-            rocksdb_close(store->db);
-        }
-        if (store->options) {
-            rocksdb_options_destroy(store->options);
-        }
-        if (store->write_options) {
-            rocksdb_writeoptions_destroy(store->write_options);
-        }
-        if (store->read_options) {
-            rocksdb_readoptions_destroy(store->read_options);
-        }
-        if (store->db_path) {
-            free(store->db_path);
-        }
+        if (store->db) rocksdb_close(store->db);
+        if (store->options) rocksdb_options_destroy(store->options);
+        if (store->write_options) rocksdb_writeoptions_destroy(store->write_options);
+        if (store->read_options) rocksdb_readoptions_destroy(store->read_options);
+        if (store->db_path) free(store->db_path);
         free(store);
     }
 }
@@ -116,4 +129,22 @@ bool kv_store_remove(const kv_store_t* store, const char* key) {
     }
 
     return true;
+}
+
+void* serialize_data(const void* data, size_t data_size, size_t* serialized_size) {
+    *serialized_size = data_size;
+    void* serialized_data = malloc(data_size);
+    if (serialized_data) {
+        memcpy(serialized_data, data, data_size);
+    }
+    return serialized_data;
+}
+
+void* deserialize_data(const void* serialized_data, size_t serialized_size, size_t* data_size) {
+    *data_size = serialized_size;
+    void* data = malloc(serialized_size);
+    if (data) {
+        memcpy(data, serialized_data, serialized_size);
+    }
+    return data;
 }
