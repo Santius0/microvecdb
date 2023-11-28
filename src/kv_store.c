@@ -56,6 +56,7 @@ void kv_store_free(kv_store_t* store) {
         if (store->read_options) rocksdb_readoptions_destroy(store->read_options);
         if (store->db_path) free(store->db_path);
         free(store);
+        store = NULL;
     }
 }
 
