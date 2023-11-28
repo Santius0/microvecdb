@@ -1,18 +1,9 @@
 #include "kv_store.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <rocksdb/c.h>
 #include <string.h>
 #include <sys/stat.h>
 
-//Key-value store structure
-struct kv_store_t {
-    rocksdb_t *db;
-    rocksdb_options_t *options;
-    rocksdb_readoptions_t *read_options;
-    rocksdb_writeoptions_t *write_options;
-    char *db_path;
-};
 
 kv_store_t* kv_store_init(const char* path, const bool create_new, const bool overwrite){
 
@@ -68,14 +59,27 @@ void kv_store_free(kv_store_t* store) {
     }
 }
 
-bool kv_store_put(const kv_store_t* store, const char* key, const char* value) {
-    if (!store || !key || !value) return false;
+bool kv_store_put(const kv_store_t* store, kv_pair_t kv_pair, const bool auto_get_key) {
+    if(auto_get_key && (!store || !kv_pair.value)) {
+        if(!kv_pair.key) kv_pair.key = malloc(sizeof(char));
+        kv_pair.key[0] = '\0';
+        return false;
+    }
 
-    const size_t key_len = strlen(key);
-    const size_t value_len = strlen(value) + 1;
+    if(!auto_get_key && (!store || !kv_pair.key || !kv_pair.value)) return false;
+
+    if(auto_get_key) {
+        const uint64_t sequence_num = rocksdb_get_latest_sequence_number(store->db);
+        if(!kv_pair.key) kv_pair.key = malloc(MAX_KEY_SIZE_BYTES); // (2^64 - 1) is a number with 20 digits
+        sprintf(kv_pair.key, "%llu", sequence_num);
+    }
+
+    const size_t key_len = strlen(kv_pair.key) + 1;
+    const size_t value_len = strlen(kv_pair.value) + 1;
     char *err = NULL;
 
-    rocksdb_put(store->db, store->write_options, key, key_len, value, value_len, &err);
+    printf("inserting \"%s\" (%lu) --------> \"%s\" (%lu)\n", kv_pair.key, key_len, kv_pair.value, value_len);
+    rocksdb_put(store->db, store->write_options, kv_pair.key, key_len, kv_pair.value, value_len, &err);
 
     if (err) {
         printf("%s", err);
@@ -85,26 +89,40 @@ bool kv_store_put(const kv_store_t* store, const char* key, const char* value) {
     return true;
 }
 
-void kv_store_put_auto(const kv_store_t* store, const char* value, char* key) {
-    if (!store || !value) {
-        key[0] = '\0';
-        return;
+bool kv_store_put_many(const kv_store_t* store, kv_pair_t* pairs, const size_t num_pairs, const bool auto_get_key) {
+    if (!store || !pairs || num_pairs == 0) return false;
+
+    if(auto_get_key) {
+        const uint64_t sequence_num = rocksdb_get_latest_sequence_number(store->db);
+        for(int i = 0; i < num_pairs; i++) {
+            if(!pairs[i].key) pairs[i].key = malloc(MAX_KEY_SIZE_BYTES); // if nothing allocated give it max size otherwise assume enough space has been alloacted
+            sprintf(pairs[i].key, "%llu", sequence_num + i);
+        }
     }
 
-    const uint64_t sequence_num = rocksdb_get_latest_sequence_number(store->db);
-    char *sequence_num_str = malloc(sizeof(char) * 21); // (2^64 - 1) is a number with 20 digits
-    sprintf(sequence_num_str, "%llu", sequence_num);
+    char *err = NULL;
+    rocksdb_writebatch_t* batch = rocksdb_writebatch_create();
 
-    if(kv_store_put(store, sequence_num_str, value)) strcpy(key, sequence_num_str);
-    else key[0] = '\0';
+    for (size_t i = 0; i < num_pairs; i++) {
+        rocksdb_writebatch_put(batch, pairs[i].key, strlen(pairs[i].key) + 1, pairs[i].value, strlen(pairs[i].value) + 1);
+    }
 
-    free(sequence_num_str);
+    rocksdb_write(store->db, store->write_options, batch, &err);
+
+    rocksdb_writebatch_destroy(batch);
+
+    if (err) {
+        rocksdb_free(err);
+        return false;
+    }
+
+    return true;
 }
 
 char* kv_store_get(const kv_store_t* store, const char* key) {
     if (!store || !key) return NULL;
 
-    const size_t key_len = strlen(key);
+    const size_t key_len = strlen(key) + 1;
     size_t value_len;
     char *err = NULL;
     char *value = rocksdb_get(store->db, store->read_options, key, key_len, &value_len, &err);
@@ -129,22 +147,4 @@ bool kv_store_remove(const kv_store_t* store, const char* key) {
     }
 
     return true;
-}
-
-void* serialize_data(const void* data, size_t data_size, size_t* serialized_size) {
-    *serialized_size = data_size;
-    void* serialized_data = malloc(data_size);
-    if (serialized_data) {
-        memcpy(serialized_data, data, data_size);
-    }
-    return serialized_data;
-}
-
-void* deserialize_data(const void* serialized_data, size_t serialized_size, size_t* data_size) {
-    *data_size = serialized_size;
-    void* data = malloc(serialized_size);
-    if (data) {
-        memcpy(data, serialized_data, serialized_size);
-    }
-    return data;
 }

@@ -6,10 +6,24 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
-#include <stdlib.h>
+#include <rocksdb/c.h>
 
-    // Forward declaration for the key-value store structure
-    typedef struct kv_store_t kv_store_t;
+#define MAX_KEY_CHARS 21
+#define MAX_KEY_SIZE_BYTES sizeof(char) * MAX_KEY_CHARS // (2^64 - 1) is a number with 20 digits
+
+    //Key-value store structure
+    typedef struct kv_store_t {
+        rocksdb_t *db;
+        rocksdb_options_t *options;
+        rocksdb_readoptions_t *read_options;
+        rocksdb_writeoptions_t *write_options;
+        char *db_path;
+    } kv_store_t;
+
+    typedef struct kv_pair_t {
+        char* key;
+        char* value;
+    } kv_pair_t;
 
     // Function to initialize the key-value store
     // The implementation will create a singleton database object.
@@ -21,24 +35,19 @@ extern "C" {
 
     // Function to add data with a key-value pair
     // Returns true on success, false on failure.
-    bool kv_store_put(const kv_store_t* store, const char* key, const char* value);
+    bool kv_store_put(const kv_store_t* store, kv_pair_t kv_pair, const bool auto_get_key);
+
+    // Function to batch add data with a key-value pairs
+    // Returns true on success, false on failure.
+    bool kv_store_put_many(const kv_store_t* store, kv_pair_t* pairs, size_t num_pairs, const bool auto_get_key);
 
     // Function to retrieve data by key
     // Returns the value or NULL if the key does not exist.
     char* kv_store_get(const kv_store_t* store, const char* key);
 
-    // Function to add data with an automatically assigned key
-    // The key will be the next in sequence.
-    // Returns the generated key or NULL on failure.
-    void kv_store_put_auto(const kv_store_t* store, const char* value, char* key);
-
     // Function to remove data using a key
     // Returns true on success, false if the key does not exist.
     bool kv_store_remove(const kv_store_t* store, const char* key);
-
-    void* serialize_data(const void* data, size_t data_size, size_t* serialized_size);
-
-    void* deserialize_data(const void* serialized_data, size_t serialized_size, size_t* data_size);
 
 #ifdef __cplusplus
 }
