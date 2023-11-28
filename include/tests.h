@@ -44,7 +44,7 @@ static bool parse_vector(const char* line, float* vector, size_t dims) {
     return true;
 }
 
-static void create_and_insert_then_search(const char* filename) {
+static void create_and_insert_then_search_then_save(const char* filename, const char* index_filename) {
     srand(42);
     // Step 1: Create a new vector index
     vector_index* vi = create_vector_index(FLAT, DIMENSIONS);
@@ -88,7 +88,8 @@ static void create_and_insert_then_search(const char* filename) {
     fseek(file, 0, SEEK_SET); // Reset file pointer to the beginning
 
     // Select a random vector
-    size_t random_line = rand() % num_vectors;
+    // size_t random_line = rand() % num_vectors;
+    size_t random_line = 66;
     for (size_t i = 0; i <= random_line; ++i) {
         if (!fgets(line, MAX_LINE_LENGTH, file)) {
             printf("Error reading file.\n");
@@ -115,6 +116,13 @@ static void create_and_insert_then_search(const char* filename) {
     printf("Searched for vector at line %zu\n", random_line + 1);
     for (int i = 0; i < TOP_K; ++i) {
         printf("Index: %lld, Distance: %f\n", labels[i], distances[i]);
+    }
+
+    if (!vector_index_save(vi, index_filename)) {
+        printf("Failed to save vector index.\n");
+        fclose(file);
+        free_vector_index(vi);
+        return;
     }
 
     // Cleanup
@@ -177,9 +185,6 @@ static void create_and_save_then_load_then_insert_then_search(const char* index_
     }
 
     // Step 6: Insert the remaining half of the CSV data
-    for (size_t i = 0; i < half_vectors; ++i) { // Skip already added vectors
-        fgets(line, MAX_LINE_LENGTH, file);
-    }
     while (fgets(line, MAX_LINE_LENGTH, file)) {
         if (parse_vector(line, vector, DIMENSIONS)) {
             if (!vector_index_add(vi, 1, vector)) {
@@ -262,8 +267,8 @@ static void load_and_search(const char* index_filename, const char* csv_filename
         return;
     }
 
-    srand(time(NULL)); // Seed the random number generator
-    size_t random_line = rand() % num_vectors;
+    // size_t random_line = rand() % num_vectors;
+    size_t random_line = 66;
     fseek(file, 0, SEEK_SET); // Reset file pointer to the beginning
 
     for (size_t i = 0; i <= random_line; ++i) {
@@ -274,6 +279,27 @@ static void load_and_search(const char* index_filename, const char* csv_filename
             return;
         }
     }
+
+    // add new vector to loaded index
+    // FILE* file_to_add = fopen(csv_filename, "r");
+    // if (!file_to_add) {
+    //     perror("Error opening file");
+    //     free_vector_index(vi);
+    //     return;
+    // }
+    //
+    // char line_to_add[MAX_LINE_LENGTH];
+    // float vector_to_add[DIMENSIONS];
+    // while (fgets(line_to_add, MAX_LINE_LENGTH, file_to_add)) {
+    //     if (parse_vector(line_to_add, vector_to_add, DIMENSIONS)) {
+    //         if (!vector_index_add(vi, 1, vector_to_add)) {
+    //             printf("Failed to add vector to index.\n");
+    //         }
+    //     }
+    // }
+    // fclose(file_to_add);
+    // vector_index_save(vi, index_filename);
+    // ----------------------------------------------------------------------- //
 
     float query_vector[DIMENSIONS];
     if (!parse_vector(line, query_vector, DIMENSIONS)) {
