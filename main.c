@@ -122,17 +122,19 @@ int test_storage() {
 }
 
 int main() {
-    test_storage();
+    vector_index *idx = vector_index_load("test.index");
+    // test_storage();
     // #pragma omp parallel
     // {
         // printf("Thread %d\n", omp_get_thread_num());
     // }
 
-    // const char *csv_file_path = "./test_data.csv", *index_file_path = "./test.index";
+    const char *csv_file_path = "./test_data.csv", *index_file_path = "./test.index";
     // generate_and_save_vectors(file_path);
 
-    // create_and_insert_then_search(csv_file_path);
-    // create_and_save_then_load_then_insert_then_search(index_file_path, csv_file_path);
+    // create_and_insert_then_search_then_save(csv_file_path, index_file_path);
+    // printf("\n\n\n\n");
+    create_and_save_then_load_then_insert_then_search(index_file_path, csv_file_path);
     // load_and_search(index_file_path, csv_file_path);
     return 0;
 }
