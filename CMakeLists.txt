@@ -22,8 +22,8 @@ add_executable(confluxdb main.c
         src/kv_store.c
         include/vector_index.h
         src/vector_index.c
-        include/vector_db.h
-        src/vector_db.c
+        include/vector_collection.h
+        src/vector_collection.c
         include/tests.h
 )
 
