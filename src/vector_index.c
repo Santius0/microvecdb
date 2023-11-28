@@ -34,13 +34,13 @@ void free_vector_index(vector_index* vi) {
     free(vi);
 }
 
-bool vector_index_add(vector_index* vi, size_t n, const float* data) {
+bool vector_index_add(const vector_index* vi, const size_t n, const float* data) {
     if (!vi || !vi->faiss_index || !data) return false;
     faiss_Index_add(vi->faiss_index, n, data);
     return true;
 }
 
-bool vector_index_remove(vector_index* vi, size_t n, const FaissIDSelector* ids) {
+bool vector_index_remove(const vector_index* vi, size_t n, const FaissIDSelector* ids) {
     if (!vi || !vi->faiss_index || !ids) return false;
     faiss_Index_remove_ids(vi->faiss_index, ids, n);
     return true;
