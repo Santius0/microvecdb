@@ -8,6 +8,7 @@
 #include "vector_index.h"
 
 #include "tests.h"
+#include "utils.h"
 
 void fetch_and_print(const kv_store_t* kv_store, const char* key) {
     if(strlen(key) > 0) {
@@ -122,7 +123,7 @@ int test_storage() {
 }
 
 int main() {
-    vector_index *idx = vector_index_load("test.index");
+    vector_index_t *idx = vector_index_load("test.index");
     // test_storage();
     // #pragma omp parallel
     // {
@@ -136,5 +137,10 @@ int main() {
     // printf("\n\n\n\n");
     create_and_save_then_load_then_insert_then_search(index_file_path, csv_file_path);
     // load_and_search(index_file_path, csv_file_path);
+
+
+    if(!exists("./test_collection")) create_directory("./test_collection");
+
+
     return 0;
 }
