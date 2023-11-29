@@ -25,6 +25,9 @@ add_executable(confluxdb main.c
         include/vector_collection.h
         src/vector_collection.c
         include/tests.h
+        include/constants.h
+        include/utils.h
+        src/utils.c
 )
 
 if(OpenMP_CXX_FOUND OR OpenMP_C_FOUND)
