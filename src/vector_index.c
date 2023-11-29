@@ -78,14 +78,13 @@ bool vector_index_save(const vector_index_t* vi) {
         index_meta_path, vi->name, vi->dir, vi->dims, vi->type);
     fflush(stdout);
 
-    // TODO: verify save happened successfully
     faiss_write_index_fname(vi->faiss_index, index_path);
-    vector_index_serialize(vi, index_meta_path);
+    const bool result = vi->faiss_index && !vector_index_serialize(vi, index_meta_path);
 
     if(index_path) free(index_path);
     if(index_meta_path) free(index_meta_path);
 
-    return true;
+    return result;
 }
 
 vector_index_t* vector_index_load(const char* name, const char* dir) {
