@@ -4,7 +4,7 @@
 
 #include <faiss/c_api/IndexFlat_c.h>
 #include <faiss/c_api/IndexIVFFlat_c.h>
-#include <faiss/c_api/Clustering_c.h>
+// #include <faiss/c_api/Clustering_c.h>
 #include <faiss/c_api/index_io_c.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,10 +16,12 @@ vector_index_t* create_vector_index(const char* name, const char* dir, const vec
 
     vi->name = strdup(name);
     vi->dir = strdup(dir);
+    vi->name_len = strlen(name) + 1;
+    vi->dir_len = strlen(dir) + 1;
     vi->dims = dims;
     vi->type = type;
 
-    if(!name || !dir || dims == 0) return NULL;
+    if(!vi->name || !vi->dir || vi->dims == 0 || vi->name_len == 0 || vi->dir_len == 0) return NULL;
 
     switch (type) {
         case IVF:
@@ -56,9 +58,9 @@ bool vector_index_remove(const vector_index_t* vi, const size_t n, const FaissID
 bool vector_index_save(const vector_index_t* vi) {
     if (!vi || !vi->faiss_index) return false;
 
-    const size_t path_preamble_len = strlen(vi->dir) + strlen(vi->name);
     // paths are dir/collection_name.index and dir/collection_name.index.meta
     // the extra 1 allocated is for the "/"
+    const size_t path_preamble_len = strlen(vi->dir) + strlen(vi->name);
     char *index_path = malloc(sizeof(char) * (path_preamble_len + INDEX_EXT_LEN + 1));
     if(!index_path) return false;
     char *index_meta_path = malloc(sizeof(char) * (path_preamble_len + INDEX_META_EXT_LEN + 1));
@@ -75,7 +77,6 @@ bool vector_index_save(const vector_index_t* vi) {
 
     // TODO: verify save happened successfully
     faiss_write_index_fname(vi->faiss_index, index_path);
-    // write_struct_to_file(vi, index_meta_path, sizeof(vector_index_t));
     vector_index_serialize(vi, index_meta_path);
 
     if(index_path) free(index_path);
@@ -85,6 +86,7 @@ bool vector_index_save(const vector_index_t* vi) {
 }
 
 vector_index_t* vector_index_load(const char* name, const char* dir) {
+
     const size_t path_preamble_len = strlen(dir) + strlen(name);
     char *index_path = malloc(sizeof(char) * (path_preamble_len + INDEX_EXT_LEN + 1));
     if(!index_path) return false;
@@ -95,7 +97,6 @@ vector_index_t* vector_index_load(const char* name, const char* dir) {
 
     vector_index_t* vi = malloc(sizeof(vector_index_t));
     if(!vi) return NULL;
-    // read_struct_from_file(vi, path, sizeof(vector_index_t));
     if(!vector_index_deserialize(vi, index_meta_path)) {
         free_vector_index(vi);
         return NULL;
@@ -110,6 +111,9 @@ vector_index_t* vector_index_load(const char* name, const char* dir) {
     printf("Index Meta Loaded From %s = \n\tname:%s\n\tdir:%s\n\tdims:%lu\n\ttype:%d\n\n",
         index_meta_path, vi->name, vi->dir, vi->dims, vi->type);
     fflush(stdout);
+
+    if(index_path) free(index_path);
+    if(index_meta_path) free(index_meta_path);
 }
 
 bool vector_index_deserialize(vector_index_t* st, const char* fp) {
@@ -127,7 +131,17 @@ bool vector_index_deserialize(vector_index_t* st, const char* fp) {
         perror(err_msg);
         return false;
     }
-    fread(st, size, 1, file); // Read the struct from the file
+    // fread(st, size, 1, file); // Read the struct from the file
+    fread(&st->name_len, sizeof(size_t), 1, file);
+    fread(&st->dir_len, sizeof(size_t), 1, file);
+
+    st->name = malloc(sizeof(char) * st->name_len);
+    st->dir = malloc(sizeof(char) * st->dir_len);
+
+    fread(st->name, sizeof(char), st->name_len, file);
+    fread(st->dir, sizeof(char), st->dir_len, file);
+    fread(&st->dims, sizeof(u_int64_t), 1, file);
+    fread(&st->type, sizeof(int), 1, file);
     fclose(file);
     return true;
 }
@@ -141,7 +155,14 @@ bool vector_index_serialize(const vector_index_t* st, const char* fp) {
         perror(err_msg);
         return false;
     }
-    fwrite(st, size, 1, file); // Write the struct to the file
+    // fwrite(st, size, 1, file); // Write the struct to the file
+    fwrite(&st->name_len, sizeof(size_t), 1, file);
+    fwrite(&st->dir_len, sizeof(size_t), 1, file);
+    fwrite(st->name, sizeof(char), st->name_len, file);
+    fwrite(st->dir, sizeof(char), st->dir_len, file);
+    fwrite(&st->dims, sizeof(uint64_t), 1, file);
+    fwrite(&st->type, sizeof(int), 1, file);
     fclose(file);
     return true;
 }
+

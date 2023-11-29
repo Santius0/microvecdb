@@ -7,7 +7,6 @@ extern "C" {
 
     #include <faiss/c_api/Index_c.h>
     #include <stdbool.h>
-    #include "serialize.h"
 
     typedef enum vector_index_types {
         FLAT,
@@ -20,6 +19,8 @@ extern "C" {
         vector_index_types type;        // type of the vector index
         char *name;
         char *dir;
+        size_t name_len;
+        size_t dir_len;
     } vector_index_t;
 
     // Function declarations
