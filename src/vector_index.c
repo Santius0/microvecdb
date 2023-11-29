@@ -69,14 +69,14 @@ bool vector_index_save(const vector_index_t* vi) {
 
     printf("Index saving to: %s\n\n", index_path);
     printf("Index Meta saving to: %s\n\n", index_meta_path);
-    printf("Index Meta Being Saved:\n\tname:%s\n\tdir:%s\n\tdims:%lu\n\ttype:%d\n\n",
-        vi->name, vi->dir, vi->dims, vi->type);
-    printf("%d", vi->type);
+    printf("Index Meta Being Saved to %s:\n\tname:%s\n\tdir:%s\n\tdims:%lu\n\ttype:%d\n\n",
+        index_meta_path, vi->name, vi->dir, vi->dims, vi->type);
     fflush(stdout);
 
     // TODO: verify save happened successfully
     faiss_write_index_fname(vi->faiss_index, index_path);
-    write_struct_to_file((void*)vi, index_meta_path, sizeof(vi));
+    // write_struct_to_file(vi, index_meta_path, sizeof(vector_index_t));
+    vector_index_serialize(vi, index_meta_path);
 
     if(index_path) free(index_path);
     if(index_meta_path) free(index_meta_path);
@@ -84,20 +84,64 @@ bool vector_index_save(const vector_index_t* vi) {
     return true;
 }
 
-vector_index_t* vector_index_load(const char* path) {
-    if (!path) return NULL;
-    vector_index_t* vi = malloc(sizeof(vector_index_t));
-    read_struct_from_file(vi, path, sizeof(vector_index_t));
-    if (!vi) return NULL;
+vector_index_t* vector_index_load(const char* name, const char* dir) {
+    const size_t path_preamble_len = strlen(dir) + strlen(name);
+    char *index_path = malloc(sizeof(char) * (path_preamble_len + INDEX_EXT_LEN + 1));
+    if(!index_path) return false;
+    char *index_meta_path = malloc(sizeof(char) * (path_preamble_len + INDEX_META_EXT_LEN + 1));
+    if(!index_meta_path) return false;
+    sprintf(index_path, "%s/%s%s",dir, name, INDEX_EXT);
+    sprintf(index_meta_path, "%s/%s%s",dir, name, INDEX_META_EXT);
 
-    faiss_read_index_fname(path, 0, &vi->faiss_index);
+    vector_index_t* vi = malloc(sizeof(vector_index_t));
+    if(!vi) return NULL;
+    // read_struct_from_file(vi, path, sizeof(vector_index_t));
+    if(!vector_index_deserialize(vi, index_meta_path)) {
+        free_vector_index(vi);
+        return NULL;
+    }
+
+    faiss_read_index_fname(index_path, 0, &vi->faiss_index);
     if (!vi->faiss_index) {
         free_vector_index(vi);
         return NULL;
     }
-    // printf("NAME LOADED %s\n", vi->name);
-    // printf("DIR LOADED %s\n", vi->dir);
-    printf("DIMS LOADED %lu\n", vi->dims);
-    printf("TYPE LOADED %d\n", vi->type);
-    return vi;
+
+    printf("Index Meta Loaded From %s = \n\tname:%s\n\tdir:%s\n\tdims:%lu\n\ttype:%d\n\n",
+        index_meta_path, vi->name, vi->dir, vi->dims, vi->type);
+    fflush(stdout);
+}
+
+bool vector_index_deserialize(vector_index_t* st, const char* fp) {
+    const size_t size = sizeof(vector_index_t);
+    char err_msg[300];
+    if(!st) st = malloc(size);
+    if(!st) {
+        sprintf(err_msg, "Error allocating memory to load vector_index \"%s\"", fp);
+        perror(err_msg);
+        return false;
+    }
+    FILE *file = fopen(fp, "rb"); // Open file for reading in binary mode
+    if (file == NULL) {
+        sprintf(err_msg, "Error opening file for reading vector_index \"%s\"", fp);
+        perror(err_msg);
+        return false;
+    }
+    fread(st, size, 1, file); // Read the struct from the file
+    fclose(file);
+    return true;
+}
+
+bool vector_index_serialize(const vector_index_t* st, const char* fp) {
+    const size_t size = sizeof(vector_index_t);
+    FILE *file = fopen(fp, "wb");
+    if (file == NULL) {
+        char err_msg[300];
+        sprintf(err_msg, "Error opening file for writing vector_index \"%s\"", fp);
+        perror(err_msg);
+        return false;
+    }
+    fwrite(st, size, 1, file); // Write the struct to the file
+    fclose(file);
+    return true;
 }

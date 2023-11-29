@@ -7,6 +7,7 @@ extern "C" {
 
     #include <faiss/c_api/Index_c.h>
     #include <stdbool.h>
+    #include "serialize.h"
 
     typedef enum vector_index_types {
         FLAT,
@@ -17,8 +18,8 @@ extern "C" {
         FaissIndex *faiss_index;        // actual faiss index
         uint64_t dims;                  // num dimensions of members in this index
         vector_index_types type;        // type of the vector index
-        char* name;
-        char* dir;
+        char *name;
+        char *dir;
     } vector_index_t;
 
     // Function declarations
@@ -27,7 +28,9 @@ extern "C" {
     bool vector_index_add(const vector_index_t* vi, const size_t n, const float* data);
     bool vector_index_remove(const vector_index_t* vi, const size_t n, const FaissIDSelector* ids);
     bool vector_index_save(const vector_index_t* vi);
-    vector_index_t* vector_index_load(const char* path);
+    vector_index_t* vector_index_load(const char* name, const char* dir) ;
+    bool vector_index_deserialize(vector_index_t* st, const char* fp);
+    bool vector_index_serialize(const vector_index_t* st, const char* fp);
 
 #ifdef __cplusplus
 }

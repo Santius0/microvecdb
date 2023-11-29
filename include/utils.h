@@ -16,10 +16,6 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-    bool write_struct_to_file(const void* st, const char* fp, const size_t size);
-
-    bool read_struct_from_file(void* st, const char* fp, const size_t size);
-
     void create_directory(const char *path);
 
     bool exists(const char* fp);
