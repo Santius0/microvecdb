@@ -1,4 +1,4 @@
-# ConfluxDB
+# MicroVecDB
 
 ## Requirements
 1. C++17
