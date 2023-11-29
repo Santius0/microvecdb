@@ -8,9 +8,6 @@ extern "C" {
 #include <stdbool.h>
 #include <rocksdb/c.h>
 
-#define MAX_KEY_CHARS 21
-#define MAX_KEY_SIZE_BYTES sizeof(char) * MAX_KEY_CHARS // (2^64 - 1) is a number with 20 digits
-
     //Key-value store structure
     typedef struct kv_store_t {
         rocksdb_t *db;
