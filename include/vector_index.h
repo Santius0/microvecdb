@@ -13,19 +13,21 @@ extern "C" {
         IVF
     } vector_index_types;
 
-    typedef struct vector_index {
+    typedef struct vector_index_t {
         FaissIndex *faiss_index;        // actual faiss index
         uint64_t dims;                  // num dimensions of members in this index
         vector_index_types type;        // type of the vector index
-    } vector_index;
+        char* name;
+        char* dir;
+    } vector_index_t;
 
     // Function declarations
-    vector_index* create_vector_index(vector_index_types type, uint64_t dims);
-    void free_vector_index(vector_index* vi);
-    bool vector_index_add(vector_index* vi, size_t n, const float* data);
-    bool vector_index_remove(vector_index* vi, size_t n, const FaissIDSelector* ids);
-    bool vector_index_save(const vector_index* vi, const char* path);
-    vector_index* vector_index_load(const char* path);
+    vector_index_t* create_vector_index(const char* name, const char* dir, const vector_index_types type, uint64_t dims);
+    void free_vector_index(vector_index_t* vi);
+    bool vector_index_add(const vector_index_t* vi, const size_t n, const float* data);
+    bool vector_index_remove(const vector_index_t* vi, const size_t n, const FaissIDSelector* ids);
+    bool vector_index_save(const vector_index_t* vi);
+    vector_index_t* vector_index_load(const char* path);
 
 #ifdef __cplusplus
 }

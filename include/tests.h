@@ -47,7 +47,7 @@ static bool parse_vector(const char* line, float* vector, size_t dims) {
 static void create_and_insert_then_search_then_save(const char* filename, const char* index_filename) {
     srand(42);
     // Step 1: Create a new vector index
-    vector_index* vi = create_vector_index(FLAT, DIMENSIONS);
+    vector_index_t* vi = create_vector_index("./test_collection", "./test_collection", FLAT, DIMENSIONS);
     if (!vi) {
         printf("Failed to create vector index.\n");
         return;
@@ -118,7 +118,7 @@ static void create_and_insert_then_search_then_save(const char* filename, const 
         printf("Index: %lld, Distance: %f\n", labels[i], distances[i]);
     }
 
-    if (!vector_index_save(vi, index_filename)) {
+    if (!vector_index_save(vi)) {
         printf("Failed to save vector index.\n");
         fclose(file);
         free_vector_index(vi);
@@ -134,7 +134,7 @@ static void create_and_insert_then_search_then_save(const char* filename, const 
 static void create_and_save_then_load_then_insert_then_search(const char* index_filename, const char* csv_filename) {
     srand(42);
     // Step 1: Create a new vector index
-    vector_index* vi = create_vector_index(FLAT, DIMENSIONS);
+    vector_index_t* vi = create_vector_index("test_collection", "./test_collection", FLAT, DIMENSIONS);
     if (!vi) {
         printf("Failed to create vector index.\n");
         return;
@@ -166,7 +166,7 @@ static void create_and_save_then_load_then_insert_then_search(const char* index_
     }
 
     // Step 3: Save the vector index
-    if (!vector_index_save(vi, index_filename)) {
+    if (!vector_index_save(vi)) {
         printf("Failed to save vector index.\n");
         fclose(file);
         free_vector_index(vi);
@@ -241,7 +241,7 @@ static void create_and_save_then_load_then_insert_then_search(const char* index_
 static void load_and_search(const char* index_filename, const char* csv_filename) {
     srand(42);
     // Step 1: Load the saved vector index
-    vector_index* vi = vector_index_load(index_filename);
+    vector_index_t* vi = vector_index_load(index_filename);
     if (!vi) {
         printf("Failed to load vector index.\n");
         return;
