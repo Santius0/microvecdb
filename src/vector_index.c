@@ -40,7 +40,10 @@ vector_index_t* create_vector_index(const char* name, const char* dir, const vec
 void free_vector_index(vector_index_t* vi) {
     if (!vi) return;
     if (vi->faiss_index) faiss_Index_free(vi->faiss_index);
+    if(vi->name) free(vi->name);
+    if(vi->dir) free(vi->dir);
     free(vi);
+    vi = NULL;
 }
 
 bool vector_index_add(const vector_index_t* vi, const size_t n, const float* data){
@@ -114,6 +117,8 @@ vector_index_t* vector_index_load(const char* name, const char* dir) {
 
     if(index_path) free(index_path);
     if(index_meta_path) free(index_meta_path);
+
+    return vi;
 }
 
 bool vector_index_deserialize(vector_index_t* st, const char* fp) {
@@ -125,7 +130,7 @@ bool vector_index_deserialize(vector_index_t* st, const char* fp) {
         perror(err_msg);
         return false;
     }
-    FILE *file = fopen(fp, "rb"); // Open file for reading in binary mode
+    FILE *file = fopen(fp, "rb");
     if (file == NULL) {
         sprintf(err_msg, "Error opening file for reading vector_index \"%s\"", fp);
         perror(err_msg);
