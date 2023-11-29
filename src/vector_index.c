@@ -1,6 +1,6 @@
 #include "vector_index.h"
 #include "utils.h"
-#include "..\include\constants.h"
+#include "constants.h"
 
 #include <faiss/c_api/IndexFlat_c.h>
 #include <faiss/c_api/IndexIVFFlat_c.h>
