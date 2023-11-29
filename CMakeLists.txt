@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-project(confluxdb)
+project(microvecdb)
 
 set(CMAKE_C_STANDARD 11)
 
@@ -15,9 +15,9 @@ link_directories(
 )
 
 #file(GLOB SOURCES CONFIGURE_DEPENDS "src/*")
-#add_executable(confluxdb main.cpp ${SOURCES})
+#add_executable(microvecdb main.cpp ${SOURCES})
 
-add_executable(confluxdb main.c
+add_executable(microvecdb main.c
         include/kv_store.h
         src/kv_store.c
         include/vector_index.h
@@ -31,7 +31,7 @@ add_executable(confluxdb main.c
 )
 
 if(OpenMP_CXX_FOUND OR OpenMP_C_FOUND)
-    target_link_libraries(confluxdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C rocksdb faiss faiss_c)
+    target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C rocksdb faiss faiss_c)
 else ()
-    target_link_libraries(confluxdb rocksdb faiss faiss_c)
+    target_link_libraries(microvecdb rocksdb faiss faiss_c)
 endif()
