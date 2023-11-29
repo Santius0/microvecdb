@@ -1,4 +1,5 @@
 #include "kv_store.h"
+#include "utils.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,9 +8,7 @@
 
 kv_store_t* kv_store_init(const char* path, const bool create_new, const bool overwrite){
 
-    struct stat st = {0};
-
-    if (stat(path, &st) == -1) {       // dir does not exist so must create dir
+    if (!exists(path)) {               // dir does not exist so must create dir
         if (!create_new) {             // but create_new set to false
             fprintf(stderr, "Error: Database does not exist at path: %s\n", path);
             return NULL;
