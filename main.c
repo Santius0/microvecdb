@@ -122,8 +122,26 @@ int test_storage() {
     return 0;
 }
 
+typedef struct test_struct {
+    int num_1;
+    float num_2;
+    vector_index_types type;
+    char* name;
+} test_struct;
+
+#include "utils.h"
+
 int main() {
-    vector_index_t *idx = vector_index_load("test.index");
+
+    // char* name = malloc(sizeof(char)*10);
+    // strcpy(name, "test_name");
+    // test_struct st_write = {1, 2, FLAT, name};
+    // test_struct st_read;
+    // write_struct_to_file(&st_write, "./test_struct.index.meta", sizeof(test_struct));
+    // read_struct_from_file(&st_read, "./test_struct.index.meta", sizeof(test_struct));
+    // printf("num_1: %d\nnum_2: %f\ntype: %d\nname: %s\n", st_read.num_1, st_read.num_2, st_read.type, st_read.name);
+
+    // vector_index_t *idx = vector_index_load("test.index");
     // test_storage();
     // #pragma omp parallel
     // {
@@ -139,7 +157,10 @@ int main() {
     // load_and_search(index_file_path, csv_file_path);
 
 
-    if(!exists("./test_collection")) create_directory("./test_collection");
+    // if(!exists("./test_collection")) create_directory("./test_collection");
+
+    vector_index_t *idx = vector_index_load("test_collection",
+        "./test_collection");
 
 
     return 0;

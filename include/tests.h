@@ -177,7 +177,7 @@ static void create_and_save_then_load_then_insert_then_search(const char* index_
     free_vector_index(vi);
 
     // Step 5: Load the saved vector index
-    vi = vector_index_load(index_filename);
+    vi = vector_index_load("test_collection", "./test_collection");
     if (!vi) {
         printf("Failed to load vector index.\n");
         fclose(file);
@@ -241,7 +241,7 @@ static void create_and_save_then_load_then_insert_then_search(const char* index_
 static void load_and_search(const char* index_filename, const char* csv_filename) {
     srand(42);
     // Step 1: Load the saved vector index
-    vector_index_t* vi = vector_index_load(index_filename);
+    vector_index_t* vi = vector_index_load("test_collection", "./test_collection");
     if (!vi) {
         printf("Failed to load vector index.\n");
         return;
