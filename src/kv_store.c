@@ -1,5 +1,6 @@
 #include "kv_store.h"
 #include "utils.h"
+#include "constants.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
