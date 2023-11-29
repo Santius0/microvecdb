@@ -69,6 +69,10 @@ bool vector_index_save(const vector_index_t* vi) {
 
     printf("Index saving to: %s\n\n", index_path);
     printf("Index Meta saving to: %s\n\n", index_meta_path);
+    printf("Index Meta Being Saved:\n\tname:%s\n\tdir:%s\n\tdims:%lu\n\ttype:%d\n\n",
+        vi->name, vi->dir, vi->dims, vi->type);
+    printf("%d", vi->type);
+    fflush(stdout);
 
     // TODO: verify save happened successfully
     faiss_write_index_fname(vi->faiss_index, index_path);
@@ -83,6 +87,7 @@ bool vector_index_save(const vector_index_t* vi) {
 vector_index_t* vector_index_load(const char* path) {
     if (!path) return NULL;
     vector_index_t* vi = malloc(sizeof(vector_index_t));
+    read_struct_from_file(vi, path, sizeof(vector_index_t));
     if (!vi) return NULL;
 
     faiss_read_index_fname(path, 0, &vi->faiss_index);
@@ -90,7 +95,9 @@ vector_index_t* vector_index_load(const char* path) {
         free_vector_index(vi);
         return NULL;
     }
-    vi->type = FLAT;
-    vi->dims = 100;
+    // printf("NAME LOADED %s\n", vi->name);
+    // printf("DIR LOADED %s\n", vi->dir);
+    printf("DIMS LOADED %lu\n", vi->dims);
+    printf("TYPE LOADED %d\n", vi->type);
     return vi;
 }
