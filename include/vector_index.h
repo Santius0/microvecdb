@@ -17,10 +17,10 @@ extern "C" {
         FaissIndex *faiss_index;        // actual faiss index
         uint64_t dims;                  // num dimensions of members in this index
         vector_index_types type;        // type of the vector index
-        char *name;
-        char *dir;
-        size_t name_len;
-        size_t dir_len;
+        char *name;                     // index's collection name
+        char *dir;                      // index's directory
+        size_t name_len;                // size of name. stored for use during deserialization
+        size_t dir_len;                 // size of name. stored for use during deserialization
     } vector_index_t;
 
     // Function declarations
