@@ -80,7 +80,7 @@ bool mvdb_vector_index_save(const mvdb_vector_index_t* vi) {
     if(!mvdb_exists(vi->dir)) mvdb_mkdir(vi->dir);
 
     faiss_write_index_fname(vi->faiss_index, index_path);
-    const bool result = vi->faiss_index && !mvdb_vector_index_serialize(vi, index_meta_path);
+    const bool result = vi->faiss_index && mvdb_vector_index_serialize(vi, index_meta_path);
 
     if(index_path) free(index_path);
     if(index_meta_path) free(index_meta_path);
