@@ -33,7 +33,7 @@ static void generate_and_save_vectors(const char *filename) {
 
 // Function to parse a line into a vector
 static bool parse_vector(const char* line, float* vector, size_t dims) {
-    char* token = strtok(line, ",");
+    const char* token = strtok((char*)line, ",");
     for (size_t i = 0; i < dims; ++i) {
         if (token == NULL) {
             return false;
@@ -47,7 +47,7 @@ static bool parse_vector(const char* line, float* vector, size_t dims) {
 static void create_and_insert_then_search_then_save(const char* filename, const char* index_filename) {
     srand(42);
     // Step 1: Create a new vector index
-    vector_index_t* vi = create_vector_index("./test_collection", "./test_collection", FLAT, DIMENSIONS);
+    mvdb_vector_index_t* vi = mvdb_vector_index_create("./test_collection", "./test_collection", FLAT, DIMENSIONS);
     if (!vi) {
         printf("Failed to create vector index.\n");
         return;
@@ -57,7 +57,7 @@ static void create_and_insert_then_search_then_save(const char* filename, const 
     FILE* file = fopen(filename, "r");
     if (!file) {
         perror("Error opening file");
-        free_vector_index(vi);
+        mvdb_vector_index_free(vi);
         return;
     }
 
@@ -65,7 +65,7 @@ static void create_and_insert_then_search_then_save(const char* filename, const 
     float vector[DIMENSIONS];
     while (fgets(line, MAX_LINE_LENGTH, file)) {
         if (parse_vector(line, vector, DIMENSIONS)) {
-            if (!vector_index_add(vi, 1, vector)) {
+            if (!mvdb_vector_index_add(vi, 1, vector)) {
                 printf("Failed to add vector to index.\n");
             }
         }
@@ -76,7 +76,7 @@ static void create_and_insert_then_search_then_save(const char* filename, const 
     file = fopen(filename, "r");
     if (!file) {
         perror("Error opening file");
-        free_vector_index(vi);
+        mvdb_vector_index_free(vi);
         return;
     }
 
@@ -94,7 +94,7 @@ static void create_and_insert_then_search_then_save(const char* filename, const 
         if (!fgets(line, MAX_LINE_LENGTH, file)) {
             printf("Error reading file.\n");
             fclose(file);
-            free_vector_index(vi);
+            mvdb_vector_index_free(vi);
             return;
         }
     }
@@ -102,7 +102,7 @@ static void create_and_insert_then_search_then_save(const char* filename, const 
     if (!parse_vector(line, vector, DIMENSIONS)) {
         printf("Error parsing vector.\n");
         fclose(file);
-        free_vector_index(vi);
+        mvdb_vector_index_free(vi);
         return;
     }
     fclose(file);
@@ -118,23 +118,23 @@ static void create_and_insert_then_search_then_save(const char* filename, const 
         printf("Index: %lld, Distance: %f\n", labels[i], distances[i]);
     }
 
-    if (!vector_index_save(vi)) {
+    if (!mvdb_vector_index_save(vi)) {
         printf("Failed to save vector index.\n");
         fclose(file);
-        free_vector_index(vi);
+        mvdb_vector_index_free(vi);
         return;
     }
 
     // Cleanup
     free(labels);
     free(distances);
-    free_vector_index(vi);
+    mvdb_vector_index_free(vi);
 }
 
 static void create_and_save_then_load_then_insert_then_search(const char* index_filename, const char* csv_filename) {
     srand(42);
     // Step 1: Create a new vector index
-    vector_index_t* vi = create_vector_index("test_collection", "./test_collection", FLAT, DIMENSIONS);
+    mvdb_vector_index_t* vi = mvdb_vector_index_create("test_collection", "./test_collection", IVF, DIMENSIONS);
     if (!vi) {
         printf("Failed to create vector index.\n");
         return;
@@ -144,7 +144,7 @@ static void create_and_save_then_load_then_insert_then_search(const char* index_
     FILE* file = fopen(csv_filename, "r");
     if (!file) {
         perror("Error opening CSV file");
-        free_vector_index(vi);
+        mvdb_vector_index_free(vi);
         return;
     }
 
@@ -159,25 +159,25 @@ static void create_and_save_then_load_then_insert_then_search(const char* index_
     float vector[DIMENSIONS];
     for (size_t i = 0; i < half_vectors; ++i) {
         if (fgets(line, MAX_LINE_LENGTH, file) && parse_vector(line, vector, DIMENSIONS)) {
-            if (!vector_index_add(vi, 1, vector)) {
+            if (!mvdb_vector_index_add(vi, 1, vector)) {
                 printf("Failed to add vector to index.\n");
             }
         }
     }
 
     // Step 3: Save the vector index
-    if (!vector_index_save(vi)) {
+    if (!mvdb_vector_index_save(vi)) {
         printf("Failed to save vector index.\n");
         fclose(file);
-        free_vector_index(vi);
+        mvdb_vector_index_free(vi);
         return;
     }
 
     // Step 4: Delete the original vector index instance
-    free_vector_index(vi);
+    mvdb_vector_index_free(vi);
 
     // Step 5: Load the saved vector index
-    vi = vector_index_load("test_collection", "./test_collection");
+    vi = mvdb_vector_index_load("test_collection", "./test_collection");
     if (!vi) {
         printf("Failed to load vector index.\n");
         fclose(file);
@@ -187,7 +187,7 @@ static void create_and_save_then_load_then_insert_then_search(const char* index_
     // Step 6: Insert the remaining half of the CSV data
     while (fgets(line, MAX_LINE_LENGTH, file)) {
         if (parse_vector(line, vector, DIMENSIONS)) {
-            if (!vector_index_add(vi, 1, vector)) {
+            if (!mvdb_vector_index_add(vi, 1, vector)) {
                 printf("Failed to add vector to index.\n");
             }
         }
@@ -198,7 +198,7 @@ static void create_and_save_then_load_then_insert_then_search(const char* index_
     file = fopen(csv_filename, "r");
     if (!file) {
         perror("Error opening CSV file");
-        free_vector_index(vi);
+        mvdb_vector_index_free(vi);
         return;
     }
 
@@ -208,7 +208,7 @@ static void create_and_save_then_load_then_insert_then_search(const char* index_
         if (!fgets(line, MAX_LINE_LENGTH, file)) {
             printf("Error reading file.\n");
             fclose(file);
-            free_vector_index(vi);
+            mvdb_vector_index_free(vi);
             return;
         }
     }
@@ -216,7 +216,7 @@ static void create_and_save_then_load_then_insert_then_search(const char* index_
     if (!parse_vector(line, vector, DIMENSIONS)) {
         printf("Error parsing vector.\n");
         fclose(file);
-        free_vector_index(vi);
+        mvdb_vector_index_free(vi);
         return;
     }
     fclose(file);
@@ -235,13 +235,13 @@ static void create_and_save_then_load_then_insert_then_search(const char* index_
     // Cleanup
     free(labels);
     free(distances);
-    free_vector_index(vi);
+    mvdb_vector_index_free(vi);
 }
 
 static void load_and_search(const char* index_filename, const char* csv_filename) {
     srand(42);
     // Step 1: Load the saved vector index
-    vector_index_t* vi = vector_index_load("test_collection", "./test_collection");
+    mvdb_vector_index_t* vi = mvdb_vector_index_load("test_collection", "./test_collection");
     if (!vi) {
         printf("Failed to load vector index.\n");
         return;
@@ -251,7 +251,7 @@ static void load_and_search(const char* index_filename, const char* csv_filename
     FILE* file = fopen(csv_filename, "r");
     if (!file) {
         perror("Error opening CSV file");
-        free_vector_index(vi);
+        mvdb_vector_index_free(vi);
         return;
     }
 
@@ -263,7 +263,7 @@ static void load_and_search(const char* index_filename, const char* csv_filename
     if (num_vectors == 0) {
         printf("No vectors found in the file.\n");
         fclose(file);
-        free_vector_index(vi);
+        mvdb_vector_index_free(vi);
         return;
     }
 
@@ -275,7 +275,7 @@ static void load_and_search(const char* index_filename, const char* csv_filename
         if (!fgets(line, MAX_LINE_LENGTH, file)) {
             printf("Error reading file.\n");
             fclose(file);
-            free_vector_index(vi);
+            mvdb_vector_index_free(vi);
             return;
         }
     }
@@ -284,7 +284,7 @@ static void load_and_search(const char* index_filename, const char* csv_filename
     // FILE* file_to_add = fopen(csv_filename, "r");
     // if (!file_to_add) {
     //     perror("Error opening file");
-    //     free_vector_index(vi);
+    //     mvdb_vector_index_free(vi);
     //     return;
     // }
     //
@@ -292,7 +292,7 @@ static void load_and_search(const char* index_filename, const char* csv_filename
     // float vector_to_add[DIMENSIONS];
     // while (fgets(line_to_add, MAX_LINE_LENGTH, file_to_add)) {
     //     if (parse_vector(line_to_add, vector_to_add, DIMENSIONS)) {
-    //         if (!vector_index_add(vi, 1, vector_to_add)) {
+    //         if (!mvdb_vector_index_add(vi, 1, vector_to_add)) {
     //             printf("Failed to add vector to index.\n");
     //         }
     //     }
@@ -305,7 +305,7 @@ static void load_and_search(const char* index_filename, const char* csv_filename
     if (!parse_vector(line, query_vector, DIMENSIONS)) {
         printf("Error parsing vector.\n");
         fclose(file);
-        free_vector_index(vi);
+        mvdb_vector_index_free(vi);
         return;
     }
     fclose(file);
@@ -324,7 +324,7 @@ static void load_and_search(const char* index_filename, const char* csv_filename
     // Cleanup
     free(labels);
     free(distances);
-    free_vector_index(vi);
+    mvdb_vector_index_free(vi);
 }
 
 #endif //TESTS_H
