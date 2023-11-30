@@ -9,9 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-vector_index_t* create_vector_index(const char* name, const char* dir, const vector_index_types type, const uint64_t dims) {
-    vector_index_t* vi = malloc(sizeof(vector_index_t));
+mvdb_vector_index_t* mvdb_vector_index_create(const char* name, const char* dir, const vector_index_types type, const uint64_t dims) {
+    mvdb_vector_index_t* vi = malloc(sizeof(mvdb_vector_index_t));
     if (!vi) return NULL;
 
     vi->name = strdup(name);
@@ -37,7 +36,7 @@ vector_index_t* create_vector_index(const char* name, const char* dir, const vec
     return vi;
 }
 
-void free_vector_index(vector_index_t* vi) {
+void mvdb_vector_index_free(mvdb_vector_index_t* vi) {
     if (!vi) return;
     if (vi->faiss_index) faiss_Index_free(vi->faiss_index);
     if(vi->name) free(vi->name);
@@ -46,19 +45,19 @@ void free_vector_index(vector_index_t* vi) {
     vi = NULL;
 }
 
-bool vector_index_add(const vector_index_t* vi, const size_t n, const float* data){
+bool mvdb_vector_index_add(const mvdb_vector_index_t* vi, const size_t n, const float* data){
     if (!vi || !vi->faiss_index || !data) return false;
     faiss_Index_add(vi->faiss_index, n, data);
     return true;
 }
 
-bool vector_index_remove(const vector_index_t* vi, const size_t n, const FaissIDSelector* ids) {
+bool mvdb_vector_index_remove(const mvdb_vector_index_t* vi, size_t n, const FaissIDSelector* ids) {
     if (!vi || !vi->faiss_index || !ids) return false;
-    faiss_Index_remove_ids(vi->faiss_index, ids, n);
+    faiss_Index_remove_ids(vi->faiss_index, ids, &n);
     return true;
 }
 
-bool vector_index_save(const vector_index_t* vi) {
+bool mvdb_vector_index_save(const mvdb_vector_index_t* vi) {
     if (!vi || !vi->faiss_index) return false;
 
     // paths are dir/collection_name.index and dir/collection_name.index.meta
@@ -79,7 +78,7 @@ bool vector_index_save(const vector_index_t* vi) {
     fflush(stdout);
 
     faiss_write_index_fname(vi->faiss_index, index_path);
-    const bool result = vi->faiss_index && !vector_index_serialize(vi, index_meta_path);
+    const bool result = vi->faiss_index && !mvdb_vector_index_serialize(vi, index_meta_path);
 
     if(index_path) free(index_path);
     if(index_meta_path) free(index_meta_path);
@@ -87,8 +86,7 @@ bool vector_index_save(const vector_index_t* vi) {
     return result;
 }
 
-vector_index_t* vector_index_load(const char* name, const char* dir) {
-
+mvdb_vector_index_t* mvdb_vector_index_load(const char* name, const char* dir) {
     const size_t path_preamble_len = strlen(dir) + strlen(name);
     char *index_path = malloc(sizeof(char) * (path_preamble_len + INDEX_EXT_LEN + 1));
     if(!index_path) return false;
@@ -97,16 +95,16 @@ vector_index_t* vector_index_load(const char* name, const char* dir) {
     sprintf(index_path, "%s/%s%s",dir, name, INDEX_EXT);
     sprintf(index_meta_path, "%s/%s%s",dir, name, INDEX_META_EXT);
 
-    vector_index_t* vi = malloc(sizeof(vector_index_t));
+    mvdb_vector_index_t* vi = malloc(sizeof(mvdb_vector_index_t));
     if(!vi) return NULL;
-    if(!vector_index_deserialize(vi, index_meta_path)) {
-        free_vector_index(vi);
+    if(!mvdb_vector_index_deserialize(vi, index_meta_path)) {
+        mvdb_vector_index_free(vi);
         return NULL;
     }
 
     faiss_read_index_fname(index_path, 0, &vi->faiss_index);
     if (!vi->faiss_index) {
-        free_vector_index(vi);
+        mvdb_vector_index_free(vi);
         return NULL;
     }
 
@@ -120,10 +118,9 @@ vector_index_t* vector_index_load(const char* name, const char* dir) {
     return vi;
 }
 
-bool vector_index_deserialize(vector_index_t* st, const char* fp) {
-    const size_t size = sizeof(vector_index_t);
+bool mvdb_vector_index_deserialize(mvdb_vector_index_t* st, const char* fp) {
     char err_msg[300];
-    if(!st) st = malloc(size);
+    if(!st) st = malloc(sizeof(mvdb_vector_index_t));
     if(!st) {
         sprintf(err_msg, "Error allocating memory to load vector_index \"%s\"", fp);
         perror(err_msg);
@@ -135,7 +132,7 @@ bool vector_index_deserialize(vector_index_t* st, const char* fp) {
         perror(err_msg);
         return false;
     }
-    // fread(st, size, 1, file); // Read the struct from the file
+    // fread(st, sizeof(vector_index_t), 1, file); // Read the struct from the file
     fread(&st->name_len, sizeof(size_t), 1, file);
     fread(&st->dir_len, sizeof(size_t), 1, file);
 
@@ -150,8 +147,7 @@ bool vector_index_deserialize(vector_index_t* st, const char* fp) {
     return true;
 }
 
-bool vector_index_serialize(const vector_index_t* st, const char* fp) {
-    const size_t size = sizeof(vector_index_t);
+bool mvdb_vector_index_serialize(const mvdb_vector_index_t* st, const char* fp) {
     FILE *file = fopen(fp, "wb");
     if (file == NULL) {
         char err_msg[300];
@@ -159,7 +155,7 @@ bool vector_index_serialize(const vector_index_t* st, const char* fp) {
         perror(err_msg);
         return false;
     }
-    // fwrite(st, size, 1, file); // Write the struct to the file
+    // fwrite(st, sizeof(vector_index_t), 1, file); // Write the struct to the file
     fwrite(&st->name_len, sizeof(size_t), 1, file);
     fwrite(&st->dir_len, sizeof(size_t), 1, file);
     fwrite(st->name, sizeof(char), st->name_len, file);
@@ -169,4 +165,3 @@ bool vector_index_serialize(const vector_index_t* st, const char* fp) {
     fclose(file);
     return true;
 }
-

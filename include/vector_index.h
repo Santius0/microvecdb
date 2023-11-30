@@ -8,30 +8,30 @@ extern "C" {
     #include <faiss/c_api/Index_c.h>
     #include <stdbool.h>
 
-    typedef enum vector_index_types {
+    typedef enum mvdb_vector_index_types {
         FLAT,
         IVF
     } vector_index_types;
 
-    typedef struct vector_index_t {
+    typedef struct mvdb_vector_index_t {
         FaissIndex *faiss_index;        // actual faiss index
-        uint64_t dims;                  // num dimensions of members in this index
-        vector_index_types type;        // type of the vector index
         char *name;                     // index's collection name
         char *dir;                      // index's directory
         size_t name_len;                // size of name. stored for use during deserialization
         size_t dir_len;                 // size of name. stored for use during deserialization
-    } vector_index_t;
+        uint64_t dims;                  // num dimensions of members in this index
+        vector_index_types type;        // type of the vector index
+    } mvdb_vector_index_t;
 
     // Function declarations
-    vector_index_t* create_vector_index(const char* name, const char* dir, const vector_index_types type, uint64_t dims);
-    void free_vector_index(vector_index_t* vi);
-    bool vector_index_add(const vector_index_t* vi, const size_t n, const float* data);
-    bool vector_index_remove(const vector_index_t* vi, const size_t n, const FaissIDSelector* ids);
-    bool vector_index_save(const vector_index_t* vi);
-    vector_index_t* vector_index_load(const char* name, const char* dir) ;
-    bool vector_index_deserialize(vector_index_t* st, const char* fp);
-    bool vector_index_serialize(const vector_index_t* st, const char* fp);
+    mvdb_vector_index_t* mvdb_vector_index_create(const char* name, const char* dir, const vector_index_types type, uint64_t dims);
+    void mvdb_vector_index_free(mvdb_vector_index_t* vi);
+    bool mvdb_vector_index_add(const mvdb_vector_index_t* vi, const size_t n, const float* data);
+    bool mvdb_vector_index_remove(const mvdb_vector_index_t* vi, size_t n, const FaissIDSelector* ids);
+    bool mvdb_vector_index_save(const mvdb_vector_index_t* vi);
+    mvdb_vector_index_t* mvdb_vector_index_load(const char* name, const char* dir) ;
+    bool mvdb_vector_index_deserialize(mvdb_vector_index_t* st, const char* fp);
+    bool mvdb_vector_index_serialize(const mvdb_vector_index_t* st, const char* fp);
 
 #ifdef __cplusplus
 }
