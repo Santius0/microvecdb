@@ -1,6 +1,6 @@
 #include "utils.h"
 
-void create_directory(const char *path) {
+void mvdb_mkdir(const char *path) {
 #ifdef _WIN32
     // Windows
     if (_mkdir(path) == 0) {
@@ -19,7 +19,7 @@ void create_directory(const char *path) {
 #endif
 }
 
-bool exists(const char* fp) {
+bool mvdb_exists(const char* fp) {
     struct stat st = {0};
 #ifdef _WIN32
     return fileAttributes != INVALID_FILE_ATTRIBUTES;

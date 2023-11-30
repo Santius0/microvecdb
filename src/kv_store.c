@@ -9,7 +9,7 @@
 
 kv_store_t* kv_store_init(const char* path, const bool create_new, const bool overwrite){
 
-    if (!exists(path)) {               // dir does not exist so must create dir
+    if (!mvdb_exists(path)) {               // dir does not exist so must create dir
         if (!create_new) {             // but create_new set to false
             fprintf(stderr, "Error: Database does not exist at path: %s\n", path);
             return NULL;

@@ -16,9 +16,9 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-    void create_directory(const char *path);
+    void mvdb_mkdir(const char *path);
 
-    bool exists(const char* fp);
+    bool mvdb_exists(const char* fp);
 
 #ifdef __cplusplus
 }
