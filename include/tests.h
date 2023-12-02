@@ -32,7 +32,7 @@ static void generate_and_save_vectors(const char *filename) {
 }
 
 // Function to parse a line into a vector
-static bool parse_vector(const char* line, float* vector, size_t dims) {
+static bool parse_vector(const char* line, float* vector, const size_t dims) {
     const char* token = strtok((char*)line, ",");
     for (size_t i = 0; i < dims; ++i) {
         if (token == NULL) {
