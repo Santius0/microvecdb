@@ -1,4 +1,4 @@
-# MicroVecDB
+# MicroVecDB - CPP
 
 ## Requirements
 1. C++17
