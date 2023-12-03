@@ -7,7 +7,7 @@
 #include "kv_store.h"
 #include "vector_index.h"
 
-#include "tests.h"
+// #include "tests.h"
 #include "utils.h"
 
 void fetch_and_print(const kv_store_t* kv_store, const char* key) {
@@ -131,7 +131,55 @@ typedef struct test_struct {
 
 #include "utils.h"
 
+#include <log4c.h>
+
+// #include "fasttext_wrapper.h"
+#include "fastttext_c.h"
+#include <fasttext.h>
+#include <time.h>
+
 int main() {
+
+    clock_t start, end;
+    auto* model = new fasttext::FastText();
+    model->loadModel("./models/cc.en.300.bin");
+    fasttext::Vector wordVec(model->getDimension());
+
+    start = clock();
+    model->getWordVector(wordVec, "The Shaka is a legendary fantasy weapon imbued with ancient magic and unparalleled craftsmanship. This mystical sword, forged in the heart of a forgotten volcano, boasts a blade that gleams with an ethereal azure light, symbolizing the boundless sky. The metal, an unknown alloy, is lighter than air yet stronger than the hardest steel, allowing it to slice through the toughest armors with ease. "
+                                  "Its hilt is adorned with rare jewels and intricate engravings depicting the legends of old. The centerpiece of the hilt is a large sapphire, pulsating with a life of its own, believed to be the source of the Shaka's power. This gem grants the wielder the ability to command the winds, allowing for swift, agile movements that seem to defy gravity. Legends say that the Shaka can summon gusts strong enough to topple giants or gentle breezes to soothe the wounded."
+                                  "The Shaka's most unique feature, however, is its ability to adapt to its wielder's heart and fighting style. It can extend or shorten its blade during combat, becoming either a dagger for close quarters or a longsword for sweeping strikes. The weapon is said to resonate with the soul of its bearer, glowing brighter as it aligns with their will and intent."
+                                  "Shrouded in myths, the Shaka is not just a weapon but a symbol of ultimate power and grace, sought after by heroes and villains alike. It's said that only the pure of heart or those with a strong will can fully harness its potential without being overwhelmed by its immense power.");
+    end = clock();
+
+    double cpu_time_used = (double)(end - start) / CLOCKS_PER_SEC;
+    std::cout << wordVec << std::endl;
+
+    printf("time = %f seconds\n\n", cpu_time_used);
+    // const char* config_file_path = "/wsl.localhost/Ubuntu-22.04/home/santius/microvecdb/microvecdb/cmake-build-debug-wsl/log4c.properties";
+    //
+    // // Initialize log4c using the specified configuration file
+    // if (log4c_init()) {
+    //     fprintf(stderr, "log4c initialization failed\n");
+    //     return -1;
+    // }
+    //
+    // // Set the configuration file
+    // if (log4c_rc_load(config_file_path, 0)) {
+    //     fprintf(stderr, "log4c configuration failed\n");
+    //     return -1;
+    // }
+    //
+    // // Get a logger (it uses a category name, similar to log4j)
+    // log4c_category_t* mycat = log4c_category_get("mycategory");
+    //
+    // // Log messages
+    // log4c_category_log(mycat, LOG4C_PRIORITY_DEBUG, "Debug message");
+    // log4c_category_log(mycat, LOG4C_PRIORITY_INFO, "Info message");
+    // log4c_category_log(mycat, LOG4C_PRIORITY_ERROR, "Error message");
+    //
+    // // Finalize log4c
+    // log4c_fini();
 
     // char* name = malloc(sizeof(char)*10);
     // strcpy(name, "test_name");
@@ -148,12 +196,12 @@ int main() {
         // printf("Thread %d\n", omp_get_thread_num());
     // }
 
-    const char *csv_file_path = "./test_data.csv", *index_file_path = "./test.index";
+    // const char *csv_file_path = "./test_data.csv", *index_file_path = "./test.index";
     // generate_and_save_vectors(file_path);
 
     // create_and_insert_then_search_then_save(csv_file_path, index_file_path);
     // printf("\n\n\n\n");
-    create_and_save_then_load_then_insert_then_search(index_file_path, csv_file_path);
+    // create_and_save_then_load_then_insert_then_search(index_file_path, csv_file_path);
     // load_and_search(index_file_path, csv_file_path);
 
 
@@ -165,5 +213,5 @@ int main() {
     // if(idx) mvdb_vector_index_free(idx);
     // idx = NULL;
 
-    return 0;
+    return EXIT_SUCCESS;
 }
