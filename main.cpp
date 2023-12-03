@@ -135,27 +135,27 @@ typedef struct test_struct {
 
 // #include "fasttext_wrapper.h"
 #include "fastttext_c.h"
-#include <fasttext.h>
 #include <time.h>
 
 int main() {
 
     clock_t start, end;
-    auto* model = new fasttext::FastText();
-    model->loadModel("./models/cc.en.300.bin");
-    fasttext::Vector wordVec(model->getDimension());
+    start = clock();
+    auto* model = fasttext_model_load("./models/cc.en.300.bin");
+    end = clock();
+    printf("create model time = %f secs\n\n", (double)(end-start)/CLOCKS_PER_SEC);
+
+
+    const char* sample_text = "The Shaka is a legendary fantasy weapon imbued with ancient magic and unparalleled craftsmanship. This mystical sword, forged in the heart of a forgotten volcano, boasts a blade that gleams with an ethereal azure light, symbolizing the boundless sky. The metal, an unknown alloy, is lighter than air yet stronger than the hardest steel, allowing it to slice through the toughest armors with ease. "
+                             "Its hilt is adorned with rare jewels and intricate engravings depicting the legends of old. The centerpiece of the hilt is a large sapphire, pulsating with a life of its own, believed to be the source of the Shaka's power. This gem grants the wielder the ability to command the winds, allowing for swift, agile movements that seem to defy gravity. Legends say that the Shaka can summon gusts strong enough to topple giants or gentle breezes to soothe the wounded. "
+                             "The Shaka's most unique feature, however, is its ability to adapt to its wielder's heart and fighting style. It can extend or shorten its blade during combat, becoming either a dagger for close quarters or a longsword for sweeping strikes. The weapon is said to resonate with the soul of its bearer, glowing brighter as it aligns with their will and intent. "
+                             "Shrouded in myths, the Shaka is not just a weapon but a symbol of ultimate power and grace, sought after by heroes and villains alike. It's said that only the pure of heart or those with a strong will can fully harness its potential without being overwhelmed by its immense power.";
 
     start = clock();
-    model->getWordVector(wordVec, "The Shaka is a legendary fantasy weapon imbued with ancient magic and unparalleled craftsmanship. This mystical sword, forged in the heart of a forgotten volcano, boasts a blade that gleams with an ethereal azure light, symbolizing the boundless sky. The metal, an unknown alloy, is lighter than air yet stronger than the hardest steel, allowing it to slice through the toughest armors with ease. "
-                                  "Its hilt is adorned with rare jewels and intricate engravings depicting the legends of old. The centerpiece of the hilt is a large sapphire, pulsating with a life of its own, believed to be the source of the Shaka's power. This gem grants the wielder the ability to command the winds, allowing for swift, agile movements that seem to defy gravity. Legends say that the Shaka can summon gusts strong enough to topple giants or gentle breezes to soothe the wounded."
-                                  "The Shaka's most unique feature, however, is its ability to adapt to its wielder's heart and fighting style. It can extend or shorten its blade during combat, becoming either a dagger for close quarters or a longsword for sweeping strikes. The weapon is said to resonate with the soul of its bearer, glowing brighter as it aligns with their will and intent."
-                                  "Shrouded in myths, the Shaka is not just a weapon but a symbol of ultimate power and grace, sought after by heroes and villains alike. It's said that only the pure of heart or those with a strong will can fully harness its potential without being overwhelmed by its immense power.");
+    // fasttext_model_get_word_vec(sample_text, model);
     end = clock();
+    // printf("get word vector time = %f secs", (double)(end-start)/CLOCKS_PER_SEC);
 
-    double cpu_time_used = (double)(end - start) / CLOCKS_PER_SEC;
-    std::cout << wordVec << std::endl;
-
-    printf("time = %f seconds\n\n", cpu_time_used);
     // const char* config_file_path = "/wsl.localhost/Ubuntu-22.04/home/santius/microvecdb/microvecdb/cmake-build-debug-wsl/log4c.properties";
     //
     // // Initialize log4c using the specified configuration file
