@@ -27,8 +27,6 @@ add_executable(microvecdb main.cpp
         src/vector_collection.cpp
         include/tests.h
         include/constants.h
-        include/fastttext_c.h
-        src/fastttext_c.cpp
         ${FASTTEXT_SOURCES}
         include/vectorizer.h
         src/vectorizer.cpp
