@@ -143,13 +143,14 @@ void generate_random_data(float* data, const size_t size) {
 int main() {
 
 
-    mvdb::Vectorizer("./models/cc.en.300.bin", 300);
+    // mvdb::Vectorizer("./models/cc.en.300.bin", 300);
 
-    auto* vi = new mvdb::VectorIndex("new_test", "./new_test", mvdb::VectorIndexType::IVF, 300);
-    std::cout << "Saved:" << std::endl << *vi << std::endl;
+    auto* created = mvdb::VectorIndex::create("new_test", "./new_test", mvdb::VectorIndexType::FLAT, 300);
+    std::cout << "Created: " << std::endl << *created << std::endl;
+    created->save();
     auto* loaded = mvdb::VectorIndex::load("new_test", "./new_test");
-    std::cout << "Loaded:" << std::endl << *loaded << std::endl;
-    delete vi;
+    std::cout << "Loaded: " << std::endl << *loaded << std::endl;
+    delete created;
     delete loaded;
     // clock_t start, end;
     // start = clock();
