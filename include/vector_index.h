@@ -34,6 +34,13 @@ namespace mvdb {
         VectorIndex(const std::string& name, const std::string& dir,
              VectorIndexType type = VectorIndexType::FLAT, uint64_t dims = 300);
 
+        // Create an index from a file. Basically just a wrapper for the constructor
+        static VectorIndex* create(const std::string& name, const std::string& dir,
+             VectorIndexType type = VectorIndexType::FLAT, uint64_t dims = 300);
+
+        // Load an index from a file
+        static VectorIndex* load(const std::string& name, const std::string& dir);
+
         // Destructor
         ~VectorIndex() = default;
 
@@ -50,8 +57,6 @@ namespace mvdb {
         // Save the index to a file
         [[nodiscard]] bool save() const;
 
-        // Load the index from a file
-        static VectorIndex* load(const std::string& name, const std::string& dir);
     };
 
 } // namespace mvdb

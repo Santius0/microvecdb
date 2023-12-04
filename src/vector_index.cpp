@@ -32,6 +32,12 @@ namespace mvdb {
         }
     }
 
+    VectorIndex* VectorIndex::create(const std::string& name, const std::string& dir,
+         VectorIndexType type, uint64_t dims) {
+        return new VectorIndex(name, dir, type, dims);
+    }
+
+
     bool VectorIndex::add(const size_t& n, const float* data) const {
         try {
             faissIndex->add(n, data);
@@ -95,11 +101,6 @@ namespace mvdb {
             const std::string index_meta_path = dir + "/" + name + INDEX_META_EXT;
             auto* vi = new VectorIndex(name, dir, VectorIndexType::FLAT, 0); // Temporary type and dims
             vi->faissIndex.reset(faiss::read_index(index_path.c_str()));
-
-            if (!vi) {
-                std::cerr << "Error allocating memory to load vector_index \"" << index_meta_path << "\"\n";
-                return nullptr;
-            }
 
             std::ifstream file(index_meta_path, std::ios::binary);
             if (!file) {
