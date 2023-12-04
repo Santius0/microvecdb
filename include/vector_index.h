@@ -31,7 +31,7 @@ namespace mvdb {
 
     public:
         // Constructor
-        VectorIndex(const std::string& name, const std::string& dir,
+        VectorIndex(std::string  name, std::string  dir,
              VectorIndexType type = VectorIndexType::FLAT, uint64_t dims = 300);
 
         // Create an index from a file. Basically just a wrapper for the constructor

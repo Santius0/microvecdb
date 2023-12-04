@@ -1,22 +1,19 @@
 #include "vector_index.h"
-
-#include <chrono>
-
 #include "constants.h"
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexIVFFlat.h>
 #include <faiss/index_io.h>
-#include <stdexcept>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <filesystem>
+#include <utility>
 
 namespace mvdb {
 
-    VectorIndex::VectorIndex(const std::string& name, const std::string& dir,
+    VectorIndex::VectorIndex(std::string  name, std::string  dir,
          VectorIndexType type, uint64_t dims)
-        : name(name), dir(dir), dims(dims), type(type) {
+        : name(std::move(name)), dir(std::move(dir)), dims(dims), type(type) {
 
         switch (type) {
             case VectorIndexType::IVF: {
@@ -40,7 +37,7 @@ namespace mvdb {
 
     bool VectorIndex::add(const size_t& n, const float* data) const {
         try {
-            faissIndex->add(n, data);
+            faissIndex->add(static_cast<long>(n), data);
             return true;
         } catch (const std::exception& e) {
             std::cerr << "Error adding data to index: " << e.what() << std::endl;
@@ -77,8 +74,8 @@ namespace mvdb {
             size_t name_len = this->name.size() + 1, dir_len = this->dir.size() + 1;
             file.write(reinterpret_cast<const char*>(&name_len), sizeof(name_len));
             file.write(reinterpret_cast<const char*>(&dir_len), sizeof(dir_len));
-            file.write(this->name.data(), name_len);
-            file.write(this->dir.data(), dir_len);
+            file.write(this->name.data(), static_cast<long>(name_len));
+            file.write(this->dir.data(), static_cast<long>(dir_len));
             file.write(reinterpret_cast<const char*>(&this->dims), sizeof(this->dims));
             file.write(reinterpret_cast<const char*>(&this->type), sizeof(this->type));
 
@@ -114,8 +111,8 @@ namespace mvdb {
             file.read(reinterpret_cast<char*>(&dir_len), sizeof(dir_len));
             vi->name.resize(name_len);
             vi->dir.resize(name_len);
-            file.read(vi->name.data(), name_len);
-            file.read(vi->dir.data(), dir_len);
+            file.read(vi->name.data(), static_cast<long>(name_len));
+            file.read(vi->dir.data(), static_cast<long>(dir_len));
             file.read(reinterpret_cast<char*>(&vi->dims), sizeof(vi->dims));
             file.read(reinterpret_cast<char*>(&vi->type), sizeof(vi->type));
 
