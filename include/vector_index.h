@@ -1,40 +1,59 @@
 #ifndef VECTOR_INDEX_H
 #define VECTOR_INDEX_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <faiss/Index.h>
+#include <string>
+#include <memory>
+#include <ostream>
 
-    #include <faiss/c_api/Index_c.h>
-    #include <stdbool.h>
+namespace mvdb {
 
-    typedef enum mvdb_vector_index_types {
-        FLAT,
-        IVF
-    } vector_index_types;
+    enum class VectorIndexType {
+        FLAT = 0,
+        IVF = 1
+    };
 
-    typedef struct mvdb_vector_index_t {
-        FaissIndex *faiss_index;        // actual faiss index
-        char *name;                     // index's collection name
-        char *dir;                      // index's directory
-        size_t name_len;                // size of name. stored for use during deserialization
-        size_t dir_len;                 // size of name. stored for use during deserialization
-        uint64_t dims;                  // num dimensions of members in this index
-        vector_index_types type;        // type of the vector index
-    } mvdb_vector_index_t;
+    class VectorIndex {
+        friend std::ostream& operator<<(std::ostream& os, const VectorIndex& obj) {
+            return os
+                   << "\tfaissIndex: " << &obj.faissIndex << std::endl
+                   << "\tname: " << obj.name << std::endl
+                   << "\tdir: " << obj.dir << std::endl
+                   << "\tdims: " << obj.dims << std::endl
+                   << "\ttype: " << static_cast<int>(obj.type);
+        }
 
-    // Function declarations
-    mvdb_vector_index_t* mvdb_vector_index_create(const char* name, const char* dir, const vector_index_types type, uint64_t dims);
-    void mvdb_vector_index_free(mvdb_vector_index_t* vi);
-    bool mvdb_vector_index_add(const mvdb_vector_index_t* vi, const size_t n, const float* data);
-    bool mvdb_vector_index_remove(const mvdb_vector_index_t* vi, size_t n, const FaissIDSelector* ids);
-    bool mvdb_vector_index_save(const mvdb_vector_index_t* vi);
-    mvdb_vector_index_t* mvdb_vector_index_load(const char* name, const char* dir) ;
-    bool mvdb_vector_index_deserialize(mvdb_vector_index_t* st, const char* fp);
-    bool mvdb_vector_index_serialize(const mvdb_vector_index_t* st, const char* fp);
+        std::unique_ptr<faiss::Index> faissIndex; // The actual FAISS index
+        std::string name;                         // Index's collection name
+        std::string dir;                          // Index's directory
+        uint64_t dims;                            // Number of dimensions
+        VectorIndexType type;                     // Type of the vector index
 
-#ifdef __cplusplus
-}
-#endif
+    public:
+        // Constructor
+        VectorIndex(const std::string& name, const std::string& dir,
+             VectorIndexType type = VectorIndexType::FLAT, uint64_t dims = 300);
 
-#endif //VECTOR_INDEX_H
+        // Destructor
+        ~VectorIndex() = default;
+
+        // Non-copyable and non-movable
+        VectorIndex(const VectorIndex&) = delete;
+        VectorIndex& operator=(const VectorIndex&) = delete;
+
+        // Add data to the index
+        [[nodiscard]] bool add(const size_t& n, const float* data) const;
+
+        // Remove data from the index
+        [[nodiscard]] bool remove(const size_t& n, const faiss::IDSelector& ids) const;
+
+        // Save the index to a file
+        [[nodiscard]] bool save() const;
+
+        // Load the index from a file
+        static VectorIndex* load(const std::string& name, const std::string& dir);
+    };
+
+} // namespace mvdb
+
+#endif // VECTOR_INDEX_H
