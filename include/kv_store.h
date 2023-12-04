@@ -28,9 +28,13 @@ namespace mvdb {
         // Returns true on success, false on failure
         [[nodiscard]] bool put(const std::string& key, const std::string& value) const;
 
+        [[nodiscard]] bool putAutoKey(const std::string& value) const;
+
         // Function to batch add data with key-value pairs
         // Returns true on success, false on failure
         [[nodiscard]] bool putMany(const std::vector<std::pair<std::string, std::string>>& pairs) const;
+
+        [[nodiscard]] bool putManyAutoKey(const std::vector<std::string>& values) const;
 
         // Function to retrieve data by key
         // Returns the value or empty string if the key does not exist

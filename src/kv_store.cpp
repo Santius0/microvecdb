@@ -1,5 +1,6 @@
 #include "kv_store.h"
 #include <stdexcept>
+#include <string>
 
 namespace mvdb {
 
@@ -26,6 +27,10 @@ namespace mvdb {
         return status.ok();
     }
 
+    bool KvStore::putAutoKey(const std::string& value) const {
+        return KvStore::put(std::to_string(db->GetLatestSequenceNumber()), value);
+    }
+
     bool KvStore::putMany(const std::vector<std::pair<std::string, std::string>>& pairs) const {
         rocksdb::WriteBatch batch;
         for (const auto& pair : pairs) {
@@ -33,6 +38,15 @@ namespace mvdb {
         }
         const rocksdb::Status status = db->Write(rocksdb::WriteOptions(), &batch);
         return status.ok();
+    }
+
+    bool KvStore::putManyAutoKey(const std::vector<std::string>&values) const {
+        std::vector<std::pair<std::string, std::string>> pairs;
+        for(int i = 0; i < values.size(); i++) {
+            std::string key_str = std::to_string(this->db->GetLatestSequenceNumber() + i);
+            pairs.emplace_back(key_str, values[i]);
+        }
+        return KvStore::putMany(pairs);
     }
 
     std::string KvStore::get(const std::string& key) const {
