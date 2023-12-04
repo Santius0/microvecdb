@@ -6,7 +6,6 @@
 #include <memory>
 #include <rocksdb/db.h>
 #include <rocksdb/options.h>
-#include <rocksdb/write_batch.h>
 
 namespace mvdb {
 
