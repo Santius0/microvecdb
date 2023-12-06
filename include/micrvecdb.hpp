@@ -11,10 +11,10 @@
 namespace mvdb {
 
     class MicroVecDB {
+        std::string path; // location of database
+        std::unique_ptr<MetadataManager> metadata_manager_;
         std::vector<std::unique_ptr<VectorCollection>> collections_;
         std::vector<std::filesystem::path> collection_paths_;
-        std::string path; // location of database
-        MetadataManager metadata_manager_;
     public:
         MicroVecDB(const std::string& path);
         ~MicroVecDB() = default;

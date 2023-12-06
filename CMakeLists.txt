@@ -30,7 +30,7 @@ add_executable(microvecdb main.cpp
         ${FASTTEXT_SOURCES}
         include/vectorizer.hpp
         src/vectorizer.cpp
-        include/micrvecdb.h
+        include/micrvecdb.hpp
         src/microvecdb.cpp
         include/metadata.hpp
         src/metadata.cpp
