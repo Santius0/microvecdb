@@ -20,8 +20,8 @@ namespace mvdb {
         serializeString(out, indexFilePath);
         serializeString(out, dataDirectoryPath);
         serializeString(out, model);
-        serializeSizeT(out, recordCount);
-        serializeSizeT(out, indexDimensions);
+        serializeNumeric(out, recordCount);
+        serializeNumeric(out, indexDimensions);
         serializeString(out, createdTimestamp);
         serializeString(out, modifiedTimestamp);
     }
@@ -32,8 +32,8 @@ namespace mvdb {
         indexFilePath = deserializeString(in);
         dataDirectoryPath = deserializeString(in);
         model = deserializeString(in);
-        recordCount = deserializeSizeT(in);
-        indexDimensions = deserializeSizeT(in);
+        recordCount = deserializeNumeric(in);
+        indexDimensions = deserializeNumeric(in);
         createdTimestamp = deserializeString(in);
         modifiedTimestamp = deserializeString(in);
     }
