@@ -21,11 +21,6 @@ namespace mvdb {
         out.write(str.data(), static_cast<long>(len));
     }
 
-    // Helper function to write a size_t to the stream
-    void serializeSizeT(std::ostream& out, const size_t value) {
-        out.write(reinterpret_cast<const char*>(&value), sizeof(value));
-    }
-
     std::string deserializeString(std::istream& in) {
         size_t len;
         in.read(reinterpret_cast<char*>(&len), sizeof(len));
@@ -34,12 +29,18 @@ namespace mvdb {
         return str;
     }
 
+    // Helper function to write a size_t to the stream
+    void serializeNumeric(std::ostream& out, const int64_t value) {
+        out.write(reinterpret_cast<const char*>(&value), sizeof(value));
+    }
+
     // Helper function to read a size_t from the stream
-    size_t deserializeSizeT(std::istream& in) {
-        size_t value;
+    int64_t deserializeNumeric(std::istream& in) {
+        int64_t value;
         in.read(reinterpret_cast<char*>(&value), sizeof(value));
         return value;
     }
+
 
     std::string getCurrentTimeStamp() {
         std::ostringstream timestampStream;

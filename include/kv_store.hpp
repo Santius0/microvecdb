@@ -19,7 +19,7 @@ namespace mvdb {
         void deserialize(std::istream& in) override;
     public:
         KvStoreMetadata() = default;
-        explicit KvStoreMetadata(rocksdb::Options options);
+        explicit KvStoreMetadata(const rocksdb::Options& options);
         ~KvStoreMetadata() override = default;
     };
 

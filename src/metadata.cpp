@@ -22,18 +22,18 @@ namespace mvdb {
     void MetadataManager::serialize(std::ostream& out) const {
         serializeString(out, createdTimestamp);
         serializeString(out, modifiedTimestamp);
-        serializeSizeT(out, collections.size());
-        for (const auto& collection : collections) collection.serialize(out);
+        serializeNumeric(out, collections_.size());
+        for (const auto& collection : collections_) collection.serialize(out);
     }
 
     void MetadataManager::deserialize(std::istream& in) {
         createdTimestamp = deserializeString(in);
         modifiedTimestamp = deserializeString(in);
-        const size_t num_collections = deserializeSizeT(in);
+        const size_t num_collections = deserializeNumeric(in);
         for (int i = 0; i < num_collections; i++) {
             CollectionMetadata collection_metadata;
             collection_metadata.deserialize(in);
-            collections.emplace_back(std::move(collection_metadata));
+            collections_.emplace_back(std::move(collection_metadata));
         }
     }
 
@@ -54,15 +54,15 @@ namespace mvdb {
     }
 
     void MetadataManager::addCollection(const CollectionMetadata& metadata) {
-        collections.push_back(metadata);
+        collections_.push_back(metadata);
     }
 
     void MetadataManager::deleteCollection(const std::string& collectionName) {
         // Additional logic to delete actual collection resources...
-        collections.erase(
-        std::remove_if(collections.begin(), collections.end(),
+        collections_.erase(
+        std::remove_if(collections_.begin(), collections_.end(),
         [&collectionName](const CollectionMetadata& m) { return m.name == collectionName; }),
-        collections.end());
+        collections_.end());
     }
 
     void MetadataManager::updateCreatedTimestamp() {

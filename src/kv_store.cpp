@@ -1,9 +1,22 @@
 #include "kv_store.hpp"
+#include "utils.hpp"
 #include <stdexcept>
 #include <string>
-// #include <rocksdb/>
 
 namespace mvdb {
+
+    KvStoreMetadata::KvStoreMetadata(const rocksdb::Options& options) {
+        create_if_missing = options.create_if_missing;
+    }
+
+    void KvStoreMetadata::serialize(std::ostream& out) const {
+        serializeNumeric(out, create_if_missing);
+    }
+
+    void KvStoreMetadata::deserialize(std::istream& in) {
+        create_if_missing = deserializeNumeric(in);
+    }
+
 
     KvStore::KvStore(const std::string& path, const bool createNew) {
         options.create_if_missing = createNew;
