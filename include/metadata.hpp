@@ -10,15 +10,17 @@ namespace mvdb {
         std::string name;
         std::string indexFilePath;
         std::string dataDirectoryPath;
-        // std::map<std::string, std::string> schema; // Key: field name, Value: field type
-        size_t recordCount;
-        size_t indexSize;
+        size_t recordCount{};
+        size_t indexSize{};
         std::string createdTimestamp;
         std::string modifiedTimestamp;
+        void serialize(std::ostream& out) const;
+        void deserialize(std::istream& in);
         friend class MetadataManager;
     public:
+        CollectionMetadata() = default;
         CollectionMetadata(std::string name, std::string indexFilePath, std::string dataDirectoryPath,
-            std::string recordCount, size_t indexSize, std::string createdTimestamp, std::string modifiedTimestamp);
+            const size_t& recordCount, const size_t& indexSize);
         ~CollectionMetadata() = default;
     };
 
@@ -27,7 +29,11 @@ namespace mvdb {
         std::string createdTimestamp;
         std::string modifiedTimestamp;
         std::vector<CollectionMetadata> collections;
+
+        void updateCreatedTimestamp();
+        void updateModifiedTimestamp();
     public:
+        MetadataManager() = default;
         explicit MetadataManager(const std::string& metadataFilePath);
         ~MetadataManager();
         void createCollection(const CollectionMetadata& metadata);

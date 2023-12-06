@@ -3,7 +3,7 @@
 
 namespace mvdb {
     // MicroVecDB
-    #define META_FILE_NAME "meta.json"
+    #define META_FILE_NAME "metadata"
     #define META_FILE_NAME_LEN strlen(META_FILE_NAME)
 
     // Vector collection
