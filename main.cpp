@@ -143,7 +143,7 @@ int main() {
 
     // mvdb::Vectorizer("./models/cc.en.300.bin", 300);
     auto* micro_vec_db = new mvdb::MicroVecDB("./test_mvdb", "test_mvdb");
-    micro_vec_db->create_collection("new collection 2", 300, "./models/cc.en.300.bin");
+    micro_vec_db->create_collection("new collection 3", 300, "./models/cc.en.300.bin");
     delete micro_vec_db;
     // auto* created = mvdb::VectorIndex::create("new_test", "./new_test", mvdb::VectorIndexType::FLAT, 300);
     // std::cout << "Created: " << std::endl << *created << std::endl;

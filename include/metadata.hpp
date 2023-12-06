@@ -13,7 +13,7 @@ namespace mvdb {
         std::string metadataFilePath;
         std::string createdTimestamp;
         std::string modifiedTimestamp;
-        std::vector<CollectionMetadata> collections;
+        std::vector<CollectionMetadata> collections_;
         void updateCreatedTimestamp();
         void updateModifiedTimestamp();
     protected:
