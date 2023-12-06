@@ -40,8 +40,8 @@ namespace mvdb {
 
     VectorCollection::VectorCollection(const CollectionMetadata& metadata) {
         if(!std::filesystem::exists(metadata.collectionFilePath)) std::filesystem::create_directory(metadata.collectionFilePath);
-        vectorizer_ = std::make_unique<Vectorizer>(metadata.model, metadata.indexDimensions);
-        kv_store_ = std::make_unique<KvStore>(metadata.dataDirectoryPath, true, false);
+        // vectorizer_ = std::make_unique<Vectorizer>(metadata.model, metadata.indexDimensions);
+        // kv_store_ = std::make_unique<KvStore>(metadata.dataDirectoryPath, true, false);
         // vector_index_ = std::make_unique<VectorIndex>(metadata.indexFilePath, metadata.indexFilePath, VectorIndexType::FLAT, dimensions);
     }
 

@@ -2,23 +2,27 @@
 #define METADATA_H
 
 #include "vector_collection.hpp"
+#include "serializable.h"
 #include <ostream>
 #include <string>
 #include <vector>
 
 namespace mvdb {
 
-    class MetadataManager {
+    class MetadataManager final: public Serializable {
         std::string metadataFilePath;
         std::string createdTimestamp;
         std::string modifiedTimestamp;
         std::vector<CollectionMetadata> collections;
         void updateCreatedTimestamp();
         void updateModifiedTimestamp();
+    protected:
+        void serialize(std::ostream& out) const override;
+        void deserialize(std::istream& in) override;
     public:
         MetadataManager() = default;
         explicit MetadataManager(const std::string& metadataFilePath);
-        ~MetadataManager();
+        ~MetadataManager() override;
         void addCollection(const CollectionMetadata& metadata);
         void deleteCollection(const std::string& collectionName);
         void load();
