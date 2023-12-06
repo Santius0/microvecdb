@@ -1,19 +1,18 @@
-#include <filesystem>
 #include "micrvecdb.hpp"
 #include "utils.hpp"
 #include "constants.hpp"
-
-#include <iostream>
+#include <filesystem>
 
 namespace mvdb {
 
-    MicroVecDB::MicroVecDB(const std::string& path): path(trim(path)) {
+    MicroVecDB::MicroVecDB(const std::string& path, const std::string& dbname): path(trim(path)), dbname(dbname) {
         if(!std::filesystem::exists(path))  // if directory doesn't exist create it
             std::filesystem::create_directory(path);
         else if(!std::filesystem::is_directory(path)) // else if file exists but is not a directory throw error
             throw::std::runtime_error("invalid database path \"" + path + "\"");
 
-        metadata_manager_ = std::make_unique<MetadataManager>(this->path + std::filesystem::path::preferred_separator + META_FILE_NAME);
+        metadata_manager_ = std::make_unique<MetadataManager>(this->path
+            + std::filesystem::path::preferred_separator + dbname + META_FILE_EXTENSION);
 
         //don't need this anymore. makes more sense to just load the metadata file and only load from the collections
         //when neccessary
@@ -24,4 +23,19 @@ namespace mvdb {
             // }
         // }
     }
+
+    void MicroVecDB::create_collection(const std::string& name, const uint64_t& dimensions, const std::string& model) {
+        const std::string collectionFilePath = path + std::filesystem::path::preferred_separator + name;
+        const std::string indexFilePath = collectionFilePath + std::filesystem::path::preferred_separator + name + INDEX_EXT;
+        const std::string dataDirectoryPath = collectionFilePath + std::filesystem::path::preferred_separator + name + KV_STORE_EXT;
+
+        const auto collection_metadata = CollectionMetadata(name, indexFilePath, dataDirectoryPath, 0, dimensions);
+        metadata_manager_->addCollection(collection_metadata);
+
+        auto* vc = new VectorCollection(model, dimensions, collectionFilePath);
+        collections_.emplace_back(vc);
+
+        metadata_manager_->save();
+    }
+
 }
