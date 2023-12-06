@@ -5,7 +5,8 @@
 
 namespace mvdb {
 
-    MicroVecDB::MicroVecDB(const std::string& path): path(trim(path)), metadata_manager_(this->path + "\\" + META_FILE_NAME) {
+    MicroVecDB::MicroVecDB(const std::string& path): path(trim(path)),
+    metadata_manager_(this->path + std::filesystem::path::preferred_separator + META_FILE_NAME) {
         if(!std::filesystem::exists(path))  // if directory doesn't exist create it
             std::filesystem::create_directory(path);
         else if(!std::filesystem::is_directory(path)) // else if file exists but is not a directory throw error
