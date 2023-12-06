@@ -18,6 +18,7 @@ list(REMOVE_ITEM FASTTEXT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/fasttext/src/main
 
 #add_executable(microvecdb main.cpp ${SOURCES} ${HEADER_SOURCES} ${FASTTEXT_SOURCES})
 
+#add_library(microvecdb ${SOURCES} ${FASTTEXT_SOURCES})
 add_executable(microvecdb main.cpp
         include/kv_store.hpp
         src/kv_store.cpp
@@ -34,7 +35,6 @@ add_executable(microvecdb main.cpp
         src/microvecdb.cpp
         include/metadata.hpp
         src/metadata.cpp
-        include/json.hpp
         include/utils.hpp
         src/utils.cpp
 )
