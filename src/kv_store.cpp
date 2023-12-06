@@ -1,24 +1,15 @@
 #include "kv_store.hpp"
 #include <stdexcept>
 #include <string>
+// #include <rocksdb/>
 
 namespace mvdb {
 
-    KvStore::KvStore(const std::string& path, const bool createNew, const bool overwrite) {
+    KvStore::KvStore(const std::string& path, const bool createNew) {
         options.create_if_missing = createNew;
-
-        if (overwrite) {
-            // Delete the existing database if it exists and overwrite is true;
-            if (const rocksdb::Status status = rocksdb::DestroyDB(path, options); !status.ok() && !status.IsNotFound()) {
-                throw std::runtime_error("Failed to destroy existing database: " + status.ToString());
-            }
-        }
-
-        // Open the database
         rocksdb::DB* raw_db_pointer = nullptr;
-        if (const rocksdb::Status status = rocksdb::DB::Open(options, path, &raw_db_pointer); !status.ok()) {
+        if (const rocksdb::Status status = rocksdb::DB::Open(options, path, &raw_db_pointer); !status.ok())
             throw std::runtime_error("Failed to open/create database: " + status.ToString());
-        }
         db.reset(raw_db_pointer);
     }
 

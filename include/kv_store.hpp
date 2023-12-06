@@ -1,6 +1,7 @@
 #ifndef KV_STORE_H
 #define KV_STORE_H
 
+#include "serializable.h"
 #include <string>
 #include <vector>
 #include <memory>
@@ -9,12 +10,25 @@
 
 namespace mvdb {
 
+    class KvStoreMetadata final: public Serializable {
+        bool create_if_missing = true;
+        friend class MetadataManager;
+        friend class KvStore;
+    protected:
+        void serialize(std::ostream& out) const override;
+        void deserialize(std::istream& in) override;
+    public:
+        KvStoreMetadata() = default;
+        explicit KvStoreMetadata(rocksdb::Options options);
+        ~KvStoreMetadata() override = default;
+    };
+
     class KvStore {
         std::unique_ptr<rocksdb::DB> db;
         rocksdb::Options options;
     public:
         // Constructor
-        KvStore(const std::string& path, bool createNew, bool overwrite);
+        KvStore(const std::string& path, bool createNew);
 
         // Destructor
         ~KvStore() = default;
