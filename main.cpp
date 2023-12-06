@@ -131,27 +131,26 @@ void generate_random_data(float* data, const size_t size) {
 
 #include "utils.h"
 
-#include <log4c.h>
-
 // #include "fasttext_wrapper.h"
-#include "fastttext_c.h"
 #include <time.h>
 
 #include <iostream>
 
+#include "micrvecdb.h"
 #include "vectorizer.h"
 int main() {
 
 
     // mvdb::Vectorizer("./models/cc.en.300.bin", 300);
-
-    auto* created = mvdb::VectorIndex::create("new_test", "./new_test", mvdb::VectorIndexType::FLAT, 300);
-    std::cout << "Created: " << std::endl << *created << std::endl;
-    created->save();
-    auto* loaded = mvdb::VectorIndex::load("new_test", "./new_test");
-    std::cout << "Loaded: " << std::endl << *loaded << std::endl;
-    delete created;
-    delete loaded;
+    const auto* micro_vec_db = new mvdb::MicroVecDB("./test_mvdb");
+    delete micro_vec_db;
+    // auto* created = mvdb::VectorIndex::create("new_test", "./new_test", mvdb::VectorIndexType::FLAT, 300);
+    // std::cout << "Created: " << std::endl << *created << std::endl;
+    // created->save();
+    // auto* loaded = mvdb::VectorIndex::load("new_test", "./new_test");
+    // std::cout << "Loaded: " << std::endl << *loaded << std::endl;
+    // delete created;
+    // delete loaded;
     // clock_t start, end;
     // start = clock();
     // auto* model = fasttext_model_load("./models/cc.en.300.bin");

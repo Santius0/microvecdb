@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="Black">
+    <option name="sdkName" value="Python 3.10.13 WSL (Ubuntu-22.04): (/home/santius/microvecdb/microvecdb/venv/bin/python)" />
+  </component>
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10.13 WSL (Ubuntu-22.04): (/home/santius/microvecdb/microvecdb/venv/bin/python)" project-jdk-type="Python SDK" />
 </project>
