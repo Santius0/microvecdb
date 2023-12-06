@@ -34,12 +34,8 @@ add_executable(microvecdb main.cpp
         src/microvecdb.cpp
         include/metadata.hpp
         src/metadata.cpp
-        src/metadata.cpp
-        include/json.hpp
         include/json.hpp
         include/utils.hpp
-        include/utils.hpp
-        src/utils.cpp
         src/utils.cpp
 )
 
