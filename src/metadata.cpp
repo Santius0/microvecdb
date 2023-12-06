@@ -1,6 +1,5 @@
 #include "metadata.hpp"
 #include "utils.hpp"
-#include "json.hpp"
 #include <algorithm>
 #include <fstream>
 #include <filesystem>
