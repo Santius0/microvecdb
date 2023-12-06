@@ -136,7 +136,7 @@ void generate_random_data(float* data, const size_t size) {
 
 #include <iostream>
 
-#include "micrvecdb.h"
+#include "micrvecdb.hpp"
 #include "vectorizer.hpp"
 int main() {
 
