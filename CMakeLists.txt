@@ -30,10 +30,21 @@ add_executable(microvecdb main.cpp
         ${FASTTEXT_SOURCES}
         include/vectorizer.h
         src/vectorizer.cpp
+        include/micrvecdb.h
+        src/microvecdb.cpp
+        include/metadata.h
+        src/metadata.cpp
+        src/metadata.cpp
+        include/json.hpp
+        include/json.hpp
+        include/utils.h
+        include/utils.h
+        src/utils.cpp
+        src/utils.cpp
 )
 
 if(OpenMP_CXX_FOUND OR OpenMP_C_FOUND)
-    target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C rocksdb faiss faiss_c log4c)
+    target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C rocksdb faiss faiss_c)
 else ()
-    target_link_libraries(microvecdb rocksdb faiss faiss_c log4c)
+    target_link_libraries(microvecdb rocksdb faiss faiss_c)
 endif()
