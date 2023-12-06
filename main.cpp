@@ -4,11 +4,11 @@
 // #include <omp.h>
 // #include <time.h>
 
-#include "kv_store.h"
-#include "vector_index.h"
+#include "kv_store.hpp"
+#include "vector_index.hpp"
 
 // #include "tests.h"
-#include "utils.h"
+#include "utils.hpp"
 
 // void fetch_and_print(const kv_store_t* kv_store, const char* key) {
 //     if(strlen(key) > 0) {
@@ -129,7 +129,7 @@ void generate_random_data(float* data, const size_t size) {
 //     char* name;
 // } test_struct;
 
-#include "utils.h"
+#include "utils.hpp"
 
 // #include "fasttext_wrapper.h"
 #include <time.h>
@@ -137,7 +137,7 @@ void generate_random_data(float* data, const size_t size) {
 #include <iostream>
 
 #include "micrvecdb.h"
-#include "vectorizer.h"
+#include "vectorizer.hpp"
 int main() {
 
 

@@ -5,8 +5,8 @@
 #include <memory>
 #include <filesystem>
 
-#include "metadata.h"
-#include "vector_collection.h"
+#include "metadata.hpp"
+#include "vector_collection.hpp"
 
 namespace mvdb {
 
@@ -16,7 +16,7 @@ namespace mvdb {
         std::vector<std::filesystem::path> collection_paths_;
         MetadataManager metadata_manager_;
     public:
-        explicit MicroVecDB(const std::string& path);
+        MicroVecDB(const std::string& path);
         ~MicroVecDB() = default;
         void create_collection(const std::string& name, const uint64_t& dimensions);
         // std::vector<VectorCollection*> collections();

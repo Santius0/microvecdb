@@ -1,4 +1,4 @@
-#include "vectorizer.h"
+#include "vectorizer.hpp"
 
 
 namespace mvdb {

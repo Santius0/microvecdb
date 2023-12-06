@@ -1,9 +1,9 @@
 #ifndef VECTOR_collection_H
 #define VECTOR_collection_H
 
-#include "kv_store.h"
-#include "vector_index.h"
-#include "vectorizer.h"
+#include "kv_store.hpp"
+#include "vector_index.hpp"
+#include "vectorizer.hpp"
 
 #include <memory>
 

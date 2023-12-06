@@ -1,6 +1,6 @@
-#include "vector_collection.h"
-#include "constants.h"
-#include "utils.h"
+#include "vector_collection.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
 
 namespace mvdb {
     VectorCollection::VectorCollection(const std::string& name, const std::string& path, const uint64_t& dimensions,
