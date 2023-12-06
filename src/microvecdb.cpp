@@ -29,10 +29,11 @@ namespace mvdb {
         const std::string indexFilePath = collectionFilePath + std::filesystem::path::preferred_separator + name + INDEX_EXT;
         const std::string dataDirectoryPath = collectionFilePath + std::filesystem::path::preferred_separator + name + KV_STORE_EXT;
 
-        const auto collection_metadata = CollectionMetadata(name, indexFilePath, dataDirectoryPath, 0, dimensions);
+        const auto collection_metadata = CollectionMetadata(name, collectionFilePath, indexFilePath,
+            dataDirectoryPath, model, 0, dimensions);
         metadata_manager_->addCollection(collection_metadata);
 
-        auto* vc = new VectorCollection(model, dimensions, collectionFilePath);
+        auto* vc = new VectorCollection(collection_metadata);
         collections_.emplace_back(vc);
 
         metadata_manager_->save();

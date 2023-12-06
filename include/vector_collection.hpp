@@ -11,8 +11,10 @@ namespace mvdb {
 
     class CollectionMetadata {
         std::string name;
+        std::string collectionFilePath;
         std::string indexFilePath;
         std::string dataDirectoryPath;
+        std::string model;
         size_t recordCount{};
         size_t indexDimensions{};
         std::string createdTimestamp;
@@ -20,10 +22,11 @@ namespace mvdb {
         void serialize(std::ostream& out) const;
         void deserialize(std::istream& in);
         friend class MetadataManager;
+        friend class VectorCollection;
     public:
         CollectionMetadata() = default;
-        CollectionMetadata(std::string name, std::string indexFilePath, std::string dataDirectoryPath,
-            const size_t& recordCount, const size_t& indexDimensions);
+        CollectionMetadata(std::string name, std::string collectionFilePath, std::string indexFilePath,
+            std::string dataDirectoryPath, std::string model, const size_t& recordCount, const size_t& indexDimensions);
         ~CollectionMetadata() = default;
         friend std::ostream& operator<<(std::ostream& os, const CollectionMetadata& obj) {
             return os
@@ -43,10 +46,8 @@ namespace mvdb {
         std::unique_ptr<Vectorizer> vectorizer_;
     public:
         VectorCollection() = default;
-        VectorCollection(const std::string& model, const uint64_t& dimensions, const std::string& path);
+        VectorCollection(const CollectionMetadata& metadata);
         ~VectorCollection() = default;
-        static VectorCollection* load(const std::string& path);
-
         // bool add(char* data, float* vector = nullptr);
         // bool remove(uint64_t key);
         // uint64_t* search(float* vectors, size_t num_vectors);
