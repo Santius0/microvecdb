@@ -1,4 +1,8 @@
 #include "utils.hpp"
+#include <string>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 
 namespace mvdb {
 
@@ -8,6 +12,41 @@ namespace mvdb {
         if (start == std::string::npos) return ""; // String contains only whitespace or specified characters
         const size_t end = str.find_last_not_of(chars);
         return str.substr(start, end - start + 1);
+    }
+
+    // Helper function to write a std::string to the stream
+    void serializeString(std::ostream& out, const std::string& str) {
+        const size_t len = str.size();
+        out.write(reinterpret_cast<const char*>(&len), sizeof(len));
+        out.write(str.data(), static_cast<long>(len));
+    }
+
+    // Helper function to write a size_t to the stream
+    void serializeSizeT(std::ostream& out, const size_t value) {
+        out.write(reinterpret_cast<const char*>(&value), sizeof(value));
+    }
+
+    std::string deserializeString(std::istream& in) {
+        size_t len;
+        in.read(reinterpret_cast<char*>(&len), sizeof(len));
+        std::string str(len, '\0');
+        in.read(&str[0], static_cast<long>(len));
+        return str;
+    }
+
+    // Helper function to read a size_t from the stream
+    size_t deserializeSizeT(std::istream& in) {
+        size_t value;
+        in.read(reinterpret_cast<char*>(&value), sizeof(value));
+        return value;
+    }
+
+    std::string getCurrentTimeStamp() {
+        std::ostringstream timestampStream;
+        const auto now = std::chrono::system_clock::now();
+        const auto timeT = std::chrono::system_clock::to_time_t(now);
+        timestampStream << std::put_time(std::localtime(&timeT), "%Y-%m-%dT%H:%M:%S");
+        return timestampStream.str();
     }
 
 }
