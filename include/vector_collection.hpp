@@ -19,7 +19,7 @@ namespace mvdb {
         KvStoreMetadata kv_store_metadata_;
         VectorIndexMetadata vector_index_metadata_;
         VectorizerMetadata vectorizer_metadata_;
-        friend class MetadataManager;
+        friend class Metadata;
         friend class VectorCollection;
     protected:
         void serialize(std::ostream& out) const override;

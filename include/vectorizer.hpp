@@ -16,7 +16,7 @@ namespace mvdb {
         void deserialize(std::istream& in) override;
         friend class Vectorizer;
         friend class CollectionMetadata;
-        friend class MetadataManager;
+        friend class Metadata;
     public:
         VectorizerMetadata() = default;
         explicit VectorizerMetadata(std::string  model, const uint64_t& dimensions);

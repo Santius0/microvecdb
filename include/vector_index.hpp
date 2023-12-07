@@ -20,7 +20,7 @@ namespace mvdb {
         VectorIndexType indexType;
         friend class VectorIndex;
         friend class CollectionMetadata;
-        friend class MetadataManager;
+        friend class Metadata;
     protected:
         void serialize(std::ostream& out) const override;
         void deserialize(std::istream& in) override;

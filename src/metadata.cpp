@@ -7,7 +7,7 @@
 
 namespace mvdb {
 
-    MetadataManager::MetadataManager(const std::string&  metadataFilePath) : metadataFilePath(metadataFilePath) {
+    Metadata::Metadata(const std::string&  metadataFilePath) : metadataFilePath(metadataFilePath) {
         if(std::filesystem::exists(metadataFilePath)) load();
         else {
             createdTimestamp = getCurrentTimeStamp();
@@ -15,18 +15,18 @@ namespace mvdb {
         }
     }
 
-    MetadataManager::~MetadataManager() {
+    Metadata::~Metadata() {
         save();
     }
 
-    void MetadataManager::serialize(std::ostream& out) const {
+    void Metadata::serialize(std::ostream& out) const {
         serializeString(out, createdTimestamp);
         serializeString(out, modifiedTimestamp);
         serializeUInt64T(out, collections_.size());
         for (const auto& collection : collections_) collection.serialize(out);
     }
 
-    void MetadataManager::deserialize(std::istream& in) {
+    void Metadata::deserialize(std::istream& in) {
         createdTimestamp = deserializeString(in);
         modifiedTimestamp = deserializeString(in);
         const size_t num_collections = deserializeUInt64T(in);
@@ -37,7 +37,7 @@ namespace mvdb {
         }
     }
 
-    void MetadataManager::load() {
+    void Metadata::load() {
         std::ifstream file(metadataFilePath, std::ios::binary);
         if (!file) throw std::runtime_error("Error opening file for reading: \"" + metadataFilePath + "\"\n");
         deserialize(file);
@@ -45,7 +45,7 @@ namespace mvdb {
         file.close();
     }
 
-    void MetadataManager::save() {
+    void Metadata::save() {
         updateModifiedTimestamp();
         std::ofstream file(metadataFilePath);
         if (!file) throw std::runtime_error("Error opening file for writing: \"" + metadataFilePath + "\"\n");
@@ -53,11 +53,11 @@ namespace mvdb {
         file.close();
     }
 
-    void MetadataManager::addCollection(const CollectionMetadata& metadata) {
+    void Metadata::addCollection(const CollectionMetadata& metadata) {
         collections_.push_back(metadata);
     }
 
-    void MetadataManager::deleteCollection(const std::string& collectionName) {
+    void Metadata::deleteCollection(const std::string& collectionName) {
         // Additional logic to delete actual collection resources...
         collections_.erase(
         std::remove_if(collections_.begin(), collections_.end(),
@@ -65,11 +65,11 @@ namespace mvdb {
         collections_.end());
     }
 
-    void MetadataManager::updateCreatedTimestamp() {
+    void Metadata::updateCreatedTimestamp() {
         createdTimestamp = getCurrentTimeStamp();
     }
 
-    void MetadataManager::updateModifiedTimestamp() {
+    void Metadata::updateModifiedTimestamp() {
         modifiedTimestamp = getCurrentTimeStamp();
     }
 

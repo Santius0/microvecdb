@@ -13,7 +13,7 @@ namespace mvdb {
     class KvStoreMetadata final: public Serializable {
         rocksdb::Options options_;
         std::string dataDirectoryPath;
-        friend class MetadataManager;
+        friend class Metadata;
         friend class CollectionMetadata;
         friend class VectorCollection;
         friend class KvStore;

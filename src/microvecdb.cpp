@@ -11,7 +11,7 @@ namespace mvdb {
         else if(!std::filesystem::is_directory(path)) // else if file exists but is not a directory throw error
             throw::std::runtime_error("invalid database path \"" + path + "\"");
 
-        metadata_ = std::make_unique<MetadataManager>(this->path
+        metadata_ = std::make_unique<Metadata>(this->path
             + std::filesystem::path::preferred_separator + dbname + META_FILE_EXTENSION);
 
         //don't need this anymore. makes more sense to just load the metadata file and only load from the collections
@@ -48,6 +48,10 @@ namespace mvdb {
         metadata_->addCollection(collection_metadata);
 
         metadata_->save();
+    }
+
+    std::unique_ptr<VectorCollection> MicroVecDB::collection(const std::string& name) {
+        for(int i = 0; i < collec)
     }
 
 }

@@ -9,7 +9,7 @@
 
 namespace mvdb {
 
-    class MetadataManager final: public Serializable {
+    class Metadata final: public Serializable {
         std::string metadataFilePath;
         std::string createdTimestamp;
         std::string modifiedTimestamp;
@@ -20,14 +20,14 @@ namespace mvdb {
         void serialize(std::ostream& out) const override;
         void deserialize(std::istream& in) override;
     public:
-        MetadataManager() = default;
-        explicit MetadataManager(const std::string& metadataFilePath);
-        ~MetadataManager() override;
+        Metadata() = default;
+        explicit Metadata(const std::string& metadataFilePath);
+        ~Metadata() override;
         void addCollection(const CollectionMetadata& metadata);
         void deleteCollection(const std::string& collectionName);
         void load();
         void save();
-        friend std::ostream& operator<<(std::ostream& os, const MetadataManager& obj) {
+        friend std::ostream& operator<<(std::ostream& os, const Metadata& obj) {
             return os
                    << "metadataFilePath: " << obj.metadataFilePath << std::endl
                    << " createdTimestamp: " << obj.createdTimestamp << std::endl
@@ -35,7 +35,7 @@ namespace mvdb {
             // << " collections: " << obj.collections;
         }
 
-        friend std::ostream& operator<<(std::ostream& os, const MetadataManager* obj) {
+        friend std::ostream& operator<<(std::ostream& os, const Metadata* obj) {
             return os << "*(" << *obj << ")";
         }
     };
