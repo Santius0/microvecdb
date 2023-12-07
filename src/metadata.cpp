@@ -41,7 +41,7 @@ namespace mvdb {
         std::ifstream file(metadataFilePath, std::ios::binary);
         if (!file) throw std::runtime_error("Error opening file for reading: \"" + metadataFilePath + "\"\n");
         deserialize(file);
-        std::cout << "LOADED:\n" << *this << std::endl;
+        // std::cout << "LOADED:\n" << *this << std::endl;
         file.close();
     }
 
