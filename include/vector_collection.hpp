@@ -13,13 +13,14 @@ namespace mvdb {
     class CollectionMetadata final: public Serializable {
         std::string name;
         std::string collectionFilePath;
-        std::string indexFilePath;
-        std::string dataDirectoryPath;
+
         std::string model;
         size_t recordCount{};
-        size_t indexDimensions{};
         std::string createdTimestamp;
         std::string modifiedTimestamp;
+        KvStoreMetadata kv_store_metadata_;
+        VectorIndexMetadata vector_index_metadata_;
+        VectorizerMetadata vectorizer_metadata_;
         friend class MetadataManager;
         friend class VectorCollection;
     protected:
@@ -27,16 +28,14 @@ namespace mvdb {
         void deserialize(std::istream& in) override;
     public:
         CollectionMetadata() = default;
-        CollectionMetadata(std::string name, std::string collectionFilePath, std::string indexFilePath,
-            std::string dataDirectoryPath, std::string model, const size_t& recordCount, const size_t& indexDimensions);
+        CollectionMetadata(std::string name, std::string collectionFilePath, const size_t& recordCount,
+        const KvStoreMetadata& kv_store_metadata, const VectorIndexMetadata& vector_index_metadata,
+        const VectorizerMetadata& vectorizer_metadata);
         ~CollectionMetadata() override = default;
         friend std::ostream& operator<<(std::ostream& os, const CollectionMetadata& obj) {
             return os
                    << "name: " << obj.name
-                   << " indexFilePath: " << obj.indexFilePath
-                   << " dataDirectoryPath: " << obj.dataDirectoryPath
                    << " recordCount: " << obj.recordCount
-                   << " indexDimensions: " << obj.indexDimensions
                    << " createdTimestamp: " << obj.createdTimestamp
                    << " modifiedTimestamp: " << obj.modifiedTimestamp;
         }

@@ -22,14 +22,14 @@ namespace mvdb {
     void MetadataManager::serialize(std::ostream& out) const {
         serializeString(out, createdTimestamp);
         serializeString(out, modifiedTimestamp);
-        serializeNumeric(out, collections_.size());
+        serializeUInt64T(out, collections_.size());
         for (const auto& collection : collections_) collection.serialize(out);
     }
 
     void MetadataManager::deserialize(std::istream& in) {
         createdTimestamp = deserializeString(in);
         modifiedTimestamp = deserializeString(in);
-        const size_t num_collections = deserializeNumeric(in);
+        const size_t num_collections = deserializeUInt64T(in);
         for (int i = 0; i < num_collections; i++) {
             CollectionMetadata collection_metadata;
             collection_metadata.deserialize(in);

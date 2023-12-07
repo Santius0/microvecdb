@@ -1,5 +1,6 @@
 #include "vector_index.hpp"
 #include "constants.hpp"
+#include "utils.hpp"
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexIVFFlat.h>
 #include <faiss/index_io.h>
@@ -10,6 +11,22 @@
 #include <utility>
 
 namespace mvdb {
+
+    VectorIndexMetadata::VectorIndexMetadata(std::string indexFilePath, const uint64_t& indexDimensions,
+        const VectorIndexType& indexType): indexFilePath(std::move(indexFilePath)), indexDimensions(indexDimensions),
+    indexType(indexType) {}
+
+    void VectorIndexMetadata::serialize(std::ostream& out) const {
+        serializeString(out, indexFilePath);
+        serializeUInt64T(out, indexDimensions);
+        serializeUInt64T(out, static_cast<uint64_t>(indexType));
+    }
+
+    void VectorIndexMetadata::deserialize(std::istream& in) {
+        indexFilePath = deserializeString(in);
+        indexDimensions = deserializeUInt64T(in);
+        indexType = static_cast<VectorIndexType>(deserializeUInt64T(in));
+    }
 
     VectorIndex::VectorIndex(std::string  name, std::string  dir,
          VectorIndexType type, uint64_t dims)
@@ -30,7 +47,7 @@ namespace mvdb {
     }
 
     VectorIndex* VectorIndex::create(const std::string& name, const std::string& dir,
-         VectorIndexType type, uint64_t dims) {
+         const VectorIndexType& type, const uint64_t& dims) {
         return new VectorIndex(name, dir, type, dims);
     }
 

@@ -11,7 +11,7 @@ namespace mvdb {
         else if(!std::filesystem::is_directory(path)) // else if file exists but is not a directory throw error
             throw::std::runtime_error("invalid database path \"" + path + "\"");
 
-        metadata_manager_ = std::make_unique<MetadataManager>(this->path
+        metadata_ = std::make_unique<MetadataManager>(this->path
             + std::filesystem::path::preferred_separator + dbname + META_FILE_EXTENSION);
 
         //don't need this anymore. makes more sense to just load the metadata file and only load from the collections
@@ -29,14 +29,24 @@ namespace mvdb {
         const std::string indexFilePath = collectionFilePath + std::filesystem::path::preferred_separator + name + INDEX_EXT;
         const std::string dataDirectoryPath = collectionFilePath + std::filesystem::path::preferred_separator + name + KV_STORE_EXT;
 
-        const auto collection_metadata = CollectionMetadata(name, collectionFilePath, indexFilePath,
-            dataDirectoryPath, model, 0, dimensions);
-        metadata_manager_->addCollection(collection_metadata);
+        const auto db_options = rocksdb::Options();
+        const KvStoreMetadata kv_store_metadata = KvStoreMetadata(dataDirectoryPath, db_options);
+
+        // TODO: fix for multiple types
+        const VectorIndexMetadata vector_index_metadata = VectorIndexMetadata(indexFilePath, dimensions, VectorIndexType::FLAT);
+
+        const VectorizerMetadata vectorizer_metadata = VectorizerMetadata(model);
+
+        const CollectionMetadata collection_metadata = CollectionMetadata(name, collectionFilePath, 0,
+            kv_store_metadata, vector_index_metadata, vectorizer_metadata);
 
         auto* vc = new VectorCollection(collection_metadata);
-        collections_.emplace_back(vc);
 
-        metadata_manager_->save();
+        collections_.emplace_back(vc); // revisit
+
+        metadata_->addCollection(collection_metadata);
+
+        metadata_->save();
     }
 
 }

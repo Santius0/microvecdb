@@ -1,6 +1,7 @@
 #ifndef VECTOR_INDEX_H
 #define VECTOR_INDEX_H
 
+#include "serializable.h"
 #include <faiss/Index.h>
 #include <string>
 #include <memory>
@@ -11,6 +12,23 @@ namespace mvdb {
     enum class VectorIndexType {
         FLAT = 0,
         IVF = 1
+    };
+
+    class VectorIndexMetadata final: Serializable {
+        std::string indexFilePath;
+        uint64_t indexDimensions{};
+        VectorIndexType indexType;
+        friend class VectorIndex;
+        friend class CollectionMetadata;
+        friend class MetadataManager;
+    protected:
+        void serialize(std::ostream& out) const override;
+        void deserialize(std::istream& in) override;
+    public:
+        VectorIndexMetadata() = default;
+        VectorIndexMetadata(std::string indexFilePath, const uint64_t& indexDimensions,
+        const VectorIndexType& indexType);
+        ~VectorIndexMetadata() override = default;
     };
 
     class VectorIndex {
@@ -36,7 +54,7 @@ namespace mvdb {
 
         // Create an index from a file. Basically just a wrapper for the constructor
         static VectorIndex* create(const std::string& name, const std::string& dir,
-             VectorIndexType type = VectorIndexType::FLAT, uint64_t dims = 300);
+            const VectorIndexType& type, const uint64_t& dims);
 
         // Load an index from a file
         static VectorIndex* load(const std::string& name, const std::string& dir);

@@ -1,14 +1,25 @@
 #ifndef VECTORIZER_H
 #define VECTORIZER_H
 
+#include "serializable.h"
 #include <fasttext.h>
 #include <memory>
 
 
 namespace mvdb {
 
-    enum VectorizerModelType {
-        MULTI_LANG = 0
+    class VectorizerMetadata final: public Serializable{
+        std::string model;
+    protected:
+        void serialize(std::ostream& out) const override;
+        void deserialize(std::istream& in) override;
+        friend class Vectorizer;
+        friend class CollectionMetadata;
+        friend class MetadataManager;
+    public:
+        VectorizerMetadata() = default;
+        explicit VectorizerMetadata(const std::string& model);
+        ~VectorizerMetadata() override = default;
     };
 
     class Vectorizer {

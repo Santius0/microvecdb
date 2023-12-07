@@ -1,7 +1,17 @@
 #include "vectorizer.hpp"
+#include "utils.hpp"
 
 
 namespace mvdb {
+    VectorizerMetadata::VectorizerMetadata(const std::string& model): model(std::move(model)){}
+
+    void VectorizerMetadata::serialize(std::ostream& out) const {
+        serializeString(out, model);
+    }
+
+    void VectorizerMetadata::deserialize(std::istream& in) {
+        model = deserializeString(in);
+    }
 
     Vectorizer::Vectorizer(const std::string& model_path, const int& dims): model_path(model_path), dims(dims) {
         auto *raw_ptr = new fasttext::FastText();

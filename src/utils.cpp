@@ -30,12 +30,24 @@ namespace mvdb {
     }
 
     // Helper function to write a size_t to the stream
-    void serializeNumeric(std::ostream& out, const int64_t value) {
+    void serializeUInt64T(std::ostream& out, const uint64_t value) {
         out.write(reinterpret_cast<const char*>(&value), sizeof(value));
     }
 
     // Helper function to read a size_t from the stream
-    int64_t deserializeNumeric(std::istream& in) {
+    uint64_t deserializeUInt64T(std::istream& in) {
+        uint64_t value;
+        in.read(reinterpret_cast<char*>(&value), sizeof(value));
+        return value;
+    }
+
+    // Helper function to write a size_t to the stream
+    void serializeInt64T(std::ostream& out, const int64_t value) {
+        out.write(reinterpret_cast<const char*>(&value), sizeof(value));
+    }
+
+    // Helper function to read a size_t from the stream
+    int64_t deserializeInt64T(std::istream& in) {
         int64_t value;
         in.read(reinterpret_cast<char*>(&value), sizeof(value));
         return value;

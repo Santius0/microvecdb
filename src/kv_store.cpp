@@ -2,19 +2,23 @@
 #include "utils.hpp"
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace mvdb {
 
-    KvStoreMetadata::KvStoreMetadata(const rocksdb::Options& options) {
+    KvStoreMetadata::KvStoreMetadata(std::string  dataDirectoryPath, const rocksdb::Options& options):
+    dataDirectoryPath(std::move(dataDirectoryPath)) {
         create_if_missing = options.create_if_missing;
     }
 
     void KvStoreMetadata::serialize(std::ostream& out) const {
-        serializeNumeric(out, create_if_missing);
+        serializeString(out, dataDirectoryPath);
+        serializeUInt64T(out, create_if_missing);
     }
 
     void KvStoreMetadata::deserialize(std::istream& in) {
-        create_if_missing = deserializeNumeric(in);
+        dataDirectoryPath = deserializeString(in);
+        create_if_missing = deserializeUInt64T(in);
     }
 
 

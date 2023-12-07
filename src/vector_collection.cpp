@@ -5,37 +5,40 @@
 
 namespace mvdb {
 
-    CollectionMetadata::CollectionMetadata(std::string name, std::string collectionFilePath, std::string indexFilePath,
-        std::string dataDirectoryPath, std::string model, const size_t& recordCount, const size_t& indexDimensions):
-    name(std::move(name)), collectionFilePath(std::move(collectionFilePath)),
-    indexFilePath(std::move(indexFilePath)), dataDirectoryPath(std::move(dataDirectoryPath)),
-    model(std::move(model)), recordCount(recordCount), indexDimensions(indexDimensions) {
+    CollectionMetadata::CollectionMetadata(std::string name, std::string collectionFilePath, const size_t& recordCount,
+        const KvStoreMetadata& kv_store_metadata, const VectorIndexMetadata& vector_index_metadata,
+        const VectorizerMetadata& vectorizer_metadata):
+    name(std::move(name)), collectionFilePath(std::move(collectionFilePath)), recordCount(recordCount) {
         createdTimestamp = getCurrentTimeStamp();
         modifiedTimestamp = createdTimestamp;
+
+        kv_store_metadata_ = kv_store_metadata;
+        vector_index_metadata_ = vector_index_metadata;
+        vectorizer_metadata_ = vectorizer_metadata;
     }
 
     void CollectionMetadata::serialize(std::ostream& out) const {
         serializeString(out, name);
         serializeString(out, collectionFilePath);
-        serializeString(out, indexFilePath);
-        serializeString(out, dataDirectoryPath);
         serializeString(out, model);
-        serializeNumeric(out, recordCount);
-        serializeNumeric(out, indexDimensions);
+        serializeUInt64T(out, recordCount);
         serializeString(out, createdTimestamp);
         serializeString(out, modifiedTimestamp);
+        kv_store_metadata_.serialize(out);
+        vector_index_metadata_.serialize(out);
+        vectorizer_metadata_.serialize(out);
     }
 
     void CollectionMetadata::deserialize(std::istream& in) {
         name = deserializeString(in);
         collectionFilePath = deserializeString(in);
-        indexFilePath = deserializeString(in);
-        dataDirectoryPath = deserializeString(in);
         model = deserializeString(in);
-        recordCount = deserializeNumeric(in);
-        indexDimensions = deserializeNumeric(in);
+        recordCount = deserializeUInt64T(in);
         createdTimestamp = deserializeString(in);
         modifiedTimestamp = deserializeString(in);
+        kv_store_metadata_.deserialize(in);
+        vector_index_metadata_.deserialize(in);
+        vectorizer_metadata_.deserialize(in);
     }
 
     VectorCollection::VectorCollection(const CollectionMetadata& metadata) {
