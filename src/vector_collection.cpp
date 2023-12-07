@@ -46,4 +46,9 @@ namespace mvdb {
         vectorizer_ = std::make_unique<Vectorizer>(metadata.vectorizer_metadata_);
     }
 
+    bool VectorCollection::add_data(const char* data) {
+        return true;
+    }
+
+
 }

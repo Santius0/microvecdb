@@ -34,8 +34,11 @@ namespace mvdb {
         return status.ok();
     }
 
-    bool KvStore::putAutoKey(const std::string& value) const {
-        return KvStore::put(std::to_string(db->GetLatestSequenceNumber()), value);
+    std::string KvStore::putAutoKey(const std::string& value) const {
+        std::string key = std::to_string(db->GetLatestSequenceNumber());
+        if(KvStore::put(key, value))
+            return key;
+        return "";
     }
 
     bool KvStore::putMany(const std::vector<std::pair<std::string, std::string>>& pairs) const {

@@ -29,8 +29,8 @@ namespace mvdb {
         explicit Vectorizer(const VectorizerMetadata& metadata);
         ~Vectorizer() = default;
         [[nodiscard]] fasttext::Vector get_word_vector(const std::string& word) const;
-        void train_supervised(const char *input, const char *output);
-        void predict(const char *text, char *buffer, int buffer_size);
+        // void train_supervised(const char *input, const char *output);
+        // void predict(const char *text, char *buffer, int buffer_size);
     };
 
 }

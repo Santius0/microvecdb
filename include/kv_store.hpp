@@ -44,7 +44,7 @@ namespace mvdb {
         // Returns true on success, false on failure
         [[nodiscard]] bool put(const std::string& key, const std::string& value) const;
 
-        [[nodiscard]] bool putAutoKey(const std::string& value) const;
+        [[nodiscard]] std::string putAutoKey(const std::string& value) const;
 
         // Function to batch add data with key-value pairs
         // Returns true on success, false on failure

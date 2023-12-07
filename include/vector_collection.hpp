@@ -47,7 +47,7 @@ namespace mvdb {
         VectorCollection() = default;
         explicit VectorCollection(const CollectionMetadata& metadata);
         ~VectorCollection() = default;
-        // bool add(char* data, float* vector = nullptr);
+        bool add_data(const char* data);
         // bool remove(uint64_t key);
         // uint64_t* search(float* vectors, size_t num_vectors);
     };

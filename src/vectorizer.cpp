@@ -30,13 +30,13 @@ namespace mvdb {
         return word_vec;
     }
 
-    void Vectorizer::train_supervised(const char *input, const char *output) {
-        // static_cast<fasttext::FastText*>(model)->train("supervised", input, output);
-    }
-
-    void Vectorizer::predict(const char *text, char *buffer, int buffer_size) {
-        // Implement prediction logic
-        // Use the FastText model to predict and store the result in `buffer`
-    }
+    // void Vectorizer::train_supervised(const char *input, const char *output) {
+    //     // static_cast<fasttext::FastText*>(model)->train("supervised", input, output);
+    // }
+    //
+    // void Vectorizer::predict(const char *text, char *buffer, int buffer_size) {
+    //     // Implement prediction logic
+    //     // Use the FastText model to predict and store the result in `buffer`
+    // }
 
 }
