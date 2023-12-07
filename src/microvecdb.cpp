@@ -29,20 +29,21 @@ namespace mvdb {
         const std::string indexFilePath = collectionFilePath + std::filesystem::path::preferred_separator + name + INDEX_EXT;
         const std::string dataDirectoryPath = collectionFilePath + std::filesystem::path::preferred_separator + name + KV_STORE_EXT;
 
-        const auto db_options = rocksdb::Options();
+        auto db_options = rocksdb::Options();
+        db_options.create_if_missing = true; // TODO: have user enter this
         const KvStoreMetadata kv_store_metadata = KvStoreMetadata(dataDirectoryPath, db_options);
 
         // TODO: fix for multiple types
         const VectorIndexMetadata vector_index_metadata = VectorIndexMetadata(indexFilePath, dimensions, VectorIndexType::FLAT);
 
-        const VectorizerMetadata vectorizer_metadata = VectorizerMetadata(model);
+        const VectorizerMetadata vectorizer_metadata = VectorizerMetadata(model, dimensions);
 
         const CollectionMetadata collection_metadata = CollectionMetadata(name, collectionFilePath, 0,
             kv_store_metadata, vector_index_metadata, vectorizer_metadata);
 
         auto* vc = new VectorCollection(collection_metadata);
 
-        collections_.emplace_back(vc); // revisit
+        collections_.emplace_back(vc); // TODO: revisit
 
         metadata_->addCollection(collection_metadata);
 

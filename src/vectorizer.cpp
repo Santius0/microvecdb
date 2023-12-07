@@ -1,21 +1,26 @@
 #include "vectorizer.hpp"
+
+#include <utility>
 #include "utils.hpp"
 
 
 namespace mvdb {
-    VectorizerMetadata::VectorizerMetadata(const std::string& model): model(std::move(model)){}
+    VectorizerMetadata::VectorizerMetadata(std::string  model, const uint64_t& dimensions):
+    model(std::move(model)), dimensions(dimensions) {}
 
     void VectorizerMetadata::serialize(std::ostream& out) const {
         serializeString(out, model);
+        serializeUInt64T(out, dimensions);
     }
 
     void VectorizerMetadata::deserialize(std::istream& in) {
         model = deserializeString(in);
+        dimensions = deserializeUInt64T(in);
     }
 
-    Vectorizer::Vectorizer(const std::string& model_path, const int& dims): model_path(model_path), dims(dims) {
+    Vectorizer::Vectorizer(const VectorizerMetadata& metadata) {
         auto *raw_ptr = new fasttext::FastText();
-        raw_ptr->loadModel(model_path);
+        raw_ptr->loadModel(metadata.model);     // TODO: make model load faster
         model.reset(raw_ptr);
     }
 

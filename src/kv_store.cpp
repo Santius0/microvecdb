@@ -8,24 +8,23 @@ namespace mvdb {
 
     KvStoreMetadata::KvStoreMetadata(std::string  dataDirectoryPath, const rocksdb::Options& options):
     dataDirectoryPath(std::move(dataDirectoryPath)) {
-        create_if_missing = options.create_if_missing;
+        options_ = options;
     }
 
     void KvStoreMetadata::serialize(std::ostream& out) const {
         serializeString(out, dataDirectoryPath);
-        serializeUInt64T(out, create_if_missing);
+        serializeUInt64T(out, options_.create_if_missing);
     }
 
     void KvStoreMetadata::deserialize(std::istream& in) {
         dataDirectoryPath = deserializeString(in);
-        create_if_missing = deserializeUInt64T(in);
+        options_.create_if_missing = deserializeUInt64T(in);
     }
 
-
-    KvStore::KvStore(const std::string& path, const bool createNew) {
-        options.create_if_missing = createNew;
+    KvStore::KvStore(const KvStoreMetadata& metadata) {
+        options = metadata.options_;
         rocksdb::DB* raw_db_pointer = nullptr;
-        if (const rocksdb::Status status = rocksdb::DB::Open(options, path, &raw_db_pointer); !status.ok())
+        if (const rocksdb::Status status = rocksdb::DB::Open(options, metadata.dataDirectoryPath, &raw_db_pointer); !status.ok())
             throw std::runtime_error("Failed to open/create database: " + status.ToString());
         db.reset(raw_db_pointer);
     }

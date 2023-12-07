@@ -13,8 +13,6 @@ namespace mvdb {
     class CollectionMetadata final: public Serializable {
         std::string name;
         std::string collectionFilePath;
-
-        std::string model;
         size_t recordCount{};
         std::string createdTimestamp;
         std::string modifiedTimestamp;

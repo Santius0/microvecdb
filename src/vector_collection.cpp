@@ -20,7 +20,6 @@ namespace mvdb {
     void CollectionMetadata::serialize(std::ostream& out) const {
         serializeString(out, name);
         serializeString(out, collectionFilePath);
-        serializeString(out, model);
         serializeUInt64T(out, recordCount);
         serializeString(out, createdTimestamp);
         serializeString(out, modifiedTimestamp);
@@ -32,7 +31,6 @@ namespace mvdb {
     void CollectionMetadata::deserialize(std::istream& in) {
         name = deserializeString(in);
         collectionFilePath = deserializeString(in);
-        model = deserializeString(in);
         recordCount = deserializeUInt64T(in);
         createdTimestamp = deserializeString(in);
         modifiedTimestamp = deserializeString(in);
@@ -43,9 +41,9 @@ namespace mvdb {
 
     VectorCollection::VectorCollection(const CollectionMetadata& metadata) {
         if(!std::filesystem::exists(metadata.collectionFilePath)) std::filesystem::create_directory(metadata.collectionFilePath);
-        // vectorizer_ = std::make_unique<Vectorizer>(metadata.model, metadata.indexDimensions);
-        // kv_store_ = std::make_unique<KvStore>(metadata.dataDirectoryPath, true, false);
-        // vector_index_ = std::make_unique<VectorIndex>(metadata.indexFilePath, metadata.indexFilePath, VectorIndexType::FLAT, dimensions);
+        kv_store_ = std::make_unique<KvStore>(metadata.kv_store_metadata_);
+        vector_index_ = std::make_unique<VectorIndex>(metadata.vector_index_metadata_);
+        vectorizer_ = std::make_unique<Vectorizer>(metadata.vectorizer_metadata_);
     }
 
 }

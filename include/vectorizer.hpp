@@ -10,6 +10,7 @@ namespace mvdb {
 
     class VectorizerMetadata final: public Serializable{
         std::string model;
+        uint64_t dimensions{};
     protected:
         void serialize(std::ostream& out) const override;
         void deserialize(std::istream& in) override;
@@ -18,16 +19,14 @@ namespace mvdb {
         friend class MetadataManager;
     public:
         VectorizerMetadata() = default;
-        explicit VectorizerMetadata(const std::string& model);
+        explicit VectorizerMetadata(std::string  model, const uint64_t& dimensions);
         ~VectorizerMetadata() override = default;
     };
 
     class Vectorizer {
         std::unique_ptr<fasttext::FastText> model;
-        std::string model_path;
-        int dims;
     public:
-        explicit Vectorizer(const std::string& model_path, const int& dims);
+        explicit Vectorizer(const VectorizerMetadata& metadata);
         ~Vectorizer() = default;
         [[nodiscard]] fasttext::Vector get_word_vector(const std::string& word) const;
         void train_supervised(const char *input, const char *output);

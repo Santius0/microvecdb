@@ -11,17 +11,18 @@
 namespace mvdb {
 
     class KvStoreMetadata final: public Serializable {
+        rocksdb::Options options_;
         std::string dataDirectoryPath;
-        bool create_if_missing = true;
         friend class MetadataManager;
         friend class CollectionMetadata;
+        friend class VectorCollection;
         friend class KvStore;
     protected:
         void serialize(std::ostream& out) const override;
         void deserialize(std::istream& in) override;
     public:
         KvStoreMetadata() = default;
-        explicit KvStoreMetadata(std::string  dataDirectoryPath, const rocksdb::Options& options);
+        explicit KvStoreMetadata(std::string dataDirectoryPath, const rocksdb::Options& options);
         ~KvStoreMetadata() override = default;
     };
 
@@ -30,7 +31,7 @@ namespace mvdb {
         rocksdb::Options options;
     public:
         // Constructor
-        KvStore(const std::string& path, bool createNew);
+        explicit KvStore(const KvStoreMetadata& metadata);
 
         // Destructor
         ~KvStore() = default;
