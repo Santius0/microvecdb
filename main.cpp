@@ -3,9 +3,8 @@
 int main() {
     auto* micro_vec_db = new mvdb::MicroVecDB("./test_mvdb", "test_mvdb");
     micro_vec_db->create_collection("collection1", 300, "./models/cc.en.300.bin");
-    mvdb::VectorCollection* collection = micro_vec_db->collection("collection1");
+    const mvdb::VectorCollection* collection = micro_vec_db->collection("collection1");
 
-    // collection->add_data("hello");
     // collection->add_data("An agile fox jumps swiftly over the sleeping dog");
     // collection->add_data("A nimble fox quickly leaps over the resting dog");
     // collection->add_data("An agile fox jumps over the sleeping canine");
@@ -16,6 +15,7 @@ int main() {
     // collection->add_data("Under a bright moon, a fox jumps over a quiet dog");
     // collection->add_data("In the forest, a brown bear climbs over a fallen log");
     // collection->add_data("Sunshine brightens the quiet forest as the deer prance away");
+    // collection->add_data("hello");
 
     const mvdb::SearchResult sr = collection->search("The fast brown fox jumps over the lazy hound in the forest", 11, true);
     std::cout << "Search Results -\n" << sr << std::endl;
