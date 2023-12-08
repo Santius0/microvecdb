@@ -42,10 +42,10 @@ namespace mvdb {
     class SearchResult {
         friend std::ostream& operator<<(std::ostream& os, const SearchResult& obj) {
             for(int i = 0; i < obj.size_; i++)
-                os << "id: " << obj.ids_.get()[i]
+                os << "id: " << obj.ids_[i]
                    << "\tdistance: "
-                   << obj.distances_.get()[i]
-                   // << "\tdata: " << obj.data[i]
+                   << obj.distances_[i]
+                   << "\tdata: " << obj.data_[i]
                    << std::endl
                 ;
             return os;
@@ -56,17 +56,17 @@ namespace mvdb {
         }
 
     public:
-        std::unique_ptr<int64_t> ids_;
-        std::unique_ptr<float> distances_;
-        std::unique_ptr<std::string> data_;
+        int64_t *ids_;
+        float* distances_;
+        std::string *data_;
         const long size_;
         SearchResult(int64_t* ids, float* distances, std::string* data, const long& size):
-        size_(size) {
-            ids_.reset(ids);
-            distances_.reset(distances);
-            data_.reset(data);
-        }
-        ~SearchResult() = default;
+        ids_(ids), distances_(distances), data_(data), size_(size) {}
+        ~SearchResult() {
+            delete[] ids_;
+            delete[] distances_;
+            delete[] data_;
+        };
     };
 
     class VectorCollection {
