@@ -44,11 +44,6 @@ namespace mvdb {
         kv_store_ = std::make_unique<KvStore>(metadata.kv_store_metadata_);
         vector_index_ = std::make_unique<VectorIndex>(metadata.vector_index_metadata_);
         vectorizer_ = std::make_unique<Vectorizer>(metadata.vectorizer_metadata_);
-        // std::unique_ptr<Vectorizer> v = std::make_unique<Vectorizer>(metadata.vectorizer_metadata_);
-        // fasttext::Vector vec = vectorizer_->get_word_vector("hello2");
-        // for(int i = 0; i < vec.size(); i++) {
-            // std::cout << vec[i] << " ";
-        // }
     }
 
     bool VectorCollection::add_data(const std::string& data) const {
@@ -57,9 +52,18 @@ namespace mvdb {
         return kv_store_->put(std::to_string(keys[0]), data);
     }
 
-    std::vector<std::string> VectorCollection::search(fasttext::Vector vec) {
-
+    SearchResult VectorCollection::search_with_vector(const std::vector<float>& query, const long& k, const bool& ret_data) const {
+        auto *ids = new int64_t[k];
+        auto *distances = new float[k];
+        auto *data = new std::string[k];
+        vector_index_->search(query, ids, distances, k);
+        if(ret_data) for(int i = 0 ; i < k; i++) data[i] = kv_store_->get(std::to_string(ids[i]));
+        return {ids, distances, data, k};
     }
 
+    SearchResult VectorCollection::search(const std::string& data, const long& k, const bool& ret_data) const {
+        fasttext::Vector query = vectorizer_->get_word_vector(data);
+        return search_with_vector(query.get_data_(), k, ret_data);
+    }
 
 }

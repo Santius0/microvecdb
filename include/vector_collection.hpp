@@ -7,6 +7,7 @@
 #include "serializable.h"
 #include <memory>
 #include <ostream>
+#include <string>
 
 namespace mvdb {
 
@@ -38,6 +39,36 @@ namespace mvdb {
         }
     };
 
+    class SearchResult {
+        friend std::ostream& operator<<(std::ostream& os, const SearchResult& obj) {
+            for(int i = 0; i < obj.size_; i++)
+                os << "id: " << obj.ids_.get()[i]
+                   << "\tdistance: "
+                   << obj.distances_.get()[i]
+                   // << "\tdata: " << obj.data[i]
+                   << std::endl
+                ;
+            return os;
+        }
+
+        friend std::ostream& operator<<(std::ostream& os, const SearchResult* obj) {
+            return os << "*(" << *obj << ")";
+        }
+
+    public:
+        std::unique_ptr<int64_t> ids_;
+        std::unique_ptr<float> distances_;
+        std::unique_ptr<std::string> data_;
+        const long size_;
+        SearchResult(int64_t* ids, float* distances, std::string* data, const long& size):
+        size_(size) {
+            ids_.reset(ids);
+            distances_.reset(distances);
+            data_.reset(data);
+        }
+        ~SearchResult() = default;
+    };
+
     class VectorCollection {
         std::unique_ptr<KvStore> kv_store_;
         std::unique_ptr<VectorIndex> vector_index_;
@@ -47,7 +78,8 @@ namespace mvdb {
         explicit VectorCollection(const CollectionMetadata& metadata);
         ~VectorCollection() = default;
         bool add_data(const std::string& data) const;
-        std::vector<std::string> search(fasttext::Vector vec);
+        SearchResult search_with_vector(const std::vector<float>& query, const long& k = 5, const bool& ret_data = false) const;
+        SearchResult search(const std::string& data, const long& k = 5, const bool& ret_data = false) const;
         // bool remove(uint64_t key);
         // uint64_t* search(float* vectors, size_t num_vectors);
     };

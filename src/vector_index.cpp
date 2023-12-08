@@ -29,6 +29,7 @@ namespace mvdb {
 
     VectorIndex::VectorIndex(const VectorIndexMetadata& metadata) {
         indexFilePath = metadata.indexFilePath;
+        indexDimensions = metadata.indexDimensions;
         if(std::filesystem::exists(metadata.indexFilePath)) load();
         else {
             switch (metadata.indexType) {
@@ -88,8 +89,23 @@ namespace mvdb {
         faissIndex.reset(faiss::read_index(indexFilePath.c_str()));
     }
 
-    // float** VectorIndex::search(int n, std::vector<float> search_vectors) {
-        // faissIndex->search(n);
-    // }
+    void VectorIndex::search(const std::vector<float>& query, int64_t ids[], float distances[], const long& k) const {
+        // int k = 2;  // Number of nearest neighbors to find
+        // std::vector<float> query(d, 0.0);  // Example query vector
+        // std::vector<float> distances(k);  // To store distances of nearest neighbors
+        // std::vector<faiss::Index::idx_t> searchIds(k);  // To store IDs of nearest neighbors
+
+        // Perform the search
+        // int64_t i[k];
+        // float d[k];
+        // float q[indexDimensions] = {};
+        faissIndex->search(static_cast<long>(query.size()/indexDimensions), query.data(), k, distances, ids);
+
+        // Output the results
+        // for (int i = 0; i < k; ++i) {
+            // printf("ID %ld, Distance %f\n", ids[i], distances[i]);
+        // }
+
+    }
 
 } // namespace mvdb

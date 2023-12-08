@@ -32,6 +32,13 @@ class Vector {
   inline real* data() {
     return data_.data();
   }
+
+  // Added by me - start
+  inline std::vector<real> get_data_() {
+    return data_;
+  }
+  // Added by me - end
+
   inline const real* data() const {
     return data_.data();
   }

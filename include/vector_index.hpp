@@ -37,6 +37,7 @@ namespace mvdb {
         // std::unique_ptr<faiss::IndexIDMap> faissIndexIDMap;
         // bool id_map = false;
         std::string indexFilePath;
+        uint64_t indexDimensions{};
 
     public:
         // Constructor
@@ -59,7 +60,7 @@ namespace mvdb {
 
         void load();
 
-        float** search(int n, float* vector);
+        void search(const std::vector<float>& query, int64_t ids[], float distances[], const long& k = 5) const;
 
     };
 

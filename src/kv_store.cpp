@@ -61,9 +61,10 @@ namespace mvdb {
 
     std::string KvStore::get(const std::string& key) const {
         std::string value;
-        if (const rocksdb::Status status = db->Get(rocksdb::ReadOptions(), key, &value); status.ok())
+        const rocksdb::Status status = db->Get(rocksdb::ReadOptions(), key, &value);
+        if (status.ok())
             return value;
-        return "";
+        return status.ToString();
     }
 
     bool KvStore::remove(const std::string& key) const {
