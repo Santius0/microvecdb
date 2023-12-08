@@ -40,6 +40,8 @@ namespace mvdb {
                 }
                 default: {
                     faissIndex = std::make_unique<faiss::IndexFlatL2>(metadata.indexDimensions);
+                    // faissIndexIDMap = std::make_unique<faiss::IndexIDMap>(faissIndex.get());
+                    // id_map = true;
                     break;
                 }
             }
@@ -51,13 +53,20 @@ namespace mvdb {
         if(faissIndex != nullptr) save();
     }
 
-    bool VectorIndex::add(const size_t& n, const float* data) const {
+    std::vector<uint64_t> VectorIndex::add(const size_t& n, const float* data, const int64_t* ids) const {
         try {
-            faissIndex->add(static_cast<long>(n), data);
-            return true;
+            std::vector<uint64_t> keys;
+            keys.reserve(n);
+            for(int i = 0; i < n; i++)
+                keys.emplace_back(faissIndex->ntotal + i);
+            if(ids == nullptr) faissIndex->add(static_cast<long>(n), data);
+            else faissIndex->add_with_ids(static_cast<long>(n), data, ids);
+                // if(id_map) faissIndexIDMap->add_with_ids(static_cast<long>(n), data, ids);
+                // else faissIndex->add_with_ids(static_cast<long>(n), data, ids);
+            return keys;
         } catch (const std::exception& e) {
             std::cerr << "Error adding data to index: " << e.what() << std::endl;
-            return false;
+            return {};
         }
     }
 
@@ -78,5 +87,9 @@ namespace mvdb {
     void VectorIndex::load() {
         faissIndex.reset(faiss::read_index(indexFilePath.c_str()));
     }
+
+    // float** VectorIndex::search(int n, std::vector<float> search_vectors) {
+        // faissIndex->search(n);
+    // }
 
 } // namespace mvdb

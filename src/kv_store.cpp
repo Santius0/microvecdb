@@ -34,11 +34,11 @@ namespace mvdb {
         return status.ok();
     }
 
-    std::string KvStore::putAutoKey(const std::string& value) const {
-        std::string key = std::to_string(db->GetLatestSequenceNumber());
-        if(KvStore::put(key, value))
+    int64_t KvStore::putAutoKey(const std::string& value) const {
+        const auto key = static_cast<int64_t>(db->GetLatestSequenceNumber());
+        if(KvStore::put(std::to_string(key), value))
             return key;
-        return "";
+        return -1;
     }
 
     bool KvStore::putMany(const std::vector<std::pair<std::string, std::string>>& pairs) const {

@@ -3,6 +3,7 @@
 
 #include "serializable.h"
 #include <faiss/Index.h>
+#include <faiss/IndexIDMap.h>
 #include <string>
 #include <memory>
 #include <ostream>
@@ -33,6 +34,8 @@ namespace mvdb {
 
     class VectorIndex {
         std::unique_ptr<faiss::Index> faissIndex; // The actual FAISS index
+        // std::unique_ptr<faiss::IndexIDMap> faissIndexIDMap;
+        // bool id_map = false;
         std::string indexFilePath;
 
     public:
@@ -47,7 +50,7 @@ namespace mvdb {
         VectorIndex& operator=(const VectorIndex&) = delete;
 
         // Add data to the index
-        [[nodiscard]] bool add(const size_t& n, const float* data) const;
+        [[nodiscard]] std::vector<uint64_t> add(const size_t& n, const float* data, const int64_t* ids = nullptr) const;
 
         // Remove data from the index
         [[nodiscard]] bool remove(const size_t& n, const faiss::IDSelector& ids) const;
@@ -55,6 +58,8 @@ namespace mvdb {
         void save() const;
 
         void load();
+
+        float** search(int n, float* vector);
 
     };
 

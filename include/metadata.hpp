@@ -13,13 +13,13 @@ namespace mvdb {
         std::string metadataFilePath;
         std::string createdTimestamp;
         std::string modifiedTimestamp;
-        std::vector<CollectionMetadata> collections_;
         void updateCreatedTimestamp();
         void updateModifiedTimestamp();
     protected:
         void serialize(std::ostream& out) const override;
         void deserialize(std::istream& in) override;
     public:
+        std::vector<CollectionMetadata> collections_;
         Metadata() = default;
         explicit Metadata(const std::string& metadataFilePath);
         ~Metadata() override;

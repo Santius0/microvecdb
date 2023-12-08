@@ -21,10 +21,12 @@ namespace mvdb {
     Vectorizer::Vectorizer(const VectorizerMetadata& metadata) {
         auto *raw_ptr = new fasttext::FastText();
         raw_ptr->loadModel(metadata.model);     // TODO: make model load faster
+        loaded = true;
         model.reset(raw_ptr);
     }
 
     fasttext::Vector Vectorizer::get_word_vector(const std::string& word) const {
+        if(!loaded) throw std::runtime_error("vectorizer does not have any model loaded");
         auto word_vec = fasttext::Vector(model->getDimension());
         model->getWordVector(word_vec, word);
         return word_vec;

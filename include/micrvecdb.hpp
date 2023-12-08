@@ -13,12 +13,12 @@ namespace mvdb {
         std::string path; // location of database
         std::string dbname; // location of database
         std::unique_ptr<Metadata> metadata_;
-        std::vector<std::unique_ptr<VectorCollection>> collections_;
+        std::vector<std::shared_ptr<VectorCollection>> collections_;
     public:
         explicit MicroVecDB(const std::string& path, const std::string& dbname = "db");
         ~MicroVecDB() = default;
         void create_collection(const std::string& name, const uint64_t& dimensions, const std::string& model);
-        std::unique_ptr<VectorCollection> collection(const std::string& name);
+        VectorCollection* collection(const std::string& name) const;
     };
 
 }

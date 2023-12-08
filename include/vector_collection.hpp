@@ -11,6 +11,11 @@
 namespace mvdb {
 
     class CollectionMetadata final: public Serializable {
+        friend class Metadata;
+    protected:
+        void serialize(std::ostream& out) const override;
+        void deserialize(std::istream& in) override;
+    public:
         std::string name;
         std::string collectionFilePath;
         size_t recordCount{};
@@ -19,12 +24,6 @@ namespace mvdb {
         KvStoreMetadata kv_store_metadata_;
         VectorIndexMetadata vector_index_metadata_;
         VectorizerMetadata vectorizer_metadata_;
-        friend class Metadata;
-        friend class VectorCollection;
-    protected:
-        void serialize(std::ostream& out) const override;
-        void deserialize(std::istream& in) override;
-    public:
         CollectionMetadata() = default;
         CollectionMetadata(std::string name, std::string collectionFilePath, const size_t& recordCount,
         const KvStoreMetadata& kv_store_metadata, const VectorIndexMetadata& vector_index_metadata,
@@ -47,7 +46,8 @@ namespace mvdb {
         VectorCollection() = default;
         explicit VectorCollection(const CollectionMetadata& metadata);
         ~VectorCollection() = default;
-        bool add_data(const char* data);
+        bool add_data(const std::string& data) const;
+        std::vector<std::string> search(fasttext::Vector vec);
         // bool remove(uint64_t key);
         // uint64_t* search(float* vectors, size_t num_vectors);
     };

@@ -44,10 +44,21 @@ namespace mvdb {
         kv_store_ = std::make_unique<KvStore>(metadata.kv_store_metadata_);
         vector_index_ = std::make_unique<VectorIndex>(metadata.vector_index_metadata_);
         vectorizer_ = std::make_unique<Vectorizer>(metadata.vectorizer_metadata_);
+        // std::unique_ptr<Vectorizer> v = std::make_unique<Vectorizer>(metadata.vectorizer_metadata_);
+        // fasttext::Vector vec = vectorizer_->get_word_vector("hello2");
+        // for(int i = 0; i < vec.size(); i++) {
+            // std::cout << vec[i] << " ";
+        // }
     }
 
-    bool VectorCollection::add_data(const char* data) {
-        return true;
+    bool VectorCollection::add_data(const std::string& data) const {
+        fasttext::Vector vec = vectorizer_->get_word_vector(data);
+        const std::vector<uint64_t> keys = vector_index_->add(1, vec.data());
+        return kv_store_->put(std::to_string(keys[0]), data);
+    }
+
+    std::vector<std::string> VectorCollection::search(fasttext::Vector vec) {
+
     }
 
 

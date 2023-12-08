@@ -25,6 +25,7 @@ namespace mvdb {
 
     class Vectorizer {
         std::unique_ptr<fasttext::FastText> model;
+        bool loaded = false;
     public:
         explicit Vectorizer(const VectorizerMetadata& metadata);
         ~Vectorizer() = default;

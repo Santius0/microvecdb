@@ -2,6 +2,7 @@
 #include "utils.hpp"
 #include "constants.hpp"
 #include <filesystem>
+#include <stdexcept>
 
 namespace mvdb {
 
@@ -50,8 +51,12 @@ namespace mvdb {
         metadata_->save();
     }
 
-    std::unique_ptr<VectorCollection> MicroVecDB::collection(const std::string& name) {
-        for(int i = 0; i < collec)
+    VectorCollection* MicroVecDB::collection(const std::string& name) const {
+        for(size_t i = 0; i < metadata_->collections_.size(); i++) {
+            if(name == metadata_->collections_[i].name) return collections_[i].get();
+        }
+        throw std::out_of_range("no collection \"" + name + "\" found\n");
+        return nullptr;
     }
 
 }
