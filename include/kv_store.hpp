@@ -1,7 +1,7 @@
 #ifndef KV_STORE_H
 #define KV_STORE_H
 
-#include "serializable.h"
+#include "serializable.hpp"
 #include <string>
 #include <vector>
 #include <memory>

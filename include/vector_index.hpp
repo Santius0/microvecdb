@@ -1,7 +1,7 @@
 #ifndef VECTOR_INDEX_H
 #define VECTOR_INDEX_H
 
-#include "serializable.h"
+#include "serializable.hpp"
 #include <faiss/Index.h>
 #include <faiss/IndexIDMap.h>
 #include <string>

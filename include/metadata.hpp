@@ -2,7 +2,7 @@
 #define METADATA_H
 
 #include "vector_collection.hpp"
-#include "serializable.h"
+#include "serializable.hpp"
 #include <ostream>
 #include <string>
 #include <vector>

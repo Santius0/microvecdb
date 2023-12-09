@@ -4,7 +4,7 @@
 #include "kv_store.hpp"
 #include "vector_index.hpp"
 #include "vectorizer.hpp"
-#include "serializable.h"
+#include "serializable.hpp"
 #include <memory>
 #include <ostream>
 #include <string>

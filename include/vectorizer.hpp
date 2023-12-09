@@ -1,7 +1,7 @@
 #ifndef VECTORIZER_H
 #define VECTORIZER_H
 
-#include "serializable.h"
+#include "serializable.hpp"
 #include <fasttext.h>
 #include <memory>
 
