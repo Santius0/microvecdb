@@ -37,7 +37,8 @@ add_executable(microvecdb main.cpp
         src/metadata.cpp
         include/utils.hpp
         src/utils.cpp
-        include/serializable.h
+        include/serializable.hpp
+        include/mvdb.hpp
 )
 
 if(OpenMP_CXX_FOUND OR OpenMP_C_FOUND)
