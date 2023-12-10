@@ -31,7 +31,7 @@ namespace mvdb {
         modifiedTimestamp = deserializeString(in);
         const size_t num_collections = deserializeUInt64T(in);
         for (int i = 0; i < num_collections; i++) {
-            CollectionMetadata collection_metadata;
+            VectorCollectionMetadata collection_metadata;
             collection_metadata.deserialize(in);
             collections_.emplace_back(std::move(collection_metadata));
         }
@@ -53,7 +53,7 @@ namespace mvdb {
         file.close();
     }
 
-    void Metadata::addCollection(const CollectionMetadata& metadata) {
+    void Metadata::addCollection(const VectorCollectionMetadata& metadata) {
         collections_.push_back(metadata);
     }
 
@@ -61,7 +61,7 @@ namespace mvdb {
         // Additional logic to delete actual collection resources...
         collections_.erase(
         std::remove_if(collections_.begin(), collections_.end(),
-        [&collectionName](const CollectionMetadata& m) { return m.name == collectionName; }),
+        [&collectionName](const VectorCollectionMetadata& m) { return m.name == collectionName; }),
         collections_.end());
     }
 

@@ -1,8 +1,8 @@
-#include "include\mvdb.hpp"
+#include <microvecdb.hpp>
 
 int main() {
-    auto* micro_vec_db = new mvdb::MicroVecDB("./test_mvdb", "test_mvdb");
-    micro_vec_db->create_collection("collection1", 300, "./models/cc.en.300.bin");
+    auto* micro_vec_db = new mvdb::VectorDB("./test_mvdb", "test_mvdb");
+    micro_vec_db->create_collection("collection1", 300, "../models/cc.en.300.bin");
     const mvdb::VectorCollection* collection = micro_vec_db->collection("collection1");
 
     // collection->add_data("An agile fox jumps swiftly over the sleeping dog");

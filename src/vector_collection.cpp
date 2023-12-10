@@ -5,7 +5,7 @@
 
 namespace mvdb {
 
-    CollectionMetadata::CollectionMetadata(std::string name, std::string collectionFilePath, const size_t& recordCount,
+    VectorCollectionMetadata::VectorCollectionMetadata(std::string name, std::string collectionFilePath, const size_t& recordCount,
         const KvStoreMetadata& kv_store_metadata, const VectorIndexMetadata& vector_index_metadata,
         const VectorizerMetadata& vectorizer_metadata):
     name(std::move(name)), collectionFilePath(std::move(collectionFilePath)), recordCount(recordCount) {
@@ -17,7 +17,7 @@ namespace mvdb {
         vectorizer_metadata_ = vectorizer_metadata;
     }
 
-    void CollectionMetadata::serialize(std::ostream& out) const {
+    void VectorCollectionMetadata::serialize(std::ostream& out) const {
         serializeString(out, name);
         serializeString(out, collectionFilePath);
         serializeUInt64T(out, recordCount);
@@ -28,7 +28,7 @@ namespace mvdb {
         vectorizer_metadata_.serialize(out);
     }
 
-    void CollectionMetadata::deserialize(std::istream& in) {
+    void VectorCollectionMetadata::deserialize(std::istream& in) {
         name = deserializeString(in);
         collectionFilePath = deserializeString(in);
         recordCount = deserializeUInt64T(in);
@@ -39,7 +39,7 @@ namespace mvdb {
         vectorizer_metadata_.deserialize(in);
     }
 
-    VectorCollection::VectorCollection(const CollectionMetadata& metadata) {
+    VectorCollection::VectorCollection(const VectorCollectionMetadata& metadata) {
         if(!std::filesystem::exists(metadata.collectionFilePath)) std::filesystem::create_directory(metadata.collectionFilePath);
         kv_store_ = std::make_unique<KvStore>(metadata.kv_store_metadata_);
         vector_index_ = std::make_unique<VectorIndex>(metadata.vector_index_metadata_);

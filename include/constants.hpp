@@ -2,7 +2,7 @@
 #define CONTSTANTS_H
 
 namespace mvdb {
-    // MicroVecDB
+    // VectorDB
     #define META_FILE_EXTENSION ".metadata"
     #define META_FILE_EXTENSION_LEN strlen(META_FILE_EXTENSION)
 

@@ -1,5 +1,5 @@
-#ifndef MICRVECDB_H
-#define MICRVECDB_H
+#ifndef VECTORDB_H
+#define VECTORDB_H
 
 #include "metadata.hpp"
 #include "vector_collection.hpp"
@@ -9,18 +9,18 @@
 
 namespace mvdb {
 
-    class MicroVecDB {
+    class VectorDB {
         std::string path; // location of database
         std::string dbname; // location of database
         std::unique_ptr<Metadata> metadata_;
         std::vector<std::shared_ptr<VectorCollection>> collections_;
     public:
-        explicit MicroVecDB(const std::string& path, const std::string& dbname = "db");
-        ~MicroVecDB() = default;
+        explicit VectorDB(const std::string& path, const std::string& dbname = "db");
+        ~VectorDB() = default;
         void create_collection(const std::string& name, const uint64_t& dimensions, const std::string& model);
         VectorCollection* collection(const std::string& name) const;
     };
 
 }
 
-#endif //MICRVECDB_H
+#endif //VECTORDB_H

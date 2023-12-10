@@ -1,20 +1,28 @@
 #ifndef KV_STORE_H
 #define KV_STORE_H
 
+#include "constants.hpp"
 #include "serializable.hpp"
 #include <string>
 #include <vector>
 #include <memory>
+#include <ostream>
 #include <rocksdb/db.h>
 #include <rocksdb/options.h>
 
 namespace mvdb {
 
-    class KvStoreMetadata final: public Serializable {
+    class KvStoreMetadata : public Serializable {
+        friend std::ostream& operator<<(std::ostream& os, const KvStoreMetadata& obj) {
+            return os
+                   << " options_creating_if_missing: " << obj.options_.create_if_missing
+                   << " dataDirectoryPath: " << obj.dataDirectoryPath;
+        }
+
         rocksdb::Options options_;
         std::string dataDirectoryPath;
         friend class Metadata;
-        friend class CollectionMetadata;
+        friend class VectorCollectionMetadata;
         friend class VectorCollection;
         friend class KvStore;
     protected:
@@ -42,23 +50,23 @@ namespace mvdb {
 
         // Function to add data with a key-value pair
         // Returns true on success, false on failure
-        [[nodiscard]] bool put(const std::string& key, const std::string& value) const;
+         bool put(const std::string& key, const std::string& value) const;
 
-        [[nodiscard]] int64_t putAutoKey(const std::string& value) const;
+         int64_t putAutoKey(const std::string& value) const;
 
         // Function to batch add data with key-value pairs
         // Returns true on success, false on failure
-        [[nodiscard]] bool putMany(const std::vector<std::pair<std::string, std::string>>& pairs) const;
+         bool putMany(const std::vector<std::pair<std::string, std::string>>& pairs) const;
 
-        [[nodiscard]] bool putManyAutoKey(const std::vector<std::string>& values) const;
+         bool putManyAutoKey(const std::vector<std::string>& values) const;
 
         // Function to retrieve data by key
         // Returns the value or empty string if the key does not exist
-        [[nodiscard]] std::string get(const std::string& key) const;
+         std::string get(const std::string& key) const;
 
         // Function to remove data using a key
         // Returns true on success, false if the key does not exist
-        [[nodiscard]] bool remove(const std::string& key) const;
+         bool remove(const std::string& key) const;
 
     };
 

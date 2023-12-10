@@ -11,7 +11,7 @@
 
 namespace mvdb {
 
-    class CollectionMetadata final: public Serializable {
+    class VectorCollectionMetadata : public Serializable {
         friend class Metadata;
     protected:
         void serialize(std::ostream& out) const override;
@@ -25,12 +25,12 @@ namespace mvdb {
         KvStoreMetadata kv_store_metadata_;
         VectorIndexMetadata vector_index_metadata_;
         VectorizerMetadata vectorizer_metadata_;
-        CollectionMetadata() = default;
-        CollectionMetadata(std::string name, std::string collectionFilePath, const size_t& recordCount,
+        VectorCollectionMetadata() = default;
+        VectorCollectionMetadata(std::string name, std::string collectionFilePath, const size_t& recordCount,
         const KvStoreMetadata& kv_store_metadata, const VectorIndexMetadata& vector_index_metadata,
         const VectorizerMetadata& vectorizer_metadata);
-        ~CollectionMetadata() override = default;
-        friend std::ostream& operator<<(std::ostream& os, const CollectionMetadata& obj) {
+        ~VectorCollectionMetadata() override = default;
+        friend std::ostream& operator<<(std::ostream& os, const VectorCollectionMetadata& obj) {
             return os
                    << "name: " << obj.name
                    << " recordCount: " << obj.recordCount
@@ -75,7 +75,7 @@ namespace mvdb {
         std::unique_ptr<Vectorizer> vectorizer_;
     public:
         VectorCollection() = default;
-        explicit VectorCollection(const CollectionMetadata& metadata);
+        explicit VectorCollection(const VectorCollectionMetadata& metadata);
         ~VectorCollection() = default;
         bool add_data(const std::string& data) const;
         SearchResult search_with_vector(const std::vector<float>& query, const long& k = 5, const bool& ret_data = false) const;

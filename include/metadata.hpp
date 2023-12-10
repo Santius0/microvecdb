@@ -9,7 +9,7 @@
 
 namespace mvdb {
 
-    class Metadata final: public Serializable {
+    class Metadata : public Serializable {
         std::string metadataFilePath;
         std::string createdTimestamp;
         std::string modifiedTimestamp;
@@ -19,11 +19,11 @@ namespace mvdb {
         void serialize(std::ostream& out) const override;
         void deserialize(std::istream& in) override;
     public:
-        std::vector<CollectionMetadata> collections_;
+        std::vector<VectorCollectionMetadata> collections_;
         Metadata() = default;
         explicit Metadata(const std::string& metadataFilePath);
         ~Metadata() override;
-        void addCollection(const CollectionMetadata& metadata);
+        void addCollection(const VectorCollectionMetadata& metadata);
         void deleteCollection(const std::string& collectionName);
         void load();
         void save();

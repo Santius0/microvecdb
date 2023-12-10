@@ -1,4 +1,4 @@
-#include "micrvecdb.hpp"
+#include "vector_db.hpp"
 #include "utils.hpp"
 #include "constants.hpp"
 #include <filesystem>
@@ -6,7 +6,7 @@
 
 namespace mvdb {
 
-    MicroVecDB::MicroVecDB(const std::string& path, const std::string& dbname): path(trim(path)), dbname(dbname) {
+    VectorDB::VectorDB(const std::string& path, const std::string& dbname): path(trim(path)), dbname(dbname) {
         if(!std::filesystem::exists(path))  // if directory doesn't exist create it
             std::filesystem::create_directory(path);
         else if(!std::filesystem::is_directory(path)) // else if file exists but is not a directory throw error
@@ -25,7 +25,7 @@ namespace mvdb {
         // }
     }
 
-    void MicroVecDB::create_collection(const std::string& name, const uint64_t& dimensions, const std::string& model) {
+    void VectorDB::create_collection(const std::string& name, const uint64_t& dimensions, const std::string& model) {
         const std::string collectionFilePath = path + std::filesystem::path::preferred_separator + name;
         const std::string indexFilePath = collectionFilePath + std::filesystem::path::preferred_separator + name + INDEX_EXT;
         const std::string dataDirectoryPath = collectionFilePath + std::filesystem::path::preferred_separator + name + KV_STORE_EXT;
@@ -39,7 +39,7 @@ namespace mvdb {
 
         const VectorizerMetadata vectorizer_metadata = VectorizerMetadata(model, dimensions);
 
-        const CollectionMetadata collection_metadata = CollectionMetadata(name, collectionFilePath, 0,
+        const VectorCollectionMetadata collection_metadata = VectorCollectionMetadata(name, collectionFilePath, 0,
             kv_store_metadata, vector_index_metadata, vectorizer_metadata);
 
         auto* vc = new VectorCollection(collection_metadata);
@@ -51,7 +51,7 @@ namespace mvdb {
         metadata_->save();
     }
 
-    VectorCollection* MicroVecDB::collection(const std::string& name) const {
+    VectorCollection* VectorDB::collection(const std::string& name) const {
         for(size_t i = 0; i < metadata_->collections_.size(); i++) {
             if(name == metadata_->collections_[i].name) return collections_[i].get();
         }

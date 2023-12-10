@@ -1,6 +1,7 @@
 #ifndef VECTOR_INDEX_H
 #define VECTOR_INDEX_H
 
+#include "constants.hpp"
 #include "serializable.hpp"
 #include <faiss/Index.h>
 #include <faiss/IndexIDMap.h>
@@ -15,12 +16,12 @@ namespace mvdb {
         IVF = 1
     };
 
-    class VectorIndexMetadata final: Serializable {
+    class VectorIndexMetadata : Serializable {
         std::string indexFilePath;
         uint64_t indexDimensions{};
         VectorIndexType indexType;
         friend class VectorIndex;
-        friend class CollectionMetadata;
+        friend class VectorCollectionMetadata;
         friend class Metadata;
     protected:
         void serialize(std::ostream& out) const override;
@@ -51,10 +52,10 @@ namespace mvdb {
         VectorIndex& operator=(const VectorIndex&) = delete;
 
         // Add data to the index
-        [[nodiscard]] std::vector<uint64_t> add(const size_t& n, const float* data, const int64_t* ids = nullptr) const;
+        std::vector<uint64_t> add(const size_t& n, const float* data, const int64_t* ids = nullptr) const;
 
         // Remove data from the index
-        [[nodiscard]] bool remove(const size_t& n, const faiss::IDSelector& ids) const;
+        bool remove(const size_t& n, const faiss::IDSelector& ids) const;
 
         void save() const;
 
