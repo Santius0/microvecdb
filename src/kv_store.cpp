@@ -12,13 +12,13 @@ namespace mvdb {
     }
 
     void KvStoreMetadata::serialize(std::ostream& out) const {
-        serializeString(out, dataDirectoryPath);
-        serializeUInt64T(out, options_.create_if_missing);
+        serialize_string(out, dataDirectoryPath);
+        serialize_numeric<bool>(out, options_.create_if_missing);
     }
 
     void KvStoreMetadata::deserialize(std::istream& in) {
-        dataDirectoryPath = deserializeString(in);
-        options_.create_if_missing = deserializeUInt64T(in);
+        dataDirectoryPath = deserialize_string(in);
+        options_.create_if_missing = deserialize_numeric<bool>(in);
     }
 
     KvStore::KvStore(const KvStoreMetadata& metadata) {

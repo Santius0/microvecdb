@@ -9,13 +9,13 @@ namespace mvdb {
     model(std::move(model)), dimensions(dimensions) {}
 
     void VectorizerMetadata::serialize(std::ostream& out) const {
-        serializeString(out, model);
-        serializeUInt64T(out, dimensions);
+        serialize_string(out, model);
+        serialize_numeric<uint64_t>(out, dimensions);
     }
 
     void VectorizerMetadata::deserialize(std::istream& in) {
-        model = deserializeString(in);
-        dimensions = deserializeUInt64T(in);
+        model = deserialize_string(in);
+        dimensions = deserialize_numeric<uint64_t>(in);
     }
 
     Vectorizer::Vectorizer(const VectorizerMetadata& metadata) {

@@ -18,22 +18,22 @@ namespace mvdb {
     }
 
     void VectorCollectionMetadata::serialize(std::ostream& out) const {
-        serializeString(out, name);
-        serializeString(out, collectionFilePath);
-        serializeUInt64T(out, recordCount);
-        serializeString(out, createdTimestamp);
-        serializeString(out, modifiedTimestamp);
+        serialize_string(out, name);
+        serialize_string(out, collectionFilePath);
+        serialize_numeric<uint64_t>(out, recordCount);
+        serialize_string(out, createdTimestamp);
+        serialize_string(out, modifiedTimestamp);
         kv_store_metadata_.serialize(out);
         vector_index_metadata_.serialize(out);
         vectorizer_metadata_.serialize(out);
     }
 
     void VectorCollectionMetadata::deserialize(std::istream& in) {
-        name = deserializeString(in);
-        collectionFilePath = deserializeString(in);
-        recordCount = deserializeUInt64T(in);
-        createdTimestamp = deserializeString(in);
-        modifiedTimestamp = deserializeString(in);
+        name = deserialize_string(in);
+        collectionFilePath = deserialize_string(in);
+        recordCount = deserialize_numeric<uint64_t>(in);
+        createdTimestamp = deserialize_string(in);
+        modifiedTimestamp = deserialize_string(in);
         kv_store_metadata_.deserialize(in);
         vector_index_metadata_.deserialize(in);
         vectorizer_metadata_.deserialize(in);

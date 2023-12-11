@@ -20,16 +20,16 @@ namespace mvdb {
     }
 
     void Metadata::serialize(std::ostream& out) const {
-        serializeString(out, createdTimestamp);
-        serializeString(out, modifiedTimestamp);
-        serializeUInt64T(out, collections_.size());
+        serialize_string(out, createdTimestamp);
+        serialize_string(out, modifiedTimestamp);
+        serialize_numeric<size_t>(out, collections_.size());
         for (const auto& collection : collections_) collection.serialize(out);
     }
 
     void Metadata::deserialize(std::istream& in) {
-        createdTimestamp = deserializeString(in);
-        modifiedTimestamp = deserializeString(in);
-        const size_t num_collections = deserializeUInt64T(in);
+        createdTimestamp = deserialize_string(in);
+        modifiedTimestamp = deserialize_string(in);
+        const auto num_collections = deserialize_numeric<size_t>(in);
         for (int i = 0; i < num_collections; i++) {
             VectorCollectionMetadata collection_metadata;
             collection_metadata.deserialize(in);

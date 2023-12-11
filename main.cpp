@@ -1,9 +1,17 @@
 #include <microvecdb.hpp>
+#include "vector.h"
+#include "index.h"
+#include "db_object.h"
+#include <fstream>
 
 int main() {
-    auto* micro_vec_db = new mvdb::VectorDB("./test_mvdb", "test_mvdb");
-    micro_vec_db->create_collection("collection1", 300, "../models/cc.en.300.bin");
-    const mvdb::VectorCollection* collection = micro_vec_db->collection("collection1");
+//    mvdb::MicroVector(2);
+    mvdb::DBObject* db = new mvdb::Index();
+//    db->ff();
+    delete db;
+//    auto* micro_vec_db = new mvdb::VectorDB("./test_mvdb", "test_mvdb");
+//    micro_vec_db->create_collection("collection1", 300, "../models/cc.en.300.bin");
+//    const mvdb::VectorCollection* collection = micro_vec_db->collection("collection1");
 
     // collection->add_data("An agile fox jumps swiftly over the sleeping dog");
     // collection->add_data("A nimble fox quickly leaps over the resting dog");
@@ -17,8 +25,8 @@ int main() {
     // collection->add_data("Sunshine brightens the quiet forest as the deer prance away");
     // collection->add_data("hello");
 
-    const mvdb::SearchResult sr = collection->search("The fast brown fox jumps over the lazy hound in the forest", 11, true);
-    std::cout << "Search Results -\n" << sr << std::endl;
-    delete micro_vec_db;
+//    const mvdb::SearchResult sr = collection->search("The fast brown fox jumps over the lazy hound in the forest", 11, true);
+//    std::cout << "Search Results -\n" << sr << std::endl;
+//    delete micro_vec_db;
     return 0;
 }

@@ -16,15 +16,15 @@ namespace mvdb {
     indexType(indexType) {}
 
     void VectorIndexMetadata::serialize(std::ostream& out) const {
-        serializeString(out, indexFilePath);
-        serializeUInt64T(out, indexDimensions);
-        serializeUInt64T(out, static_cast<uint64_t>(indexType));
+        serialize_string(out, indexFilePath);
+        serialize_numeric<uint64_t>(out, indexDimensions);
+        serialize_numeric<uint64_t>(out, static_cast<uint64_t>(indexType));
     }
 
     void VectorIndexMetadata::deserialize(std::istream& in) {
-        indexFilePath = deserializeString(in);
-        indexDimensions = deserializeUInt64T(in);
-        indexType = static_cast<VectorIndexType>(deserializeUInt64T(in));
+        indexFilePath = deserialize_string(in);
+        indexDimensions = deserialize_numeric<uint64_t>(in);
+        indexType = static_cast<VectorIndexType>(deserialize_numeric<uint64_t>(in));
     }
 
     VectorIndex::VectorIndex(const VectorIndexMetadata& metadata) {
