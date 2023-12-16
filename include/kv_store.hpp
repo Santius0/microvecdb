@@ -56,9 +56,9 @@ namespace mvdb {
 
         // Function to batch add data with key-value pairs
         // Returns true on success, false on failure
-         bool putMany(const std::vector<std::pair<std::string, std::string>>& pairs) const;
+//         bool putMany(const std::vector<std::pair<std::string, std::string>>& pairs) const;
 
-         bool putManyAutoKey(const std::vector<std::string>& values) const;
+//         bool putManyAutoKey(const std::vector<std::string>& values) const;
 
         // Function to retrieve data by key
         // Returns the value or empty string if the key does not exist

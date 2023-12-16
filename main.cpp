@@ -1,32 +1,29 @@
 #include <microvecdb.hpp>
-#include "vector.h"
-#include "index.h"
-#include "db_object.h"
-#include <fstream>
+//#include "vector.h"
 
 int main() {
-//    mvdb::MicroVector(2);
-    mvdb::DBObject* db = new mvdb::Index();
+//    mvdb::Vector* v = new mvdb::Vector(300, 1, nullptr, nullptr, nullptr);
+//    mvdb::DBObject* db = new mvdb::Index();
 //    db->ff();
-    delete db;
-//    auto* micro_vec_db = new mvdb::VectorDB("./test_mvdb", "test_mvdb");
-//    micro_vec_db->create_collection("collection1", 300, "../models/cc.en.300.bin");
-//    const mvdb::VectorCollection* collection = micro_vec_db->collection("collection1");
+//    delete v;
+    auto* micro_vec_db = new mvdb::VectorDB("./test_mvdb", "test_mvdb");
+    micro_vec_db->create_collection("collection1", 300, "../models/cc.en.300.bin");
+    const mvdb::VectorCollection* collection = micro_vec_db->collection("collection1");
+//
+//     collection->add_data("An agile fox jumps swiftly over the sleeping dog");
+//     collection->add_data("A nimble fox quickly leaps over the resting dog");
+//     collection->add_data("An agile fox jumps over the sleeping canine");
+//     collection->add_data("The fast brown fox jumps over the lazy hound");
+//     collection->add_data("Rapidly jumping over a dog, the brown fox is swift");
+//     collection->add_data("Sprinting swiftly, the red fox overcomes the resting dog");
+//     collection->add_data("The quick blue fox hops over the lazy dog");
+//     collection->add_data("Under a bright moon, a fox jumps over a quiet dog");
+//     collection->add_data("In the forest, a brown bear climbs over a fallen log");
+//     collection->add_data("Sunshine brightens the quiet forest as the deer prance away");
+//     collection->add_data("hello");
 
-    // collection->add_data("An agile fox jumps swiftly over the sleeping dog");
-    // collection->add_data("A nimble fox quickly leaps over the resting dog");
-    // collection->add_data("An agile fox jumps over the sleeping canine");
-    // collection->add_data("The fast brown fox jumps over the lazy hound");
-    // collection->add_data("Rapidly jumping over a dog, the brown fox is swift");
-    // collection->add_data("Sprinting swiftly, the red fox overcomes the resting dog");
-    // collection->add_data("The quick blue fox hops over the lazy dog");
-    // collection->add_data("Under a bright moon, a fox jumps over a quiet dog");
-    // collection->add_data("In the forest, a brown bear climbs over a fallen log");
-    // collection->add_data("Sunshine brightens the quiet forest as the deer prance away");
-    // collection->add_data("hello");
-
-//    const mvdb::SearchResult sr = collection->search("The fast brown fox jumps over the lazy hound in the forest", 11, true);
-//    std::cout << "Search Results -\n" << sr << std::endl;
-//    delete micro_vec_db;
+    const mvdb::SearchResult sr = collection->search("The fast brown fox jumps over the lazy hound in the forest", 11, true);
+    std::cout << "Search Results -\n" << sr << std::endl;
+    delete micro_vec_db;
     return 0;
 }

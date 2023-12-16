@@ -41,23 +41,23 @@ namespace mvdb {
         return -1;
     }
 
-    bool KvStore::putMany(const std::vector<std::pair<std::string, std::string>>& pairs) const {
-        rocksdb::WriteBatch batch;
-        for (const auto& pair : pairs) {
-            batch.Put(pair.first, pair.second);
-        }
-        const rocksdb::Status status = db->Write(rocksdb::WriteOptions(), &batch);
-        return status.ok();
-    }
+//    bool KvStore::putMany(const std::vector<std::pair<std::string, std::string>>& pairs) const {
+//        rocksdb::WriteBatch batch;
+//        for (const auto& pair : pairs) {
+//            batch.Put(pair.first, pair.second);
+//        }
+//        const rocksdb::Status status = db->Write(rocksdb::WriteOptions(), &batch);
+//        return status.ok();
+//    }
 
-    bool KvStore::putManyAutoKey(const std::vector<std::string>&values) const {
-        std::vector<std::pair<std::string, std::string>> pairs;
-        for(int i = 0; i < values.size(); i++) {
-            std::string key_str = std::to_string(this->db->GetLatestSequenceNumber() + i);
-            pairs.emplace_back(key_str, values[i]);
-        }
-        return KvStore::putMany(pairs);
-    }
+//    bool KvStore::putManyAutoKey(const std::vector<std::string>&values) const {
+//        std::vector<std::pair<std::string, std::string>> pairs;
+//        for(int i = 0; i < values.size(); i++) {
+//            std::string key_str = std::to_string(this->db->GetLatestSequenceNumber() + i);
+//            pairs.emplace_back(key_str, values[i]);
+//        }
+//        return KvStore::putMany(pairs);
+//    }
 
     std::string KvStore::get(const std::string& key) const {
         std::string value;

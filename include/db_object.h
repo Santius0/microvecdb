@@ -15,7 +15,8 @@ namespace mvdb {
         INDEX = 0,
         VECTORIZER = 1,
         KV_STORE = 2,
-        COLLECTION = 3
+        COLLECTION = 3,
+        SCHEMA = 4
     };
 
     inline std::ostream& operator<<(std::ostream& os, DBObjectType objectType) {
@@ -30,10 +31,10 @@ namespace mvdb {
     }
 
     class DBObject : Serializable {
+    protected:
         std::string obj_name_{};
         DBObjectType obj_type_{};
         std::string obj_col_name_{};
-    protected:
         void serialize(std::ostream &out) const override;
         void deserialize(std::istream &in) override;
 

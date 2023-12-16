@@ -1,6 +1,10 @@
 #ifndef CONTSTANTS_H
 #define CONTSTANTS_H
 
+#pragma once
+#include <cstdint>
+#include <vector>
+
 namespace mvdb {
     // VectorDB
     #define META_FILE_EXTENSION ".metadata"
@@ -21,5 +25,8 @@ namespace mvdb {
     #define KV_STORE_EXT_LEN strlen(KV_STORE_EXT)
     #define MAX_KEY_CHARS 21
     #define MAX_KEY_SIZE_BYTES (sizeof(char) * MAX_KEY_CHARS) // (2^64 - 1) is a number with 20 digits
+
+    using pkey_t = uint64_t; // numerical standard for primary keys
+    using vec_count_t = uint16_t;  // numerical standard for specifying number of vectors
 }
 #endif //CONTSTANTS_H
