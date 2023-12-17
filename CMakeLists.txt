@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.26)
 project(microvecdb)
+set(CMAKE_CXX_STANDARD 17)
 
 # Constructing Platform Tag >>>> ----------------------------------------------------------
 set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
-
-# Detect the operating system
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(OS "linux-gnu")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
@@ -14,19 +13,18 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 else()
     set(OS ${CMAKE_SYSTEM_NAME})
 endif()
-
-# Construct the platform tag
 set(PLATFORM_TAG "${ARCHITECTURE}-${OS}")
-
+message(STATUS "Platform Tag: ${PLATFORM_TAG}")
 # <<<< Constructing Platform Tag  ----------------------------------------------------------
 
-set(CMAKE_CXX_STANDARD 17)
-
+# Getting Python Major & Minor Version >>>> ----------------------------------------------------------
 find_package(OpenMP REQUIRED)
 find_package(PythonLibs REQUIRED)
 string(REPLACE "." ";" PYTHON_VERSION_LIST ${PYTHONLIBS_VERSION_STRING})
 list(GET PYTHON_VERSION_LIST 0 PYTHON_MAJOR_VERSION)
 list(GET PYTHON_VERSION_LIST 1 PYTHON_MINOR_VERSION)
+message(STATUS "CPython Version: ${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}")
+# <<<< Getting Python Major & Minor Version ----------------------------------------------------------
 
 function(include_sub_directories_recursively root_dir)
     if (IS_DIRECTORY ${root_dir})
@@ -62,29 +60,10 @@ add_executable(microvecdb_main main.cpp)
 set(python_extension_target "microvecdb.cpython-${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}-${PLATFORM_TAG}")
 add_library(${python_extension_target} MODULE python/pymicrovecdb.cpp)
 
-#add_custom_target(
-#        BuildPythonPackage
-#        COMMAND ${PYTHON_EXECUTABLE} python/setup.py build
-#        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-#)
-#
-#add_custom_command(
-#        TARGET BuildPythonPackage
-#        POST_BUILD
-#        COMMAND ${PYTHON_EXECUTABLE} python/setup.py bdist_wheel
-#        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-#        COMMENT "Building Python Package"
-#)
 
-#set_target_properties(microvecdb_py PROPERTIES PREFIX "")
+#target_link_libraries(microindex PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C)
+target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C rocksdb faiss faiss_c)
 
-#if(OpenMP_CXX_FOUND OR OpenMP_C_FOUND)
-#    target_link_libraries(microindex PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C)
-    target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C rocksdb faiss faiss_c)
-#else ()
-#    target_link_libraries(microindex)
-#    target_link_libraries(microvecdb PUBLIC rocksdb faiss faiss_c)
-#endif()
 target_link_libraries(microvecdb_main PUBLIC microvecdb)
 target_link_libraries(${python_extension_target} ${PYTHON_LIBRARIES} microvecdb)
 
