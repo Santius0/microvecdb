@@ -26,6 +26,7 @@ list(GET PYTHON_VERSION_LIST 1 PYTHON_MINOR_VERSION)
 message(STATUS "CPython Version: ${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}")
 # <<<< Getting Python Major & Minor Version ----------------------------------------------------------
 
+# Configuring sources headers and link directories >>>> ----------------------------------------------------------
 function(include_sub_directories_recursively root_dir)
     if (IS_DIRECTORY ${root_dir})
         message("Including directory: ${root_dir}")
@@ -53,23 +54,27 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*")
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "include/*")
 file(GLOB_RECURSE FASTTEXT_SOURCES CONFIGURE_DEPENDS "fasttext/src/*.cc")
 list(REMOVE_ITEM FASTTEXT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/fasttext/src/main.cc") # gathering all the fasttext src files and removing main.cc
+# <<<< Configuring sources headers and link directories ----------------------------------------------------------
 
+# Specifying targets >>>> ----------------------------------------------------------
 add_library(microvecdb SHARED ${SOURCES} ${HEADERS} ${FASTTEXT_SOURCES})
 add_executable(microvecdb_main main.cpp)
 
-set(python_extension_target "microvecdb.cpython-${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}-${PLATFORM_TAG}")
-add_library(${python_extension_target} MODULE python/pymicrovecdb.cpp)
+set(PYTHON_EXTENSION_TARGET "microvecdb.cpython-${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}-${PLATFORM_TAG}")
+add_library(${PYTHON_EXTENSION_TARGET} MODULE python/pymicrovecdb.cpp)
+# <<<< Specifying targets ----------------------------------------------------------
 
-
+# Setting Up link libraries targets >>>> ----------------------------------------------------------
 #target_link_libraries(microindex PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C)
 target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C rocksdb faiss faiss_c)
 
 target_link_libraries(microvecdb_main PUBLIC microvecdb)
-target_link_libraries(${python_extension_target} ${PYTHON_LIBRARIES} microvecdb)
+target_link_libraries(${PYTHON_EXTENSION_TARGET} ${PYTHON_LIBRARIES} microvecdb)
+# <<<< Setting Up link libraries targets ----------------------------------------------------------
 
-
+# Setting up additional properties >>>> ----------------------------------------------------------
 set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-
-set_target_properties(${python_extension_target} PROPERTIES PREFIX "")
-set_target_properties(${python_extension_target} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
+set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 file(MAKE_DIRECTORY "${LIBRARY_OUTPUT_DIRECTORY}")
+# <<<< Setting up additional properties ----------------------------------------------------------
