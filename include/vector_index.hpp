@@ -59,11 +59,11 @@ namespace mvdb {
 
     class VectorIndex final : public Serializable {
         std::unique_ptr<faiss::Index> faissIndex; // The actual FAISS index
-        // std::unique_ptr<faiss::IndexIDMap> faissIndexIDMap;
-        // bool id_map = false;
         std::string indexFilePath;
         uint64_t indexDimensions{};
         VectorIndexType indexType;
+
+        bool is_open_ = false;
         friend class VectorDB;
         friend std::ostream& operator<<(std::ostream& os, const VectorIndex& obj);
         friend std::ostream& operator<<(std::ostream& os, const VectorIndex* obj);
@@ -72,14 +72,16 @@ namespace mvdb {
         void deserialize(std::istream &in) override;
     public:
         // Constructor
-        explicit VectorIndex(const std::string indexFilePath, const uint64_t& indexDimensions, const VectorIndexType& indexType);
+        explicit VectorIndex(const std::string& indexFilePath, const uint64_t& indexDimensions, const VectorIndexType& indexType);
 
         // Destructor
-        ~VectorIndex() override;
+        ~VectorIndex() override = default;
 
         // Non-copyable and non-movable
         VectorIndex(const VectorIndex&) = delete;
         VectorIndex& operator=(const VectorIndex&) = delete;
+
+        void init();
 
         // Add data to the index
         std::vector<uint64_t> add(const size_t& n, const float* data, const int64_t* ids = nullptr) const;
@@ -90,6 +92,12 @@ namespace mvdb {
         void save() const;
 
         void load();
+
+        void open();
+
+        void close();
+
+        [[nodiscard]] bool is_open() const;
 
         void search(const std::vector<float>& query, int64_t ids[], float distances[], const long& k = 5) const;
 

@@ -17,7 +17,7 @@ namespace mvdb {
      }
 
      std::ostream& operator<<(std::ostream& os, const VectorDB* obj) {
-         return os << "*(" << *obj << ")";
+         return os << "VectorDB*(" << *obj << ")";
      }
 
      void VectorDB::serialize(std::ostream &out) const {
@@ -77,33 +77,36 @@ namespace mvdb {
     }
 
     KvStore* VectorDB::storage() {
-        return kv_store_.get();
+         return kv_store_.get();
     }
 
     bool VectorDB::add_data_vector(const std::string& data, float* vec) const {
-        const std::vector<uint64_t> keys = vector_index_->add(1, vec);
-        return kv_store_->put(std::to_string(keys[0]), data);
+         if(!kv_store_->is_open()) kv_store_->open();
+         if(!vector_index_->is_open()) vector_index_->open();
+         const std::vector<uint64_t> keys = vector_index_->add(1, vec);
+         return kv_store_->put(std::to_string(keys[0]), data);
     }
 
     bool VectorDB::add_data(const std::string& data) const {
-        if(!kv_store_->is_open()) kv_store_->open();
         Vectorizer vectorizer = Vectorizer("../models/cc.en.300.bin", dims_);
         fasttext::Vector vec = vectorizer.get_word_vector(data);
         return add_data_vector(data, vec.data());
     }
 
     SearchResult VectorDB::search_with_vector(const std::vector<float>& query, const long& k, const bool& ret_data) const {
-        auto *ids = new int64_t[k];
-        auto *distances = new float[k];
-        auto *data = new std::string[k];
-        vector_index_->search(query, ids, distances, k);
-        if(ret_data) for(int i = 0 ; i < k; i++) data[i] = kv_store_->get(std::to_string(ids[i]));
-        return {ids, distances, data, k};
+         if(!kv_store_->is_open()) kv_store_->open();
+         if(!vector_index_->is_open()) vector_index_->open();
+         auto *ids = new int64_t[k];
+         auto *distances = new float[k];
+         auto *data = new std::string[k];
+         vector_index_->search(query, ids, distances, k);
+         if(ret_data) for(int i = 0 ; i < k; i++) data[i] = kv_store_->get(std::to_string(ids[i]));
+         return {ids, distances, data, k};
     }
 
     SearchResult VectorDB::search(const std::string& data, const long& k, const bool& ret_data) const {
-        Vectorizer vectorizer = Vectorizer("../models/cc.en.300.bin", dims_);
-        fasttext::Vector query = vectorizer.get_word_vector(data);
-        return search_with_vector(query.get_data_(), k, ret_data);
+         Vectorizer vectorizer = Vectorizer("../models/cc.en.300.bin", dims_);
+         fasttext::Vector query = vectorizer.get_word_vector(data);
+         return search_with_vector(query.get_data_(), k, ret_data);
     }
 }
