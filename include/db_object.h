@@ -34,13 +34,12 @@ namespace mvdb {
     protected:
         std::string obj_name_{};
         DBObjectType obj_type_{};
-        std::string obj_col_name_{};
         void serialize(std::ostream &out) const override;
         void deserialize(std::istream &in) override;
 
     public:
         DBObject() = default;
-        DBObject(std::string obj_name, const DBObjectType& obj_type, std::string  obj_col_name);
+        DBObject(std::string obj_name, const DBObjectType& obj_type);
         ~DBObject() override = default;
     };
 }

@@ -11,42 +11,38 @@
 
 namespace mvdb {
 
-    VectorIndexMetadata::VectorIndexMetadata(std::string indexFilePath, const uint64_t& indexDimensions,
-        const VectorIndexType& indexType): indexFilePath(std::move(indexFilePath)), indexDimensions(indexDimensions),
-    indexType(indexType) {}
-
-    void VectorIndexMetadata::serialize(std::ostream& out) const {
+    void VectorIndex::serialize(std::ostream& out) const {
         serialize_string(out, indexFilePath);
         serialize_numeric<uint64_t>(out, indexDimensions);
         serialize_numeric<uint64_t>(out, static_cast<uint64_t>(indexType));
     }
 
-    void VectorIndexMetadata::deserialize(std::istream& in) {
+    void VectorIndex::deserialize(std::istream& in) {
         indexFilePath = deserialize_string(in);
         indexDimensions = deserialize_numeric<uint64_t>(in);
         indexType = static_cast<VectorIndexType>(deserialize_numeric<uint64_t>(in));
     }
 
-    VectorIndex::VectorIndex(const VectorIndexMetadata& metadata) {
-        indexFilePath = metadata.indexFilePath;
-        indexDimensions = metadata.indexDimensions;
-        if(std::filesystem::exists(metadata.indexFilePath)) load();
-        else {
-            switch (metadata.indexType) {
+    VectorIndex::VectorIndex(std::string indexFilePath, const uint64_t& indexDimensions,
+        const VectorIndexType& indexType): indexFilePath(std::move(indexFilePath)), indexDimensions(indexDimensions),
+    indexType(indexType) {
+//        if(std::filesystem::exists(indexFilePath)) load();
+//        else {
+            switch (indexType) {
                 case VectorIndexType::IVF: {
                     constexpr int nlist = 100;
-                    faiss::IndexFlatL2 quantizer(static_cast<long>(metadata.indexDimensions));
-                    faissIndex = std::make_unique<faiss::IndexIVFFlat>(&quantizer, metadata.indexDimensions, nlist, faiss::METRIC_L2);
+                    faiss::IndexFlatL2 quantizer(static_cast<long>(indexDimensions));
+                    faissIndex = std::make_unique<faiss::IndexIVFFlat>(&quantizer, indexDimensions, nlist, faiss::METRIC_L2);
                     break;
                 }
                 default: {
-                    faissIndex = std::make_unique<faiss::IndexFlatL2>(metadata.indexDimensions);
+                    faissIndex = std::make_unique<faiss::IndexFlatL2>(indexDimensions);
                     // faissIndexIDMap = std::make_unique<faiss::IndexIDMap>(faissIndex.get());
                     // id_map = true;
                     break;
                 }
             }
-        }
+//        }
     }
 
     // TODO: only save if something changed

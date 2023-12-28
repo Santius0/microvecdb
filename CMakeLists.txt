@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.26)
 project(microvecdb)
 set(CMAKE_CXX_STANDARD 17)
 
+message("")
+
 # Constructing Platform Tag >>>> ----------------------------------------------------------
 set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
@@ -46,9 +48,9 @@ include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/rocksdb/include)
 
-link_directories(lib rocksdb/lib faiss/lib ${CMAKE_BINARY_DIR})
+link_directories(lib faiss/lib ${CMAKE_BINARY_DIR})
 
-file(GLOB_RECURSE MICROINDEX_SOURCES CONFIGURE_DEPENDS "src/index/*.cpp")
+#file(GLOB_RECURSE MICROINDEX_SOURCES CONFIGURE_DEPENDS "src/index/*.cpp")
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*")
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "include/*")

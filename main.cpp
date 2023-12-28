@@ -1,14 +1,25 @@
 #include <microvecdb.hpp>
 //#include "vector.h"
 
+// Profiler Settings:
+//  --tool=massif --massif-out-file=./massif.out
+
+// --leak-check=full --leak-resolution=med --track-origins=yes --vgdb=no
 int main() {
+    mvdb::VectorDB *vdb = new mvdb::VectorDB("./test_db", "test_db");
+//    vdb->add_data("An agile fox jumps swiftly over the sleeping dog");
+//    vdb->add_data("In the forest, a brown bear climbs over a fallen log");
+//    const mvdb::SearchResult sr = vdb->search("The fast brown fox jumps over the lazy hound in the forest", 11, true);
+//    std::cout << "Search Results -\n" << sr << std::endl;
+    std::cout << vdb;
+    delete vdb;
 //    mvdb::Vector* v = new mvdb::Vector(300, 1, nullptr, nullptr, nullptr);
 //    mvdb::DBObject* db = new mvdb::Index();
 //    db->ff();
 //    delete v;
-    auto* micro_vec_db = new mvdb::VectorDB("./test_mvdb", "test_mvdb");
-    micro_vec_db->create_collection("collection1", 300, "../models/cc.en.300.bin");
-    const mvdb::VectorCollection* collection = micro_vec_db->collection("collection1");
+//    auto* micro_vec_db = new mvdb::VectorDB("./test_mvdb", "test_mvdb");
+//    micro_vec_db->create_collection("collection1", 300, "../models/cc.en.300.bin");
+//    const mvdb::VectorCollection* collection = micro_vec_db->collection("collection1");
 //
 //     collection->add_data("An agile fox jumps swiftly over the sleeping dog");
 //     collection->add_data("A nimble fox quickly leaps over the resting dog");
@@ -22,8 +33,8 @@ int main() {
 //     collection->add_data("Sunshine brightens the quiet forest as the deer prance away");
 //     collection->add_data("hello");
 
-    const mvdb::SearchResult sr = collection->search("The fast brown fox jumps over the lazy hound in the forest", 11, true);
-    std::cout << "Search Results -\n" << sr << std::endl;
-    delete micro_vec_db;
+//    const mvdb::SearchResult sr = collection->search("The fast brown fox jumps over the lazy hound in the forest", 11, true);
+//    std::cout << "Search Results -\n" << sr << std::endl;
+//    delete micro_vec_db;
     return 0;
 }

@@ -16,36 +16,60 @@ namespace mvdb {
         IVF = 1
     };
 
-    class VectorIndexMetadata : Serializable {
-        std::string indexFilePath;
-        uint64_t indexDimensions{};
-        VectorIndexType indexType;
-        friend class VectorIndex;
-        friend class VectorCollectionMetadata;
-        friend class Metadata;
-    protected:
-        void serialize(std::ostream& out) const override;
-        void deserialize(std::istream& in) override;
+    inline std::string VectorIndexTypeToString(VectorIndexType type) {
+        switch (type) {
+            case VectorIndexType::FLAT:     return "FLAT";
+            case VectorIndexType::IVF:      return "IVF";
+            default:                        return "invalid index type";
+    }
+}
+
+    class SearchResult {
+        friend std::ostream& operator<<(std::ostream& os, const SearchResult& obj) {
+            for(int i = 0; i < obj.size_; i++)
+                os << "id: " << obj.ids_[i]
+                   << "\tdistance: "
+                   << obj.distances_[i]
+                   << "\tdata: " << obj.data_[i]
+                   << std::endl
+                ;
+            return os;
+        }
+
+        friend std::ostream& operator<<(std::ostream& os, const SearchResult* obj) {
+            return os << "*(" << *obj << ")";
+        }
     public:
-        VectorIndexMetadata() = default;
-        VectorIndexMetadata(std::string indexFilePath, const uint64_t& indexDimensions,
-        const VectorIndexType& indexType);
-        ~VectorIndexMetadata() override = default;
+        int64_t *ids_;
+        float* distances_;
+        std::string *data_;
+        const long size_;
+        SearchResult(int64_t* ids, float* distances, std::string* data, const long& size):
+        ids_(ids), distances_(distances), data_(data), size_(size) {}
+        ~SearchResult() {
+            delete[] ids_;
+            delete[] distances_;
+            delete[] data_;
+        };
     };
 
-    class VectorIndex {
+    class VectorIndex final : public Serializable{
         std::unique_ptr<faiss::Index> faissIndex; // The actual FAISS index
         // std::unique_ptr<faiss::IndexIDMap> faissIndexIDMap;
         // bool id_map = false;
         std::string indexFilePath;
         uint64_t indexDimensions{};
-
+        VectorIndexType indexType;
+        friend class VectorDB;
+    protected:
+        void serialize(std::ostream &out) const override;
+        void deserialize(std::istream &in) override;
     public:
         // Constructor
-        explicit VectorIndex(const VectorIndexMetadata& metadata);
+        explicit VectorIndex(const std::string indexFilePath, const uint64_t& indexDimensions, const VectorIndexType& indexType);
 
         // Destructor
-        ~VectorIndex();
+        ~VectorIndex() override;
 
         // Non-copyable and non-movable
         VectorIndex(const VectorIndex&) = delete;

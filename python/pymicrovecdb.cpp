@@ -1,12 +1,12 @@
 #include <Python.h>
-#include <microvecdb.hpp>
+//#include <microvecdb.hpp>
 
 // Function to be exposed - hello_world
 static PyObject* hello_world(PyObject *self, PyObject *args) {
     printf("Hello, World!\n");
-    auto* micro_vec_db = new mvdb::VectorDB("./test_mvdb", "test_mvdb");
-    std::cout << micro_vec_db << std::endl;
-    delete micro_vec_db;
+//    auto* micro_vec_db = new mvdb::VectorDB("./test_mvdb", "test_mvdb");
+//    std::cout << micro_vec_db << std::endl;
+//    delete micro_vec_db;
     Py_RETURN_NONE;
 }
 
