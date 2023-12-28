@@ -11,21 +11,12 @@ namespace mvdb {
         return os   << "path_: " << obj.path_ << std::endl
                     << "dbname_: " << obj.dbname_ << std::endl
                     << "dims_: " << obj.dims_ << std::endl
-                    << "index_type_: " << VectorIndexTypeToString(obj.index_type_) << std::endl
-//                    << "vector_index_:\n" << obj.vector_index_ << std::endl
-//                    << "kv_store_:\n" << obj.kv_store_
-                    ;
+                    << "index_type_: " << obj.index_type_ << std::endl
+                    << "vector_index_:\n" << obj.vector_index_.get() << std::endl
+                    << "kv_store_:\n" << obj.kv_store_.get();
      }
 
      std::ostream& operator<<(std::ostream& os, const VectorDB* obj) {
-         return os << "*(" << *obj << ")";
-     }
-
-     std::ostream& operator<<(std::ostream& os, const std::unique_ptr<VectorDB>& obj) {
-         return os << "*(" << *obj << ")";
-     }
-
-     std::ostream& operator<<(std::ostream& os, const std::shared_ptr<VectorDB>& obj) {
          return os << "*(" << *obj << ")";
      }
 

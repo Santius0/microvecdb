@@ -10,6 +10,15 @@
 #include <utility>
 
 namespace mvdb {
+    std::ostream& operator<<(std::ostream& os, const VectorIndex& obj){
+        return os   << "indexFilePath: " << obj.indexFilePath << std::endl
+                    << "indexDimensions: " << obj.indexDimensions << std::endl
+                    << "indexType: " << obj.indexType << std::endl;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const VectorIndex* obj){
+        return os << "*(" << *obj << ")";
+    }
 
     void VectorIndex::serialize(std::ostream& out) const {
         serialize_string(out, indexFilePath);

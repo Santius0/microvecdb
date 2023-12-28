@@ -19,6 +19,8 @@ namespace mvdb {
 
         bool is_open_ = false;
         friend class VectorDB;
+        friend std::ostream& operator<<(std::ostream& os, const KvStore& obj);
+        friend std::ostream& operator<<(std::ostream& os, const KvStore* obj);
     protected:
         void serialize(std::ostream &out) const override;
         void deserialize(std::istream &in) override;

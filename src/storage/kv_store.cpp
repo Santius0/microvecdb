@@ -5,6 +5,15 @@
 #include <utility>
 
 namespace mvdb {
+    std::ostream& operator<<(std::ostream& os, const KvStore& obj) {
+        return os   << "data_dir_path_: " << obj.data_dir_path_ << std::endl
+                    << "create_if_missing: " << obj.options_.create_if_missing << std::endl
+                    ;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const KvStore* obj) {
+        return os << "*(" << *obj << ")";
+    }
 
     void KvStore::serialize(std::ostream& out) const {
         serialize_string(out, data_dir_path_);

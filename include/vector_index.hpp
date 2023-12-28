@@ -16,13 +16,17 @@ namespace mvdb {
         IVF = 1
     };
 
-    inline std::string VectorIndexTypeToString(VectorIndexType type) {
-        switch (type) {
-            case VectorIndexType::FLAT:     return "FLAT";
-            case VectorIndexType::IVF:      return "IVF";
-            default:                        return "invalid index type";
+    inline std::ostream& operator<<(std::ostream& os, const VectorIndexType& obj) {
+        switch (obj) {
+            case VectorIndexType::FLAT:     return os << "FLAT";
+            case VectorIndexType::IVF:      return os << "IVF";
+            default:                        return os << "invalid index type";
+        }
     }
-}
+
+    inline std::ostream& operator<<(std::ostream& os, const VectorIndexType* obj) {
+        return os << "*(" << *obj << ")";
+    }
 
     class SearchResult {
         friend std::ostream& operator<<(std::ostream& os, const SearchResult& obj) {
@@ -53,7 +57,7 @@ namespace mvdb {
         };
     };
 
-    class VectorIndex final : public Serializable{
+    class VectorIndex final : public Serializable {
         std::unique_ptr<faiss::Index> faissIndex; // The actual FAISS index
         // std::unique_ptr<faiss::IndexIDMap> faissIndexIDMap;
         // bool id_map = false;
@@ -61,6 +65,8 @@ namespace mvdb {
         uint64_t indexDimensions{};
         VectorIndexType indexType;
         friend class VectorDB;
+        friend std::ostream& operator<<(std::ostream& os, const VectorIndex& obj);
+        friend std::ostream& operator<<(std::ostream& os, const VectorIndex* obj);
     protected:
         void serialize(std::ostream &out) const override;
         void deserialize(std::istream &in) override;

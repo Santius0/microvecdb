@@ -29,8 +29,6 @@ namespace mvdb {
 
         friend std::ostream& operator<<(std::ostream& os, const VectorDB& obj);
         friend std::ostream& operator<<(std::ostream& os, const VectorDB* obj);
-        friend std::ostream& operator<<(std::ostream& os, const std::unique_ptr<VectorDB>& obj);
-        friend std::ostream& operator<<(std::ostream& os, const std::shared_ptr<VectorDB>& obj);
     protected:
         void serialize(std::ostream &out) const override;
         void deserialize(std::istream &in) override;

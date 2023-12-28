@@ -1,4 +1,5 @@
 #include <microvecdb.hpp>
+#include <iostream>
 //#include "vector.h"
 
 // Profiler Settings:
