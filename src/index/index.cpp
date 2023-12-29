@@ -1,25 +1,31 @@
-//#include "index.h"
-//
-//#include <utility>
-//#include "exception.h"
-//
-//namespace mvdb {
-//
-//    Index::Index(std::string obj_name, const DBObjectType& obj_type, std::string obj_col_name,
-//                      const mvdb::IndexType &idx_type, const uint64_t &idx_dims) :
-//            DBObject(std::move(obj_name), obj_type, std::move(obj_col_name)),
-//            idx_type_(idx_type), idx_dims_(idx_dims) {}
-//
-//    void Index::serialize(std::ostream &out) const {
-//        DBObject::serialize(out);
-//        serialize_numeric<int>(out, static_cast<int>(idx_type_));
-//        serialize_numeric<uint64_t>(out, idx_dims_);
-//    }
-//
-//    void Index::deserialize(std::istream &in) {
-//        DBObject::deserialize(in);
-//        idx_type_ = static_cast<IndexType>(deserialize_numeric<int>(in));
-//        idx_dims_ = deserialize_numeric<int>(in);
-//    }
-//
-//}
+#include "index.hpp"
+#include <filesystem>
+
+namespace mvdb {
+
+    Index::Index(std::string index_path, const uint64_t &dims, const IndexType &index_type):
+    index_path_(std::move(index_path)), dims_(dims), index_type_(index_type){}
+
+     void Index::serialize(std::ostream& out) const {
+        serialize_string(out, index_path_);
+        serialize_numeric<uint64_t>(out, dims_);
+        serialize_numeric<uint64_t>(out, static_cast<uint64_t>(index_type_));
+    }
+
+    void Index::deserialize(std::istream& in) {
+        index_path_ = deserialize_string(in);
+        dims_ = deserialize_numeric<uint64_t>(in);
+        index_type_ = static_cast<IndexType>(deserialize_numeric<uint64_t>(in));
+    }
+
+    void Index::open() {
+        if(std::filesystem::exists(index_path_)) load();
+        else init();
+        is_open_ = true;
+    }
+
+    bool Index::is_open() const {
+        return is_open_;
+    }
+
+}

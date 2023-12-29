@@ -1,6 +1,7 @@
 #include "vector_db.hpp"
 #include "utils.hpp"
 #include "constants.hpp"
+#include "faiss_flat_index.h"
 #include <filesystem>
 #include <stdexcept>
 #include <fstream>
@@ -12,7 +13,7 @@ namespace mvdb {
                     << "dbname_: " << obj.dbname_ << std::endl
                     << "dims_: " << obj.dims_ << std::endl
                     << "index_type_: " << obj.index_type_ << std::endl
-                    << "vector_index_:\n" << obj.vector_index_.get() << std::endl
+                    << "vector_index_:\n" << obj.index_.get() << std::endl
                     << "kv_store_:\n" << obj.kv_store_.get();
      }
 
@@ -25,7 +26,7 @@ namespace mvdb {
         serialize_string(out, dbname_);
         serialize_numeric<uint64_t>(out, dims_);
         serialize_numeric<int8_t>(out, static_cast<int8_t>(index_type_));
-        vector_index_->serialize(out);
+        index_->serialize(out);
         kv_store_->serialize(out);
     }
 
@@ -33,12 +34,12 @@ namespace mvdb {
         path_ = deserialize_string(in);
         dbname_ = deserialize_string(in);
         dims_ = deserialize_numeric<uint64_t>(in);
-        index_type_ = static_cast<VectorIndexType>(deserialize_numeric<int8_t>(in));
-        vector_index_->deserialize(in);
+        index_type_ = static_cast<IndexType>(deserialize_numeric<int8_t>(in));
+        index_->deserialize(in);
         kv_store_->deserialize(in);
     }
 
-    VectorDB::VectorDB(const std::string& path, const std::string& dbname, const uint64_t& dims, const VectorIndexType& index_type,
+    VectorDB::VectorDB(const std::string& path, const std::string& dbname, const uint64_t& dims, const IndexType& index_type,
                        VectorizerModelType vec_model): path_(trim(path)), dbname_(dbname), dims_(dims), index_type_(index_type),
                        vec_model_(vec_model){
 
@@ -53,10 +54,19 @@ namespace mvdb {
 
         if(std::filesystem::exists(metadata_path_)) load();
         else {
-            vector_index_ = std::make_unique<VectorIndex>(index_path, dims_,  index_type_);
+            make_index_(index_path);
             kv_store_ = std::make_unique<KvStore>(data_path,true, false);
         }
     }
+
+    void VectorDB::make_index_(const std::string& index_path){
+         switch (index_type_) {
+             case IndexType::FLAT:
+                 return;
+             default:
+                 index_ = std::make_unique<FaissFlatIndex>(index_path, dims_);
+         }
+     }
 
     void VectorDB::save(const std::string& save_path) {
         std::ofstream file(save_path.empty() ? metadata_path_ : save_path);
@@ -72,8 +82,8 @@ namespace mvdb {
         file.close();
     }
 
-    VectorIndex* VectorDB::index() {
-        return vector_index_.get();
+    Index* VectorDB::index() {
+        return index_.get();
     }
 
     KvStore* VectorDB::storage() {
@@ -82,8 +92,8 @@ namespace mvdb {
 
     bool VectorDB::add_data_vector(const std::string& data, float* vec) const {
          if(!kv_store_->is_open()) kv_store_->open();
-         if(!vector_index_->is_open()) vector_index_->open();
-         const std::vector<uint64_t> keys = vector_index_->add(1, vec);
+         if(!index_->is_open()) index_->open();
+         const std::vector<uint64_t> keys = index_->add(1, vec);
          return kv_store_->put(std::to_string(keys[0]), data);
     }
 
@@ -95,11 +105,11 @@ namespace mvdb {
 
     SearchResult VectorDB::search_with_vector(const std::vector<float>& query, const long& k, const bool& ret_data) const {
          if(!kv_store_->is_open()) kv_store_->open();
-         if(!vector_index_->is_open()) vector_index_->open();
+         if(!index_->is_open()) index_->open();
          auto *ids = new int64_t[k];
          auto *distances = new float[k];
          auto *data = new std::string[k];
-         vector_index_->search(query, ids, distances, k);
+         index_->search(query, ids, distances, k);
          if(ret_data) for(int i = 0 ; i < k; i++) data[i] = kv_store_->get(std::to_string(ids[i]));
          return {ids, distances, data, k};
     }

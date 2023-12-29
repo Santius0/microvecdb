@@ -4,7 +4,6 @@
 #include "constants.hpp"
 #include "serializable.hpp"
 #include <faiss/Index.h>
-#include <faiss/IndexIDMap.h>
 #include <string>
 #include <memory>
 #include <ostream>
