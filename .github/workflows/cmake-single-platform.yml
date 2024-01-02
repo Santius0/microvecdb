@@ -43,3 +43,9 @@ jobs:
       with:
         files: |
           test-results/**/*.json
+
+permissions:
+  contents: read
+  issues: read
+  checks: write
+  pull-requests: write
