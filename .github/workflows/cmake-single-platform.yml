@@ -42,7 +42,7 @@ jobs:
       if: always()
       with:
         files: |
-          test-results/**/*.json
+          tests/results/**/*.json
 
 permissions:
   contents: read
