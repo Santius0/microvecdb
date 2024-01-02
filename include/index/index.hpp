@@ -9,6 +9,7 @@
 #include <ostream>
 
 namespace mvdb {
+    using value_t = int8_t;
 
     enum IndexType {
         FAISS_FLAT = 0,

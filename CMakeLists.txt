@@ -4,6 +4,16 @@ set(CMAKE_CXX_STANDARD 17)
 
 message("")
 
+find_program(READELF_EXECUTABLE readelf)
+if(NOT READELF_EXECUTABLE)
+    message(FATAL_ERROR "readelf not found")
+endif()
+
+find_program(SIZE_EXECUTABLE size)
+if(NOT SIZE_EXECUTABLE)
+    message(FATAL_ERROR "size tool not found")
+endif()
+
 # Constructing Platform Tag >>>> ----------------------------------------------------------
 set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
@@ -42,41 +52,68 @@ function(include_sub_directories_recursively root_dir)
     endif()
 endfunction()
 
-include_directories(${PYTHON_INCLUDE_DIRS})
+#include_directories(${PYTHON_INCLUDE_DIRS})
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
-include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
+#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/rocksdb/include)
+#
+#link_directories(lib faiss/lib ${CMAKE_BINARY_DIR})
 
-link_directories(lib faiss/lib ${CMAKE_BINARY_DIR})
-
-#file(GLOB_RECURSE MICROINDEX_SOURCES CONFIGURE_DEPENDS "src/index/*.cpp")
-
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*")
-file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "include/*")
-file(GLOB_RECURSE FASTTEXT_SOURCES CONFIGURE_DEPENDS "fasttext/src/*.cc")
-list(REMOVE_ITEM FASTTEXT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/fasttext/src/main.cc") # gathering all the fasttext src files and removing main.cc
+#file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*")
+#file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "include/*")
+#file(GLOB_RECURSE FASTTEXT_SOURCES CONFIGURE_DEPENDS "fasttext/src/*.cc")
+#list(REMOVE_ITEM FASTTEXT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/fasttext/src/main.cc") # gathering all the fasttext src files and removing main.cc
 # <<<< Configuring sources headers and link directories ----------------------------------------------------------
 
-# Specifying targets >>>> ----------------------------------------------------------
-add_library(microvecdb SHARED ${SOURCES} ${HEADERS} ${FASTTEXT_SOURCES})
-add_executable(microvecdb_main main.cpp)
+# Configuring targets >>>> ----------------------------------------------------------
+# microindex:
+add_library(microindex SHARED
+        src/index/index.cpp
+        src/index/flat_index.cpp
+        src/index/faiss_flat_index.cpp
 
-set(PYTHON_EXTENSION_TARGET "microvecdb.cpython-${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}-${PLATFORM_TAG}")
-add_library(${PYTHON_EXTENSION_TARGET} MODULE python/pymicrovecdb.cpp)
-# <<<< Specifying targets ----------------------------------------------------------
+        include/index/index.hpp
+        include/index/flat_index.h)
+target_include_directories(microindex PUBLIC include/index)
+target_link_directories(microindex PUBLIC faiss/lib)
+target_link_libraries(microindex PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C faiss faiss_c)
+set_target_properties(microindex PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
-# Setting Up link libraries targets >>>> ----------------------------------------------------------
-#target_link_libraries(microindex PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C)
-target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C rocksdb faiss faiss_c)
 
-target_link_libraries(microvecdb_main PUBLIC microvecdb)
-target_link_libraries(${PYTHON_EXTENSION_TARGET} ${PYTHON_LIBRARIES} microvecdb)
-# <<<< Setting Up link libraries targets ----------------------------------------------------------
+# storage:
+# TODO: implement and configure rocksdb stuff
+#add_library(microstorage PUBLIC <insert sources here>)
+#target_link_directories(microstorage PUBLIC rocksdb/lib)
 
-# Setting up additional properties >>>> ----------------------------------------------------------
-set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
-set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+# microvecdb:
+# add_library(microvecdb SHARED ${SOURCES} ${FASTTEXT_SOURCES})
+# target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C rocksdb faiss faiss_c)
+#set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+
+# microvecdb.cpython
+# set(PYTHON_EXTENSION_TARGET "microvecdb.cpython-${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}-${PLATFORM_TAG}")
+# add_library(${PYTHON_EXTENSION_TARGET} MODULE python/pymicrovecdb.cpp)
+# target_link_libraries(${PYTHON_EXTENSION_TARGET} ${PYTHON_LIBRARIES} microvecdb)
+# set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
+# set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+
+# main:
+add_executable(microvecdb_main main.c)
+target_link_libraries(microvecdb_main PUBLIC microindex)
+# <<<< Configuring targets ----------------------------------------------------------
+
+# making sure output directory exists
 file(MAKE_DIRECTORY "${LIBRARY_OUTPUT_DIRECTORY}")
-# <<<< Setting up additional properties ----------------------------------------------------------
+
+# Post build analysis >>>> ----------------------------------------------------------
+set(SIZE_OUTPUT_FILE "${CMAKE_BINARY_DIR}/size_output.txt")
+set(READELF_OUTPUT_FILE "${CMAKE_BINARY_DIR}/readelf_output.txt")
+add_custom_command(
+        TARGET microindex POST_BUILD
+        COMMAND ${SIZE_EXECUTABLE} $<TARGET_FILE:microindex> > ${SIZE_OUTPUT_FILE}
+        COMMENT "Running size on microindex"
+        COMMAND ${READELF_EXECUTABLE} -s $<TARGET_FILE:microindex> | sort -n -k3 > ${READELF_OUTPUT_FILE}
+        COMMENT "Running readelf on microindex"
+)
+# <<<< Post build analysis ----------------------------------------------------------

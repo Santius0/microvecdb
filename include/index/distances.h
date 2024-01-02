@@ -10,12 +10,19 @@
 // Function to calculate L2 distance between two vectors
 inline float L2_distance(const std::vector<float>& vec1, const std::vector<float>& vec2) {
     float distance = 0.0;
-    for (size_t i = 0; i < vec1.size(); i++) {
-        distance += (vec1[i] - vec2[i]) * (vec1[i] - vec2[i]);
-    }
-    return std::sqrt(distance);
+    float sum = 0.0;
 
+    #pragma omp parallel for reduction(+:sum) // Parallel for-loop with reduction on 'sum'
+    for (size_t i = 0; i < vec1.size(); i++) {
+        sum += (vec1[i] - vec2[i]) * (vec1[i] - vec2[i]);
+    }
+
+//    distance = std::sqrt(sum); // this metric will only be used to compare the distance between points
+                                 // so don't really need to use compute on the sqrt step, just need the overall
+                                 // magnitude
+    return sum;
 }
+
 // Function to find the k nearest neighbors
 inline std::vector<uint64_t> knn(const std::vector<float>& query, const std::vector<std::vector<float>>& dataset, int k) {
     // Use a max heap to keep track of the k nearest neighbors found so far

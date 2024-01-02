@@ -2,9 +2,11 @@
 #define MICROVEC_DB_FLAT_INDEX_H
 
 #include "index.hpp"
+#include <vector>
 
 namespace mvdb {
     class FlatIndex final : public Index {
+        std::vector<value_t> index_;
         friend std::ostream& operator<<(std::ostream& os, const FlatIndex& obj);
         friend std::ostream& operator<<(std::ostream& os, const FlatIndex* obj);
     protected:
