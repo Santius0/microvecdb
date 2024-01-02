@@ -4,4 +4,4 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_executable(index_tests index_tests.cpp)
 target_link_libraries(index_tests gtest_main)
-add_test(NAME index_tests COMMAND bash -c "./index_tests --gtest_output='json:${CMAKE_SOURCE_DIR}/tests/results/index_tests_results.json'")
+add_test(NAME index_tests COMMAND bash -c "./index_tests --gtest_output='xml:${CMAKE_SOURCE_DIR}/tests/results/index_tests_results.xml'")
