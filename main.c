@@ -9,9 +9,7 @@
 
 // --leak-check=full --leak-resolution=med --track-origins=yes --vgdb=no
 
-#include <index.h>
-#include <time.h>
-#include <stdio.h>
+#include <index.hpp>
 
 int main() {
 
