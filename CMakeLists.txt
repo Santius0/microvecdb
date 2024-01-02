@@ -72,7 +72,8 @@ add_library(microindex SHARED
         src/index/faiss_flat_index.cpp
 
         include/index/index.hpp
-        include/index/flat_index.h)
+        include/index/flat_index.h
+        include/index/faiss_flat_index.h)
 target_include_directories(microindex PUBLIC include/index)
 target_link_directories(microindex PUBLIC faiss/lib)
 target_link_libraries(microindex PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C faiss faiss_c)
