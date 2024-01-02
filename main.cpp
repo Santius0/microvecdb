@@ -12,7 +12,6 @@
 #include <index.hpp>
 
 int main() {
-
 //    mvdb::VectorDB *vdb = new mvdb::VectorDB("./test_db", "test_db");
 //    vdb->add_data("An agile fox jumps swiftly over the sleeping dog");
 //    vdb->add_data("In the forest, a brown bear climbs over a fallen log");

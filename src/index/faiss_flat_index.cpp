@@ -26,7 +26,7 @@ namespace mvdb {
     Index(index_path, dims, IndexType::FAISS_FLAT) {}
 
     void FaissFlatIndex::init(){
-        faiss_index = std::make_unique<faiss::IndexFlatL2>(dims_);
+        faiss_index_ = std::make_unique<faiss::IndexFlatL2>(dims_);
     }
 
     std::vector<uint64_t> FaissFlatIndex::add(const size_t& n, const float* data) const {
@@ -34,10 +34,10 @@ namespace mvdb {
             std::vector<uint64_t> keys;
             keys.reserve(n);
             for(int i = 0; i < n; i++)
-                keys.emplace_back(faiss_index->ntotal + i);
-            faiss_index->add(static_cast<long>(n), data);
-//            if(ids == nullptr) faiss_index->add(static_cast<long>(n), data);
-//            else faiss_index->add_with_ids(static_cast<long>(n), data, ids);
+                keys.emplace_back(faiss_index_->ntotal + i);
+            faiss_index_->add(static_cast<long>(n), data);
+//            if(ids == nullptr) faiss_index_->add(static_cast<long>(n), data);
+//            else faiss_index_->add_with_ids(static_cast<long>(n), data, ids);
             save();
             return keys;
         } catch (const std::exception& e) {
@@ -48,7 +48,7 @@ namespace mvdb {
 
     bool FaissFlatIndex::remove(const size_t& n, const faiss::IDSelector& ids) const {
         try {
-            faiss_index->remove_ids(ids);
+            faiss_index_->remove_ids(ids);
             save();
             return true;
         } catch (const std::exception& e) {
@@ -58,20 +58,24 @@ namespace mvdb {
     }
 
     void FaissFlatIndex::save() const {
-        faiss::write_index(faiss_index.get(), index_path_.c_str());
+        faiss::write_index(faiss_index_.get(), index_path_.c_str());
     }
 
     void FaissFlatIndex::load() {
-        faiss_index.reset(faiss::read_index(index_path_.c_str()));
+        faiss_index_.reset(faiss::read_index(index_path_.c_str()));
     }
 
     void FaissFlatIndex::search(const std::vector<float>& query, int64_t ids[], float distances[], const long& k) const {
-        faiss_index->search(static_cast<long>(query.size()/dims_), query.data(), k, distances, ids);
+        faiss_index_->search(static_cast<long>(query.size()/dims_), query.data(), k, distances, ids);
     }
 
     void FaissFlatIndex::close() {
-        faiss_index->reset();
+        faiss_index_->reset();
         is_open_ = false;
+    }
+
+    faiss::Index* FaissFlatIndex::faiss_index(){
+        return faiss_index_.get();
     }
 
 } // namespace mvdb

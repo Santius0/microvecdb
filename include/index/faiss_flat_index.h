@@ -9,7 +9,7 @@
 namespace mvdb {
 
     class FaissFlatIndex final : public Index {
-        std::unique_ptr<faiss::Index> faiss_index; // The actual FAISS index
+        std::unique_ptr<faiss::Index> faiss_index_; // The actual FAISS index
         friend std::ostream& operator<<(std::ostream& os, const FaissFlatIndex& obj);
         friend std::ostream& operator<<(std::ostream& os, const FaissFlatIndex* obj);
     protected:
@@ -38,6 +38,8 @@ namespace mvdb {
         void close() override;
 
         void search(const std::vector<float>& query, int64_t ids[], float distances[], const long& k = 5) const override;
+
+        faiss::Index* faiss_index();
 
     };
 
