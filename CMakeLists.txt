@@ -99,7 +99,7 @@ set_target_properties(microindex PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOU
 # set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 # main:
-add_executable(microvecdb_main main.c)
+add_executable(microvecdb_main main.cpp)
 target_link_libraries(microvecdb_main PUBLIC microindex)
 # <<<< Configuring targets ----------------------------------------------------------
 
