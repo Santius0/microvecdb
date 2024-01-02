@@ -45,6 +45,9 @@ jobs:
           tests/results/**/*.xml
           tests/results/**/*.trx
           tests/results/**/*.json
+        check_name: Unit Test Results
+        job_summary: true
+        check_run: true
 
 permissions:
   contents: read
