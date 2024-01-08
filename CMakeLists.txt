@@ -50,7 +50,7 @@ function(include_sub_directories_recursively root_dir)
     endif()
 endfunction()
 
-#include_directories(${PYTHON_INCLUDE_DIRS})
+include_directories(${PYTHON_INCLUDE_DIRS})
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
@@ -68,14 +68,12 @@ include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 # microindex:
 add_library(microindex SHARED
         src/index/index.cpp
-        src/index/flat_index.cpp
         src/index/faiss_flat_index.cpp
-        include/index/index.hpp
-        include/index/flat_index.h
-        include/index/faiss_flat_index.h
-        include/index/faiss_ivf_index.h
-        include/index/faiss_hnsw_index.h
-        include/index/faiss_pq_index.h)
+#        include/index/faiss_flat_index.h
+#        include/index/faiss_ivf_index.h
+#        include/index/faiss_hnsw_index.h
+#        include/index/faiss_pq_index.h
+)
 
 target_include_directories(microindex PUBLIC include/index)
 target_link_directories(microindex PUBLIC faiss/lib)
@@ -94,11 +92,19 @@ set_target_properties(microindex PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOU
 #set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 # microvecdb.cpython
-# set(PYTHON_EXTENSION_TARGET "microvecdb.cpython-${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}-${PLATFORM_TAG}")
-# add_library(${PYTHON_EXTENSION_TARGET} MODULE python/pymicrovecdb.cpp)
-# target_link_libraries(${PYTHON_EXTENSION_TARGET} ${PYTHON_LIBRARIES} microvecdb)
-# set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
-# set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set(PYTHON_EXTENSION_TARGET "microvecdb.cpython-${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}-${PLATFORM_TAG}")
+add_library(${PYTHON_EXTENSION_TARGET} MODULE python/pymicrovecdb.cpp)
+target_link_libraries(${PYTHON_EXTENSION_TARGET} ${PYTHON_LIBRARIES} microindex)
+set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
+set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+#set(PYTHON_PACKAGE_BUILD_SCRIPT "/python/pymicrovecdb.sh")
+#file(CHMOD +x ${PYTHON_PACKAGE_BUILD_SCRIPT})
+#add_custom_command(
+#        TARGET ${PYTHON_EXTENSION_TARGET} POST_BUILD
+#        COMMAND ${PYTHON_PACKAGE_BUILD_SCRIPT}
+#        COMMENT "Building python package"
+#)
+
 
 # main:
 add_executable(microvecdb_main main.cpp)
@@ -119,6 +125,7 @@ add_custom_command(
         COMMENT "Running readelf on microindex"
 )
 # <<<< Post build analysis ----------------------------------------------------------
+
 
 include(FetchContent)
 FetchContent_Declare(

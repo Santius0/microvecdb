@@ -1,9 +1,11 @@
 #include <Python.h>
+#include <faiss_flat_index.h>
 //#include <microvecdb.hpp>
 
 // Function to be exposed - hello_world
 static PyObject* hello_world(PyObject *self, PyObject *args) {
     printf("Hello, World!\n");
+    printf("Hello, World FUCK!\n");
 //    auto* micro_vec_db = new mvdb::VectorDB("./test_mvdb", "test_mvdb");
 //    std::cout << micro_vec_db << std::endl;
 //    delete micro_vec_db;
