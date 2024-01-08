@@ -8,20 +8,20 @@
 
 namespace mvdb {
 
-    class FaissFlatIndex final : public Index {
+    class FaissIVFIndex final : public Index {
         std::unique_ptr<faiss::Index> faiss_index_;    // The actual FAISS index
-        friend std::ostream& operator<<(std::ostream& os, const FaissFlatIndex& obj);
-        friend std::ostream& operator<<(std::ostream& os, const FaissFlatIndex* obj);
+        friend std::ostream& operator<<(std::ostream& os, const FaissIVFIndex& obj);
+        friend std::ostream& operator<<(std::ostream& os, const FaissIVFIndex* obj);
     protected:
         void serialize(std::ostream &out) const override;
         void deserialize(std::istream &in) override;
     public:
-        explicit FaissFlatIndex(const std::string& index_path, const uint64_t& dims_);
-        ~FaissFlatIndex() override = default;
+        explicit FaissIVFIndex(const std::string& index_path, const uint64_t& dims_);
+        ~FaissIVFIndex() override = default;
 
         // Non-copyable and non-movable
-        FaissFlatIndex(const FaissFlatIndex&) = delete;
-        FaissFlatIndex& operator=(const FaissFlatIndex&) = delete;
+        FaissIVFIndex(const FaissIVFIndex&) = delete;
+        FaissIVFIndex& operator=(const FaissIVFIndex&) = delete;
 
         void init() override;
 

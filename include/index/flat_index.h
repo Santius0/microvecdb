@@ -6,7 +6,7 @@
 
 namespace mvdb {
     class FlatIndex final : public Index {
-        std::vector<value_t> index_;
+        std::vector<vector_t> index_ = {};
         friend std::ostream& operator<<(std::ostream& os, const FlatIndex& obj);
         friend std::ostream& operator<<(std::ostream& os, const FlatIndex* obj);
     protected:
@@ -18,7 +18,7 @@ namespace mvdb {
         FlatIndex(const FlatIndex&) = delete;
         FlatIndex& operator=(const FlatIndex&) = delete;
         void init() override;
-        std::vector<uint64_t> add(const size_t& n, const float* data) const override;
+        std::vector<uint64_t> add(const size_t& n, const value_t* data) const override;
         [[nodiscard]] bool remove(const size_t& n, const faiss::IDSelector& ids) const override;
         void save() const override;
         void load() override;

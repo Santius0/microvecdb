@@ -10,6 +10,7 @@
 
 namespace mvdb {
     using value_t = int8_t;
+    using vector_t = value_t*;
 
     enum IndexType {
         FAISS_FLAT = 0,
