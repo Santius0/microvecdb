@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include "kv_store.hpp"
+#include "kv_store.h"
 #include "schema.h"
-#include "index.hpp"
-#include "vectorizer.hpp"
+#include "index.h"
+#include "vectorizer.h"
 
-#include "metadata.hpp"
-#include "vector_collection.hpp"
+#include "metadata.h"
+#include "vector_collection.h"
 #include <vector>
 #include <memory>
 #include <filesystem>

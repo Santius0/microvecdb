@@ -1,5 +1,5 @@
-#include "kv_store.hpp"
-#include "utils.hpp"
+#include "kv_store.h"
+#include "utils.h"
 #include <stdexcept>
 #include <string>
 #include <utility>

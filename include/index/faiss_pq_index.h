@@ -1,7 +1,7 @@
 #ifndef MICROVEC_DB_FAISS_FLAT_INDEX_H
 #define MICROVEC_DB_FAISS_FLAT_INDEX_H
 
-#include "index.hpp"
+#include "index.h"
 #include <faiss/Index.h>
 #include <faiss/IndexFlat.h>
 #include <faiss/index_io.h>

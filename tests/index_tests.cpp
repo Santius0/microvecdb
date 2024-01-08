@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <index.hpp>
+#include <index.h>
 //#include <faiss_flat_index.h>
 
 //float* generateRandomVector(size_t n) {

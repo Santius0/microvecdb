@@ -1,4 +1,4 @@
-#include "index.hpp"
+#include "index.h"
 #include <filesystem>
 
 namespace mvdb {

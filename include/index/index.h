@@ -1,8 +1,8 @@
 #ifndef INDEX_H
 #define INDEX_H
 
-#include "constants.hpp"
-#include "serializable.hpp"
+#include "constants.h"
+#include "serializable.h"
 #include <faiss/IndexIDMap.h>
 #include <string>
 #include <memory>

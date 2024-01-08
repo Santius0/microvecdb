@@ -1,8 +1,8 @@
 #ifndef VECTORIZER_H
 #define VECTORIZER_H
 
-#include "constants.hpp"
-#include "serializable.hpp"
+#include "constants.h"
+#include "serializable.h"
 #include <fasttext.h>
 #include <memory>
 

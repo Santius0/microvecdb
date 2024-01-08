@@ -1,5 +1,5 @@
-#include "vector_index.hpp"
-#include "utils.hpp"
+#include "vector_index.h"
+#include "utils.h"
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexIVFFlat.h>
 #include <faiss/index_io.h>

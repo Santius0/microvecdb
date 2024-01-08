@@ -1,8 +1,8 @@
 #ifndef KV_STORE_H
 #define KV_STORE_H
 
-#include "constants.hpp"
-#include "serializable.hpp"
+#include "constants.h"
+#include "serializable.h"
 #include <string>
 #include <vector>
 #include <memory>

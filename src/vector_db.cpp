@@ -1,6 +1,6 @@
-#include "vector_db.hpp"
-#include "utils.hpp"
-#include "constants.hpp"
+#include "vector_db.h"
+#include "utils.h"
+#include "constants.h"
 #include "faiss_flat_index.h"
 #include <filesystem>
 #include <stdexcept>

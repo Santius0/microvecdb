@@ -1,7 +1,7 @@
 #ifndef MICROVEC_DB_FLAT_INDEX_H
 #define MICROVEC_DB_FLAT_INDEX_H
 
-#include "index.hpp"
+#include "index.h"
 #include <vector>
 
 namespace mvdb {

@@ -9,7 +9,7 @@
 
 // --leak-check=full --leak-resolution=med --track-origins=yes --vgdb=no
 
-#include <index.hpp>
+#include <index.h>
 
 int main() {
 //    mvdb::VectorDB *vdb = new mvdb::VectorDB("./test_db", "test_db");
