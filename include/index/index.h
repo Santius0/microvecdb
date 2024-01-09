@@ -81,6 +81,7 @@ namespace mvdb {
         virtual void close() = 0;
         [[nodiscard]] virtual bool is_open() const;
         virtual void search(const int& n, float* query, int64_t* ids, float* distances, const long& k) const = 0;
+        virtual uint64_t dims();
     };
 
 } // namespace mvdb

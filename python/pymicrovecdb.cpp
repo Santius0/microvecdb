@@ -1,7 +1,6 @@
 #include <Python.h>
 #include <iostream>
 #include <faiss_flat_index.h>
-//#include <microvecdb.hpp>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
@@ -28,11 +27,31 @@ static PyObject* FaissFlatIndex_create(PyObject *self, PyObject *args) {
     return PyCapsule_New(flat_index, FAISS_FLAT_INDEX_NAME, FaissFlatIndex_delete);
 }
 
-static PyObject* FaissFlatIndex_init(PyObject *self, PyObject *args) {
+static PyObject* FaissFlatIndex_open(PyObject *self, PyObject *args) {
     PyObject* capsule;
     if(!PyArg_ParseTuple(args, "O", &capsule)) return nullptr;
     auto* idx_obj = static_cast<mvdb::FaissFlatIndex*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAME));
-    idx_obj->init();
+    idx_obj->open();
+    Py_RETURN_NONE;
+}
+
+static PyObject* FaissFlatIndex_add(PyObject* self, PyObject* args) {
+    PyObject *capsule, *input_vector;
+    int n; // number of input vector passed in;
+    if(!PyArg_ParseTuple(args, "OO!i", &capsule, &PyArray_Type, &input_vector, &n)) return nullptr;
+    auto* idx_obj = static_cast<mvdb::FaissFlatIndex*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAME));
+    auto* input_pyarray = (PyArrayObject*)input_vector;
+    if (PyArray_TYPE(input_pyarray) != NPY_FLOAT) {
+        PyErr_SetString(PyExc_TypeError, "Array should be of type float");
+        return nullptr;
+    }
+    auto* input = (float*)PyArray_DATA(input_pyarray);
+    npy_intp dims[1] = {static_cast<long>(idx_obj->dims())};
+    PyObject* keys_pyArray = PyArray_SimpleNew(1, dims, NPY_FLOAT);
+    if (!keys_pyArray) return nullptr;
+    auto* keys = (uint64_t*)PyArray_DATA((PyArrayObject*)keys_pyArray);
+    bool res = idx_obj->add(n, input, keys);
+    return PyTuple_Pack(2, PyBool_FromLong(res), keys_pyArray);
     Py_RETURN_NONE;
 }
 
@@ -75,8 +94,10 @@ static PyMethodDef MyExtensionMethods[] = {
       hello_world,    // C function to be called
       METH_VARARGS,    // No arguments for this function
       "Print 'Hello, World!'" }, // Docstring for this function
+
     { "FaissFlatIndex_create", FaissFlatIndex_create, METH_VARARGS, "Creates index using faiss' flat index under the hood" },
-    { "FaissFlatIndex_init", FaissFlatIndex_init, METH_VARARGS, "" },
+    { "FaissFlatIndex_open", FaissFlatIndex_open, METH_VARARGS, "" },
+    { "FaissFlatIndex_add", FaissFlatIndex_add, METH_VARARGS, "" },
     { "FaissFlatIndex_search", FaissFlatIndex_search, METH_VARARGS, "" },
     { NULL, NULL, 0, NULL }  // Sentinel value ending the array
 };

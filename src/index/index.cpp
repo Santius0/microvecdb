@@ -30,4 +30,8 @@ namespace mvdb {
         return is_open_;
     }
 
+    uint64_t Index::dims(){
+        return dims_;
+    }
+
 }

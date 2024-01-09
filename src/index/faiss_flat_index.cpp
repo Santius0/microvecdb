@@ -55,8 +55,9 @@ namespace mvdb {
     }
 
     void FaissFlatIndex::save() const {
-        if(!is_open_)
+        if(is_open_){
             faiss::write_index(faiss_index_.get(), index_path_.c_str());
+        }
     }
 
     void FaissFlatIndex::load() {
