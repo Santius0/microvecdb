@@ -1,23 +1,83 @@
 #include <Python.h>
+#include <iostream>
 #include <faiss_flat_index.h>
 //#include <microvecdb.hpp>
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
+
+#define FAISS_FLAT_INDEX_NAME "mvdb::FaissFlatIndex"
+
 // Function to be exposed - hello_world
 static PyObject* hello_world(PyObject *self, PyObject *args) {
-    printf("Hello, World!\n");
-    printf("Hello, World FUCK!\n");
-//    auto* micro_vec_db = new mvdb::VectorDB("./test_mvdb", "test_mvdb");
-//    std::cout << micro_vec_db << std::endl;
-//    delete micro_vec_db;
+    const char *str;
+    if(!PyArg_ParseTuple(args, "s", &str)) return nullptr;
+    std::cout << "Hello " << str << std::endl;
     Py_RETURN_NONE;
 }
+
+static void FaissFlatIndex_delete(PyObject* capsule) {
+    delete static_cast<mvdb::FaissFlatIndex*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAME));
+}
+
+static PyObject* FaissFlatIndex_create(PyObject *self, PyObject *args) {
+    const char* index_path;
+    uint64_t dims;
+    if(!PyArg_ParseTuple(args, "sl", &index_path, &dims)) return nullptr;
+    auto *flat_index = new mvdb::FaissFlatIndex(std::string(index_path), dims);
+    return PyCapsule_New(flat_index, FAISS_FLAT_INDEX_NAME, FaissFlatIndex_delete);
+}
+
+static PyObject* FaissFlatIndex_init(PyObject *self, PyObject *args) {
+    PyObject* capsule;
+    if(!PyArg_ParseTuple(args, "O", &capsule)) return nullptr;
+    auto* idx_obj = static_cast<mvdb::FaissFlatIndex*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAME));
+    idx_obj->init();
+    Py_RETURN_NONE;
+}
+
+static PyObject* FaissFlatIndex_search(PyObject* self, PyObject* args) {
+    PyObject *capsule, *query_input;
+    int n, k;
+    if (!PyArg_ParseTuple(args, "OiO!i", &capsule, &n, &PyArray_Type, &query_input, &k)) return nullptr;
+    auto* idx_obj = static_cast<mvdb::FaissFlatIndex*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAME));
+    auto* query_pyarray = (PyArrayObject*)query_input;
+
+    // Check if the array is of the correct type (uint64)
+    if (PyArray_TYPE(query_pyarray) != NPY_FLOAT) {
+        PyErr_SetString(PyExc_TypeError, "Array should be of type float");
+        return nullptr;
+    }
+
+    auto* query = (float*)PyArray_DATA(query_pyarray);
+
+    int array_size = k;
+    npy_intp dims[1] = {array_size};
+
+    // Create a new NumPy array of uint64
+    PyObject* ids_pyArray = PyArray_SimpleNew(1, dims, NPY_INT64);
+    PyObject* distances_pyArray = PyArray_SimpleNew(1, dims, NPY_FLOAT);
+    if (!ids_pyArray || !distances_pyArray) return nullptr;
+
+    auto* ids = (int64_t*)PyArray_DATA((PyArrayObject*)ids_pyArray);
+    auto* distances = (float*)PyArray_DATA((PyArrayObject*)distances_pyArray);
+
+    idx_obj->search(n, query, ids, distances, k);
+
+    return PyTuple_Pack(2, ids_pyArray, distances_pyArray);
+}
+
+
 
 // Method definition object for this extension, describes the hello_world function
 static PyMethodDef MyExtensionMethods[] = {
     { "hello_world",  // Python method name
       hello_world,    // C function to be called
-      METH_NOARGS,    // No arguments for this function
+      METH_VARARGS,    // No arguments for this function
       "Print 'Hello, World!'" }, // Docstring for this function
+    { "FaissFlatIndex_create", FaissFlatIndex_create, METH_VARARGS, "Creates index using faiss' flat index under the hood" },
+    { "FaissFlatIndex_init", FaissFlatIndex_init, METH_VARARGS, "" },
+    { "FaissFlatIndex_search", FaissFlatIndex_search, METH_VARARGS, "" },
     { NULL, NULL, 0, NULL }  // Sentinel value ending the array
 };
 
@@ -32,5 +92,6 @@ static struct PyModuleDef myextensionmodule = {
 
 // Initialization function for this module
 PyMODINIT_FUNC PyInit_microvecdb(void) {
+    import_array(); // Initialize NumPy API
     return PyModule_Create(&myextensionmodule);
 }

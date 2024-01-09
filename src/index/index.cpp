@@ -19,9 +19,11 @@ namespace mvdb {
     }
 
     void Index::open() {
-        if(std::filesystem::exists(index_path_)) load();
-        else init();
-        is_open_ = true;
+        if(!is_open_){
+            if(std::filesystem::exists(index_path_)) load();
+            else init();
+            is_open_ = true;
+        }
     }
 
     bool Index::is_open() const {

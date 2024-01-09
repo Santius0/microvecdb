@@ -26,7 +26,7 @@ namespace mvdb {
         void init() override;
 
         // Add data to the index
-        std::vector<uint64_t> add(const size_t& n, const float* data) const override;
+        [[nodiscard]] bool add(const size_t& n, const float* data, uint64_t* keys) const override;
 
         // Remove data from the index
         [[nodiscard]] bool remove(const size_t& n, const faiss::IDSelector& ids) const override;
@@ -37,7 +37,7 @@ namespace mvdb {
 
         void close() override;
 
-        void search(const std::vector<float>& query, int64_t ids[], float distances[], const long& k = 5) const override;
+        void search(const int& n, float* query, int64_t* ids, float* distances, const long& k) const override;
 
         faiss::Index* faiss_index();
 

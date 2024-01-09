@@ -1,6 +1,20 @@
 #include <gtest/gtest.h>
+#include <random>
+
 #include <index.h>
+#include <quantization.h>
 //#include <faiss_flat_index.h>
+
+
+void populate_random_vector( const size_t& n, float* v) {
+    std::random_device rd;  // Seed for the random number engine
+    std::mt19937 gen(rd()); // Standard mersenne_twister_engine
+    std::uniform_real_distribution<> dis(1.0, 100.0); // Range of generated values
+    for(size_t i = 0; i < n; i++) {
+        if (i < n / 2) v[i] = dis(gen); // Generate positive values for the first half
+        else v[i] = -dis(gen);          // Generate negative values for the second half
+    }
+}
 
 //float* generateRandomVector(size_t n) {
 //    auto* vec = new float[n];
@@ -26,6 +40,18 @@
 //    delete index;
 //    EXPECT_EQ(true, index == nullptr);
 //}
+
+TEST(ScalerQuantizationTest, ScalerQuanitzation) {
+    size_t n = 1000;
+    float *v = new float[n];
+    mvdb::value_t *q = new mvdb::value_t[n];
+    populate_random_vector(n, v);
+    mvdb::scaler_quantization(n, v, q);
+    for(size_t i = 0; i < n; i++)
+        EXPECT_EQ(q[i], round(q[i]));
+    delete[] v;
+    delete[] q;
+}
 
 // main function
 int main(int argc, char **argv) {

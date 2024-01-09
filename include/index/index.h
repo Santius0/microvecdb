@@ -73,14 +73,14 @@ namespace mvdb {
         Index(const Index&) = delete;
         Index& operator=(const Index&) = delete;
         virtual void init() = 0;
-        virtual std::vector<uint64_t> add(const size_t& n, const float* data) const = 0;
+        [[nodiscard]] virtual bool add(const size_t& n, const float* data, uint64_t* keys) const = 0;
         [[nodiscard]] virtual bool remove(const size_t& n, const faiss::IDSelector& ids) const = 0;
         virtual void save() const = 0;
         virtual void load() = 0;
         virtual void open();
         virtual void close() = 0;
         [[nodiscard]] virtual bool is_open() const;
-        virtual void search(const std::vector<float>& query, int64_t ids[], float distances[], const long& k) const = 0;
+        virtual void search(const int& n, float* query, int64_t* ids, float* distances, const long& k) const = 0;
     };
 
 } // namespace mvdb

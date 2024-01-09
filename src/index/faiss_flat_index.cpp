@@ -16,6 +16,7 @@ namespace mvdb {
 
     void FaissFlatIndex::serialize(std::ostream& out) const {
         Index::serialize(out);
+        save();
     }
 
     void FaissFlatIndex::deserialize(std::istream& in) {
@@ -29,21 +30,17 @@ namespace mvdb {
         faiss_index_ = std::make_unique<faiss::IndexFlatL2>(dims_);
     }
 
-    std::vector<uint64_t> FaissFlatIndex::add(const size_t& n, const float* data) const {
+    bool FaissFlatIndex::add(const size_t& n, const float* data, uint64_t* keys) const {
         try {
-            std::vector<uint64_t> keys;
-            keys.reserve(n);
             for(int i = 0; i < n; i++)
-                keys.emplace_back(faiss_index_->ntotal + i);
+                keys[i] = faiss_index_->ntotal + i;
             faiss_index_->add(static_cast<long>(n), data);
-//            if(ids == nullptr) faiss_index_->add(static_cast<long>(n), data);
-//            else faiss_index_->add_with_ids(static_cast<long>(n), data, ids);
             save();
-            return keys;
         } catch (const std::exception& e) {
             std::cerr << "Error adding data to index: " << e.what() << std::endl;
-            return {};
+            return false;
         }
+        return true;
     }
 
     bool FaissFlatIndex::remove(const size_t& n, const faiss::IDSelector& ids) const {
@@ -58,15 +55,16 @@ namespace mvdb {
     }
 
     void FaissFlatIndex::save() const {
-        faiss::write_index(faiss_index_.get(), index_path_.c_str());
+        if(!is_open_)
+            faiss::write_index(faiss_index_.get(), index_path_.c_str());
     }
 
     void FaissFlatIndex::load() {
         faiss_index_.reset(faiss::read_index(index_path_.c_str()));
     }
 
-    void FaissFlatIndex::search(const std::vector<float>& query, int64_t ids[], float distances[], const long& k) const {
-        faiss_index_->search(static_cast<long>(query.size()/dims_), query.data(), k, distances, ids);
+    void FaissFlatIndex::search(const int& n, float* query, int64_t* ids, float* distances, const long& k) const{
+        faiss_index_->search(static_cast<long>(n/dims_), query, k, distances, ids);
     }
 
     void FaissFlatIndex::close() {

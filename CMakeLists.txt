@@ -53,6 +53,7 @@ endfunction()
 include_directories(${PYTHON_INCLUDE_DIRS})
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/numpy/include)
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/rocksdb/include)
 #
@@ -69,7 +70,10 @@ include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 add_library(microindex SHARED
         src/index/index.cpp
         src/index/faiss_flat_index.cpp
-#        include/index/faiss_flat_index.h
+        include/preprocess.h
+        include/quantization.h
+        include/index/index.h
+        #        include/index/faiss_flat_index.h
 #        include/index/faiss_ivf_index.h
 #        include/index/faiss_hnsw_index.h
 #        include/index/faiss_pq_index.h
@@ -93,7 +97,8 @@ set_target_properties(microindex PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOU
 
 # microvecdb.cpython
 set(PYTHON_EXTENSION_TARGET "microvecdb.cpython-${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}-${PLATFORM_TAG}")
-add_library(${PYTHON_EXTENSION_TARGET} MODULE python/pymicrovecdb.cpp)
+add_library(${PYTHON_EXTENSION_TARGET} MODULE python/pymicrovecdb.cpp
+        include/index/faiss_flat_index.h)
 target_link_libraries(${PYTHON_EXTENSION_TARGET} ${PYTHON_LIBRARIES} microindex)
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
