@@ -1,0 +1,15 @@
+(array([-1, -1, -1, -1, -1]), array([3.4028235e+38, 3.4028235e+38, 3.4028235e+38, 3.4028235e+38,
+       3.4028235e+38], dtype=float32))
+Filename: main.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+     9   60.637 MiB   60.637 MiB           1   @profile
+    10                                         def main():
+    11   60.637 MiB    0.000 MiB           1       index = microvecdb.FaissFlatIndex_create("./test_index", 5)
+    12   60.637 MiB    0.000 MiB           1       microvecdb.FaissFlatIndex_init(index)
+    13   60.637 MiB    0.000 MiB           1       query = np.array([1.2, 2.3, 3.4, 4.5], dtype=np.float32)
+    14   60.637 MiB    0.000 MiB           1       top_k = microvecdb.FaissFlatIndex_search(index, 5, query, 5)
+    15   60.637 MiB    0.000 MiB           1       print(top_k)
+
+
