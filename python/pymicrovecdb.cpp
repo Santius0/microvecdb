@@ -37,7 +37,7 @@ static PyObject* FaissFlatIndex_open(PyObject *self, PyObject *args) {
 
 static PyObject* FaissFlatIndex_add(PyObject* self, PyObject* args) {
     PyObject *capsule, *input_vector;
-    int n; // number of input vector passed in;
+    int n; // number of input vectors passed in;
     if(!PyArg_ParseTuple(args, "OO!i", &capsule, &PyArray_Type, &input_vector, &n)) return nullptr;
     auto* idx_obj = static_cast<mvdb::FaissFlatIndex*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAME));
     auto* input_pyarray = (PyArrayObject*)input_vector;
@@ -57,8 +57,8 @@ static PyObject* FaissFlatIndex_add(PyObject* self, PyObject* args) {
 
 static PyObject* FaissFlatIndex_search(PyObject* self, PyObject* args) {
     PyObject *capsule, *query_input;
-    int n, k;
-    if (!PyArg_ParseTuple(args, "OiO!i", &capsule, &n, &PyArray_Type, &query_input, &k)) return nullptr;
+    int nq, k; // nq = total size of query vector, should be a multiple of index dimensionality. k = number of results to be returned
+    if (!PyArg_ParseTuple(args, "OiO!i", &capsule, &nq, &PyArray_Type, &query_input, &k)) return nullptr;
     auto* idx_obj = static_cast<mvdb::FaissFlatIndex*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAME));
     auto* query_pyarray = (PyArrayObject*)query_input;
 
@@ -81,7 +81,7 @@ static PyObject* FaissFlatIndex_search(PyObject* self, PyObject* args) {
     auto* ids = (int64_t*)PyArray_DATA((PyArrayObject*)ids_pyArray);
     auto* distances = (float*)PyArray_DATA((PyArrayObject*)distances_pyArray);
 
-    idx_obj->search(n, query, ids, distances, k);
+    idx_obj->search(nq, query, ids, distances, k);
 
     return PyTuple_Pack(2, ids_pyArray, distances_pyArray);
 }
