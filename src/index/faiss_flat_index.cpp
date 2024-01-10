@@ -77,4 +77,29 @@ namespace mvdb {
         return faiss_index_.get();
     }
 
+    float* FaissFlatIndex::get(size_t& n, uint64_t* keys) const {
+        if (faiss_index_->is_trained) {
+            if(keys != nullptr){
+                for(size_t i = 0; i < n; i++) {
+                    if(faiss_index_->ntotal <= keys[i]){
+                        std::cerr << "ID '" << keys[i] << "' is out of index range." << std::endl;
+                        return nullptr;
+                    }
+                }
+            }
+        }
+        else {
+            std::cerr << "Index does not support reconstruction." << std::endl;
+            return nullptr;
+        }
+
+        if(keys == nullptr) n = faiss_index_->ntotal;
+        auto* reconstructed_vec = new float[n * dims_];
+        for(faiss::idx_t i = 0; i < n; i++){
+            faiss::idx_t key = (keys == nullptr ? i : static_cast<faiss::idx_t>(keys[i]));
+            faiss_index_->reconstruct(key, reconstructed_vec + (i * dims_));
+        }
+        return reconstructed_vec;
+    }
+
 } // namespace mvdb

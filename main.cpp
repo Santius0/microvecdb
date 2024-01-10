@@ -1,17 +1,48 @@
 //#include <microvecdb.hpp>
-//#include <iostream>
-//#include "vector.h"
+#include <zmq.hpp>
+#include <string>
+#include <iostream>
+#include <thread>
 
-//#include "distances.h"
+void server_thread() {
+    zmq::context_t context(1);
+    zmq::socket_t socket(context, ZMQ_REP);
+    socket.bind("inproc://example");
 
-// Profiler Settings:
-//  valgrind --tool=massif --massif-out-file=./massif.out ./microvecdb_main
+    while (true) {
+        zmq::message_t request;
+        socket.recv(&request);
+        std::string recv_msg(static_cast<char*>(request.data()), request.size());
+        std::cout << "Server received: " << recv_msg << std::endl;
 
-// --leak-check=full --leak-resolution=med --track-origins=yes --vgdb=no
+        zmq::message_t reply(5);
+        memcpy(reply.data(), "World", 5);
+        socket.send(reply);
+    }
+}
 
-#include <index.h>
+void client_thread() {
+    zmq::context_t context(1);
+    zmq::socket_t socket(context, ZMQ_REQ);
+    socket.connect("inproc://example");
+
+    zmq::message_t request(5);
+    memcpy(request.data(), "Hello", 5);
+    socket.send(request);
+
+    zmq::message_t reply;
+    socket.recv(&reply);
+    std::string recv_msg(static_cast<char*>(reply.data()), reply.size());
+    std::cout << "Client received: " << recv_msg << std::endl;
+}
 
 int main() {
+    std::thread server(server_thread);
+    std::thread client(client_thread);
+
+    client.join();
+    server.detach(); // Server thread will run indefinitely
+
 //    mvdb::VectorDB *vdb = new mvdb::VectorDB("./test_db", "test_db");
 //    vdb->add_data("An agile fox jumps swiftly over the sleeping dog");
 //    vdb->add_data("In the forest, a brown bear climbs over a fallen log");

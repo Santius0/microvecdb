@@ -113,7 +113,7 @@ set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIREC
 
 # main:
 add_executable(microvecdb_main main.cpp)
-target_link_libraries(microvecdb_main PUBLIC microindex)
+target_link_libraries(microvecdb_main PUBLIC microindex zmq pthread)
 # <<<< Configuring targets ----------------------------------------------------------
 
 # making sure output directory exists

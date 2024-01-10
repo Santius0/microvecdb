@@ -3,12 +3,13 @@
 
 #include <index.h>
 #include <quantization.h>
-//#include <faiss_flat_index.h>
+#include <faiss_flat_index.h>
 
 
-void populate_random_vector( const size_t& n, float* v) {
-    std::random_device rd;  // Seed for the random number engine
-    std::mt19937 gen(rd()); // Standard mersenne_twister_engine
+void populate_random_vector(const size_t& n, float* v) {
+    const unsigned int seed = 42;
+//    std::random_device rd;  // Seed for the random number engine
+    std::mt19937 gen(seed); // Standard mersenne_twister_engine
     std::uniform_real_distribution<> dis(1.0, 100.0); // Range of generated values
     for(size_t i = 0; i < n; i++) {
         if (i < n / 2) v[i] = dis(gen); // Generate positive values for the first half
@@ -52,6 +53,28 @@ TEST(ScalerQuantizationTest, ScalerQuanitzation) {
     delete[] v;
     delete[] q;
 }
+
+// FaissFlatIndex - Start ---------------------------------------------
+//class FaissFlatIndexTest : public ::testing::Test {
+//protected:
+//    int n = 10000, d = 1000, nq = 100; // n = num input vectors, d = num dimensions, nq = num query vectors
+//    mvdb::FaissFlatIndex* index;
+//    float* input;
+//    float* query;
+//
+//    void SetUp() override {
+//        index = new mvdb::FaissFlatIndex("./test_index", 1000);
+//        index->open();
+//    }
+//
+//    void TearDown() override {
+//        index->close();
+//        delete index;
+//    }
+//};
+// FaissFlatIndex - End ---------------------------------------------
+
+
 
 // main function
 int main(int argc, char **argv) {

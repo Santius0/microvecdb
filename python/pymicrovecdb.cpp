@@ -32,6 +32,12 @@ static PyObject* FaissFlatIndex_open(PyObject *self, PyObject *args) {
     if(!PyArg_ParseTuple(args, "O", &capsule)) return nullptr;
     auto* idx_obj = static_cast<mvdb::FaissFlatIndex*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAME));
     idx_obj->open();
+//    size_t n = 4;
+//    uint64_t keys[4] = {0, 1, 2, 3};
+//    float* vecs = idx_obj->get(n, nullptr);
+//    for(int i = 0; i < n * idx_obj->dims(); i++){
+//        std::cout  << vecs[i] << (((i+1) % idx_obj->dims()) == 0 ? "\n" : " ");
+//    }
     Py_RETURN_NONE;
 }
 

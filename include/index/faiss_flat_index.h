@@ -41,6 +41,8 @@ namespace mvdb {
 
         faiss::Index* faiss_index();
 
+        float* get(size_t& n, uint64_t* keys) const override;
+
     };
 
 } // namespace mvdb

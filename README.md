@@ -20,6 +20,15 @@ to tools included in the rocksdb build such as db_bench.
 ### Compilation
 `g++ main.cpp -o main -lrocksdb -std=c++11 -lpthread -ldla` or use cmake
 
+`sudo apt-get install libzmq3-dev`
+
+`pip install memory_profiler`
+
+Profiler Settings:
+`valgrind --tool=massif --massif-out-file=./massif.out ./microvecdb_main`
+`--leak-check=full --leak-resolution=med --track-origins=yes --vgdb=no`
+`python -m memory_profiler main.py`
+
 [//]: # (Might need `sudo apt-get install libopenblas-dev`. Not sure if just installing MKL gived everything needed.)
 [//]: # (sudo ln -s /opt/cmake-3.*your_version*/bin/* /usr/local/bin)
 
