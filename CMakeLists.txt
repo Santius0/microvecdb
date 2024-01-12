@@ -109,6 +109,7 @@ set_target_properties(microvecdb_vectorizer PROPERTIES LIBRARY_OUTPUT_DIRECTORY 
 # microvecdb:
 add_library(microvecdb SHARED
         src/db.cpp
+        include/cli.h
 )
 target_include_directories(microvecdb PUBLIC include)
 target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C microvecdb_core microvecdb_index microvecdb_storage microvecdb_vectorizer)
