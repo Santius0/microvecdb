@@ -64,8 +64,8 @@ namespace mvdb {
         faiss_index_.reset(faiss::read_index(index_path_.c_str()));
     }
 
-    void FaissFlatIndex::search(const int& n, float* query, int64_t* ids, float* distances, const long& k) const{
-        faiss_index_->search(static_cast<long>(n/dims_), query, k, distances, ids);
+    void FaissFlatIndex::search(const int& nq, float* query, int64_t* ids, float* distances, const long& k) const{
+        faiss_index_->search(static_cast<long>(nq), query, k, distances, ids);
     }
 
     void FaissFlatIndex::close() {

@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <thread>
+//#include <db.h>
 
 void server_thread() {
     zmq::context_t context(1);
@@ -21,10 +22,10 @@ void server_thread() {
     }
 }
 
-void client_thread() {
+void client_thread(const std::string& server_address) {
     zmq::context_t context(1);
     zmq::socket_t socket(context, ZMQ_REQ);
-    socket.connect("inproc://example");
+    socket.connect(server_address); // Connect to the server address
 
     zmq::message_t request(5);
     memcpy(request.data(), "Hello", 5);
@@ -36,12 +37,18 @@ void client_thread() {
     std::cout << "Client received: " << recv_msg << std::endl;
 }
 
-int main() {
-    std::thread server(server_thread);
-    std::thread client(client_thread);
+// device #1: ./microvecdb_main tcp://192.168.1.11:5555
+// device #1: ./microvecdb_main tcp://192.168.1.10:5555
 
-    client.join();
-    server.detach(); // Server thread will run indefinitely
+int main(int argc, char* argv[]) {
+//    std::string server_address = "tcp://localhost:5555";
+//    if (argc > 1) server_address = argv[1];
+//
+//    std::thread server(server_thread);
+//    std::thread client(client_thread, server_address);
+//
+//    client.join();
+//    server.detach();
 
 //    mvdb::VectorDB *vdb = new mvdb::VectorDB("./test_db", "test_db");
 //    vdb->add_data("An agile fox jumps swiftly over the sleeping dog");

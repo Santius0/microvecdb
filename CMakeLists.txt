@@ -50,56 +50,79 @@ function(include_sub_directories_recursively root_dir)
     endif()
 endfunction()
 
-include_directories(${PYTHON_INCLUDE_DIRS})
-include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/core)   # all targets should have access to core headers
+link_directories(lib)                                                     # all targets should be able to link against the contents of the lib directory
+
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/numpy/include)
-#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
-#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/rocksdb/include)
-#
-#link_directories(lib faiss/lib ${CMAKE_BINARY_DIR})
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
 
-#file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*")
-#file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "include/*")
-#file(GLOB_RECURSE FASTTEXT_SOURCES CONFIGURE_DEPENDS "fasttext/src/*.cc")
-#list(REMOVE_ITEM FASTTEXT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/fasttext/src/main.cc") # gathering all the fasttext src files and removing main.cc
 # <<<< Configuring sources headers and link directories ----------------------------------------------------------
 
 # Configuring targets >>>> ----------------------------------------------------------
-# microindex:
-add_library(microindex SHARED
+# microvecdb_core:
+add_library(microvecdb_core SHARED
+        include/core/utils.h
+        include/core/quantization.h
+        include/core/preprocess.h
+
+        src/core/utils.cpp
+        src/core/quantization.cpp
+        src/core/preprocess.cpp
+)
+target_link_libraries(microvecdb_core PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C)
+set_target_properties(microvecdb_core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+
+
+# microvecdb_index:
+add_library(microvecdb_index SHARED
         src/index/index.cpp
         src/index/faiss_flat_index.cpp
-        include/preprocess.h
-        include/quantization.h
-        include/index/index.h
-        #        include/index/faiss_flat_index.h
-#        include/index/faiss_ivf_index.h
-#        include/index/faiss_hnsw_index.h
-#        include/index/faiss_pq_index.h
 )
+target_include_directories(microvecdb_index PUBLIC include/index)
+target_link_directories(microvecdb_index PUBLIC faiss/lib)
+target_link_libraries(microvecdb_index PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C microvecdb_core faiss faiss_c)
+set_target_properties(microvecdb_index PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
-target_include_directories(microindex PUBLIC include/index)
-target_link_directories(microindex PUBLIC faiss/lib)
-target_link_libraries(microindex PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C faiss faiss_c)
-set_target_properties(microindex PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+
+# microvecdb_storage:
+add_library(microvecdb_storage SHARED
+        src/storage/kv_store.cpp
+)
+target_include_directories(microvecdb_storage PUBLIC include/storage)
+target_link_libraries(microvecdb_storage PUBLIC microvecdb_core rocksdb)
+set_target_properties(microvecdb_storage PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 
-# storage:
-# TODO: implement and configure rocksdb stuff
-#add_library(microstorage PUBLIC <insert sources here>)
-#target_link_directories(microstorage PUBLIC rocksdb/lib)
+# microvecdb_vectorizer
+file(GLOB_RECURSE FASTTEXT_SOURCES CONFIGURE_DEPENDS "fasttext/src/*.cc")
+list(REMOVE_ITEM FASTTEXT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/fasttext/src/main.cc") # gathering all the fasttext src files and removing main.cc
+add_library(microvecdb_vectorizer SHARED
+        src/vectorizer/vectorizer.cpp
+        ${FASTTEXT_SOURCES}
+)
+target_include_directories(microvecdb_vectorizer PUBLIC include/vectorizer)
+target_link_libraries(microvecdb_vectorizer PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C microvecdb_core)
+set_target_properties(microvecdb_vectorizer PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+
 
 # microvecdb:
-# add_library(microvecdb SHARED ${SOURCES} ${FASTTEXT_SOURCES})
-# target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C rocksdb faiss faiss_c)
-#set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+add_library(microvecdb SHARED
+        src/db.cpp
+)
+target_include_directories(microvecdb PUBLIC include)
+target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C microvecdb_core microvecdb_index microvecdb_storage microvecdb_vectorizer)
+set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+
 
 # microvecdb.cpython
 set(PYTHON_EXTENSION_TARGET "microvecdb.cpython-${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}-${PLATFORM_TAG}")
-add_library(${PYTHON_EXTENSION_TARGET} MODULE python/pymicrovecdb.cpp
-        include/index/faiss_flat_index.h)
-target_link_libraries(${PYTHON_EXTENSION_TARGET} ${PYTHON_LIBRARIES} microindex)
+add_library(${PYTHON_EXTENSION_TARGET} MODULE
+        python/pymicrovecdb.cpp
+)
+target_include_directories(${PYTHON_EXTENSION_TARGET} PUBLIC ${PYTHON_INCLUDE_DIRS})
+target_link_directories(${PYTHON_EXTENSION_TARGET} PUBLIC lib)
+target_link_libraries(${PYTHON_EXTENSION_TARGET} ${PYTHON_LIBRARIES} microvecdb)
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 #set(PYTHON_PACKAGE_BUILD_SCRIPT "/python/pymicrovecdb.sh")
@@ -113,23 +136,23 @@ set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIREC
 
 # main:
 add_executable(microvecdb_main main.cpp)
-target_link_libraries(microvecdb_main PUBLIC microindex zmq pthread)
+target_link_libraries(microvecdb_main PUBLIC microvecdb_core zmq pthread)
 # <<<< Configuring targets ----------------------------------------------------------
 
-# making sure output directory exists
-file(MAKE_DIRECTORY "${LIBRARY_OUTPUT_DIRECTORY}")
-
-# Post build analysis >>>> ----------------------------------------------------------
-set(SIZE_OUTPUT_FILE "${CMAKE_BINARY_DIR}/size_output.txt")
-set(READELF_OUTPUT_FILE "${CMAKE_BINARY_DIR}/readelf_output.txt")
-add_custom_command(
-        TARGET microindex POST_BUILD
-        COMMAND ${SIZE_EXECUTABLE} $<TARGET_FILE:microindex> > ${SIZE_OUTPUT_FILE}
-        COMMENT "Running size on microindex"
-        COMMAND ${READELF_EXECUTABLE} -s $<TARGET_FILE:microindex> | sort -n -k3 > ${READELF_OUTPUT_FILE}
-        COMMENT "Running readelf on microindex"
-)
-# <<<< Post build analysis ----------------------------------------------------------
+## making sure output directory exists
+#file(MAKE_DIRECTORY "${LIBRARY_OUTPUT_DIRECTORY}")
+#
+## Post build analysis >>>> ----------------------------------------------------------
+##set(SIZE_OUTPUT_FILE "${CMAKE_BINARY_DIR}/size_output.txt")
+##set(READELF_OUTPUT_FILE "${CMAKE_BINARY_DIR}/readelf_output.txt")
+##add_custom_command(
+##        TARGET microindex POST_BUILD
+##        COMMAND ${SIZE_EXECUTABLE} $<TARGET_FILE:microindex> > ${SIZE_OUTPUT_FILE}
+##        COMMENT "Running size on microindex"
+##        COMMAND ${READELF_EXECUTABLE} -s $<TARGET_FILE:microindex> | sort -n -k3 > ${READELF_OUTPUT_FILE}
+##        COMMENT "Running readelf on microindex"
+##)
+## <<<< Post build analysis ----------------------------------------------------------
 
 
 include(FetchContent)

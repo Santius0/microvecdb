@@ -18,7 +18,7 @@ namespace mvdb {
         rocksdb::Options options_{};
 
         bool is_open_ = false;
-        friend class VectorDB;
+        friend class DB;
         friend std::ostream& operator<<(std::ostream& os, const KvStore& obj);
         friend std::ostream& operator<<(std::ostream& os, const KvStore* obj);
     protected:

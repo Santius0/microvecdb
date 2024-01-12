@@ -1,22 +1,18 @@
-#ifndef VECTORDB_H
-#define VECTORDB_H
+#ifndef DB_H
+#define DB_H
 
 #pragma once
 
 #include "kv_store.h"
-#include "schema.h"
 #include "index.h"
 #include "vectorizer.h"
-
-#include "metadata.h"
-#include "vector_collection.h"
 #include <vector>
 #include <memory>
 #include <filesystem>
 
 namespace mvdb {
 
-    class VectorDB : Serializable {
+    class DB : Serializable {
         std::string path_;                          // location of database
         std::string dbname_;                        // name of database
         uint64_t dims_;                             // number of dimension each vector in this system will have
@@ -28,27 +24,28 @@ namespace mvdb {
         std::unique_ptr<Index> index_; // vector storage object
         void make_index_(const std::string& index_path);
 
-        friend std::ostream& operator<<(std::ostream& os, const VectorDB& obj);
-        friend std::ostream& operator<<(std::ostream& os, const VectorDB* obj);
+        friend std::ostream& operator<<(std::ostream& os, const DB& obj);
+        friend std::ostream& operator<<(std::ostream& os, const DB* obj);
     protected:
         void serialize(std::ostream &out) const override;
         void deserialize(std::istream &in) override;
     public:
-        VectorDB() = default;
-        explicit VectorDB(const std::string& path, const std::string& dbname = "db", const uint64_t& dims = 300,
+        DB() = default;
+        explicit DB(const std::string& path, const std::string& dbname = "db", const uint64_t& dims = 300,
                           const IndexType& index_type = IndexType::FAISS_FLAT,
                           VectorizerModelType vec_model = VectorizerModelType::FASTTEXT);
-        ~VectorDB() override = default;
+        ~DB() override = default;
         void save(const std::string& save_path = "");
         void load(const std::string& load_path = "");
         Index* index();
         KvStore* storage();
-        [[nodiscard]] bool add_data_vector(const std::string& data, float* vec) const;
-        [[nodiscard]] bool add_data(const std::string& data) const;
-        [[nodiscard]] SearchResult search_with_vector(const std::vector<float>& query, const long& k, const bool& ret_data) const;
-        [[nodiscard]] SearchResult search(const std::string& data, const long& k, const bool& ret_data) const;
+        [[nodiscard]] bool add_vector(const size_t& nv, void* v) const;       // add nv vectors to the index
+        [[nodiscard]] bool add_data(const size_t& nv, void* data) const;      // take nv pieces of data, generate a vector for each, add vectors to the index, store raw data in kv_store
+        [[nodiscard]] bool add_vector_data(const size_t& nv, void* data, void* v) const; // take nv pieces of data and n corresponding vectors, add vectors to the index, add data to the kv_store
+        [[nodiscard]] SearchResult search_with_vector(const size_t& nq, void* query, const long& k, const bool& ret_data) const; // carry out a search using only vectors as input
+        [[nodiscard]] SearchResult search(void* data, const long& k, const bool& ret_data) const;  // carry out a search using only raw data as input
     };
 
 }
 
-#endif //VECTORDB_H
+#endif //DB_H

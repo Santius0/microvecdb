@@ -6,6 +6,9 @@
 #include <vector>
 
 namespace mvdb {
+    using value_t = int8_t;
+    using vector_t = value_t*;
+
     // VectorDB
     #define META_FILE_EXTENSION ".metadata"
     #define META_FILE_EXTENSION_LEN strlen(META_FILE_EXTENSION)

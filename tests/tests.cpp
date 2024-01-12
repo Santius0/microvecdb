@@ -42,17 +42,17 @@ void populate_random_vector(const size_t& n, float* v) {
 //    EXPECT_EQ(true, index == nullptr);
 //}
 
-TEST(ScalerQuantizationTest, ScalerQuanitzation) {
-    size_t n = 1000;
-    float *v = new float[n];
-    mvdb::value_t *q = new mvdb::value_t[n];
-    populate_random_vector(n, v);
-    mvdb::scaler_quantization(n, v, q);
-    for(size_t i = 0; i < n; i++)
-        EXPECT_EQ(q[i], round(q[i]));
-    delete[] v;
-    delete[] q;
-}
+//TEST(ScalerQuantizationTest, ScalerQuanitzation) {
+//    size_t n = 1000;
+//    float *v = new float[n];
+//    mvdb::value_t *q = new mvdb::value_t[n];
+//    populate_random_vector(n, v);
+//    mvdb::scaler_quantization(n, v, q);
+//    for(size_t i = 0; i < n; i++)
+//        EXPECT_EQ(q[i], round(q[i]));
+//    delete[] v;
+//    delete[] q;
+//}
 
 // FaissFlatIndex - Start ---------------------------------------------
 //class FaissFlatIndexTest : public ::testing::Test {

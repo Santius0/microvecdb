@@ -1,7 +1,6 @@
 #ifndef INDEX_H
 #define INDEX_H
 
-#include "constants.h"
 #include "serializable.h"
 #include <faiss/IndexIDMap.h>
 #include <string>
@@ -9,8 +8,6 @@
 #include <ostream>
 
 namespace mvdb {
-    using value_t = int8_t;
-    using vector_t = value_t*;
 
     enum IndexType {
         FAISS_FLAT = 0,
@@ -59,7 +56,7 @@ namespace mvdb {
     };
 
     class Index : public Serializable {
-        friend class VectorDB;
+        friend class DB;
     protected:
         std::string index_path_;
         uint64_t dims_{};

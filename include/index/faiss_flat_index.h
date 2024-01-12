@@ -37,7 +37,7 @@ namespace mvdb {
 
         void close() override;
 
-        void search(const int& n, float* query, int64_t* ids, float* distances, const long& k) const override;
+        void search(const int& nq, float* query, int64_t* ids, float* distances, const long& k) const override;
 
         faiss::Index* faiss_index();
 
