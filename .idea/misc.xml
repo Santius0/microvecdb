@@ -4,5 +4,18 @@
     <option name="sdkName" value="Python 3.10.13 WSL (Ubuntu-22.04): (/home/santius/microvecdb/microvecdb/venv/bin/python)" />
   </component>
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
+  <component name="CidrRootsConfiguration">
+    <sourceRoots>
+      <file path="$PROJECT_DIR$/include" />
+      <file path="$PROJECT_DIR$/src" />
+    </sourceRoots>
+    <excludeRoots>
+      <file path="$PROJECT_DIR$/annoy" />
+      <file path="$PROJECT_DIR$/faiss" />
+      <file path="$PROJECT_DIR$/fasttext" />
+      <file path="$PROJECT_DIR$/numpy" />
+      <file path="$PROJECT_DIR$/rocksdb" />
+    </excludeRoots>
+  </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10.13 WSL (Ubuntu-22.04): (/home/santius/.virtualenvs/microvecdb/bin/python)" project-jdk-type="Python SDK" />
 </project>
