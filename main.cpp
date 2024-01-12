@@ -3,7 +3,7 @@
 #include <string>
 #include <iostream>
 #include <thread>
-//#include <db.h>
+#include <db.h>
 
 void server_thread() {
     zmq::context_t context(1);
@@ -41,6 +41,20 @@ void client_thread(const std::string& server_address) {
 // device #1: ./microvecdb_main tcp://192.168.1.10:5555
 
 int main(int argc, char* argv[]) {
+    auto* db = new mvdb::DB("./test_db", "test_db", 5);
+    float vec[5 * 2] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 33};
+    if(db->add_vector(2, vec))
+        std::cout << "added successfully" << std::endl;
+    size_t n = 5;
+    uint64_t* keys = nullptr;
+    float* vecs = db->index()->get(n, keys);
+    std::cout << "n = " << n << "\nn x dims = " << n * db->index()->dims() << std::endl;
+    for(int i = 0; i < n * db->index()->dims(); i++){
+        if(i % db->index()->dims() == 0)
+            std::cout << i/db->index()->dims() << ". ";
+        std::cout << vecs[i] << (((i+1) % db->index()->dims()) == 0 ? "\n" : " ");
+    }
+    delete db;
 //    std::string server_address = "tcp://localhost:5555";
 //    if (argc > 1) server_address = argv[1];
 //
