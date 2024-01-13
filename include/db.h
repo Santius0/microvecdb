@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "kv_store.h"
+#include "storage.h"
 #include "index.h"
 #include "vectorizer.h"
 #include <vector>
@@ -20,7 +20,7 @@ namespace mvdb {
         VectorizerModelType vec_model_;             // vectorizer model to be used to embedding generation
 
         std::string metadata_path_;                 // location of binary file that holds DB metadata i.e the values in this object
-        std::unique_ptr<KvStore> kv_store_;         // data storage object
+        std::unique_ptr<Storage> storage_;         // data storage object
         std::unique_ptr<Index> index_; // vector storage object
         void make_index_(const std::string& index_path);
 
@@ -38,11 +38,11 @@ namespace mvdb {
         void save(const std::string& save_path = "");
         void load(const std::string& load_path = "");
         Index* index();
-        KvStore* storage();
-        [[nodiscard]] bool add_vector(const size_t& nv, void* v) const;       // add nv vectors to the index
+        Storage* storage();
+        [[nodiscard]] uint64_t* add_vector(const size_t& nv, void* v, const std::string& v_d_type = "float") const;       // add nv vectors to the index
         [[nodiscard]] bool add_data(const size_t& nv, void* data) const;      // take nv pieces of data, generate a vector for each, add vectors to the index, store raw data in kv_store
         [[nodiscard]] bool add_vector_data(const size_t& nv, void* data, void* v) const; // take nv pieces of data and n corresponding vectors, add vectors to the index, add data to the kv_store
-        [[nodiscard]] SearchResult search_with_vector(const size_t& nq, void* query, const long& k, const bool& ret_data) const; // carry out a search using only vectors as input
+        [[nodiscard]] SearchResult* search_with_vector(const size_t& nq, void* query, const long& k, const bool& ret_data) const; // carry out a search using only nq vectors as input
         [[nodiscard]] SearchResult search(void* data, const long& k, const bool& ret_data) const;  // carry out a search using only raw data as input
     };
 

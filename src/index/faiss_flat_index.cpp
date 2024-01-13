@@ -64,6 +64,17 @@ namespace mvdb {
         faiss_index_.reset(faiss::read_index(index_path_.c_str()));
     }
 
+    /** query n vectors of dimension d to the index.
+     *
+     * return at most k vectors. If there are not enough results for a
+     * query, the result array is padded with -1s.
+     *
+     * @param nq            number of query vectors
+     * @param query         input vectors to search, size n * d
+     * @param ids           output labels of the NNs, size n*k
+     * @param distances     output pairwise distances, size n*k
+     * @param k             number of extracted vectors
+     */
     void FaissFlatIndex::search(const int& nq, float* query, int64_t* ids, float* distances, const long& k) const{
         faiss_index_->search(static_cast<long>(nq), query, k, distances, ids);
     }

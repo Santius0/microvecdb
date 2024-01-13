@@ -1,11 +1,15 @@
 #include <Python.h>
 #include <iostream>
+#include <db.h>
+#include <index.h>
 #include <faiss_flat_index.h>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
 #define FAISS_FLAT_INDEX_NAME "mvdb::FaissFlatIndex"
+#define DB_NAME "mvdb::DB"
+#define SEARCH_RESULT_NAME "mvdb::DB"
 
 // Function to be exposed - hello_world
 static PyObject* hello_world(PyObject *self, PyObject *args) {
@@ -14,6 +18,97 @@ static PyObject* hello_world(PyObject *self, PyObject *args) {
     std::cout << "Hello " << str << std::endl;
     Py_RETURN_NONE;
 }
+
+static void SearchResult_delete(PyObject* capsule) {
+    delete static_cast<mvdb::SearchResult*>(PyCapsule_GetPointer(capsule, SEARCH_RESULT_NAME));
+}
+
+static void DB_delete(PyObject* capsule) {
+    delete static_cast<mvdb::DB*>(PyCapsule_GetPointer(capsule, DB_NAME));
+}
+
+static PyObject* DB_create(PyObject *self, PyObject *args) {
+    const char *dbpath, *dbname;
+    uint64_t dims;
+    if(!PyArg_ParseTuple(args, "ssl", &dbpath, &dbname, &dims)) return nullptr;
+    auto* db = new mvdb::DB(std::string(dbpath), std::string(dbname), dims);
+    return PyCapsule_New(db, DB_NAME, DB_delete);
+}
+
+static PyObject* DB_add_vector(PyObject *self, PyObject *args) {
+    PyObject *capsule, *input_array;
+    size_t nv; // number of input vectors passed in;
+    const char *v_d_type;
+    std::string v_d_type_str;
+    if(!PyArg_ParseTuple(args, "OO!i", &capsule, &PyArray_Type, &input_array, &nv, &v_d_type)) return nullptr;
+    v_d_type_str = std::string(v_d_type);
+    if(v_d_type_str != "float" && v_d_type_str != "int8"){
+        PyErr_SetString(PyExc_TypeError, "Only data type 'float' and 'int8' are valid");
+        return nullptr;
+    }
+    auto* db = static_cast<mvdb::DB*>(PyCapsule_GetPointer(capsule, DB_NAME));
+    auto* input_pyarray = (PyArrayObject*)input_array;
+    void* v;
+    if(v_d_type_str == "float") {
+        if (PyArray_TYPE(input_pyarray) != NPY_FLOAT) {
+            PyErr_SetString(PyExc_TypeError, "float data type used but array is not of type float");
+            return nullptr;
+        }
+        v = (float*)PyArray_DATA(input_pyarray);
+    } else {
+        if (PyArray_TYPE(input_pyarray) != NPY_INT8) {
+            PyErr_SetString(PyExc_TypeError, "int8 data type used but array is not of type int8");
+            return nullptr;
+        }
+        v = (int8_t*)PyArray_DATA(input_pyarray);
+    }
+    npy_intp arr_dims[1] = {static_cast<long>(db->index()->dims())};
+    auto* keys = db->add_vector(nv, v, v_d_type);
+    if (!keys){
+        PyErr_SetString(PyExc_TypeError, "keys = nullptr => vector add failed");
+        return nullptr;
+    }
+    PyObject* keys_npArray = PyArray_SimpleNewFromData(1, arr_dims, NPY_INT64, (void*)keys);
+    if (!keys_npArray){
+        PyErr_SetString(PyExc_TypeError, "keys_npArray = nullptr => failed to generate keys nparray");
+        return nullptr;
+    }
+    // If your data should not be freed by NumPy when the array is deleted,
+    // you should set the WRITEABLE flag to ensure Python code doesn't change the data.
+//    PyArray_CLEARFLAGS((PyArrayObject*)np_array, NPY_ARRAY_WRITEABLE);
+    return PyTuple_Pack(2, keys_npArray);
+}
+
+static PyObject* DB_search_with_vector(PyObject* self, PyObject* args) {
+    PyObject *capsule, *query_input;
+    int nq, k, ret_data; // nq = total size of query vector, should be a multiple of index dimensionality. k = number of results to be returned
+    if (!PyArg_ParseTuple(args, "OiO!ip", &capsule, &nq, &PyArray_Type, &query_input, &k, &ret_data)) return nullptr;
+    auto* db = static_cast<mvdb::DB*>(PyCapsule_GetPointer(capsule, DB_NAME));
+    auto* query_pyarray = (PyArrayObject*)query_input;
+
+    // TODO: implements data typing in the index object so I can do if(db->index()->v_d_type)
+//    if (PyArray_TYPE(query_pyarray) != NPY_FLOAT) {
+//        PyErr_SetString(PyExc_TypeError, "Array should be of type float");
+//        return nullptr;
+//    }
+
+    auto* query = (float*)PyArray_DATA(query_pyarray);
+
+//    npy_intp dims[1] = {k};
+//    PyObject* ids_pyArray = PyArray_SimpleNew(1, dims, NPY_INT64);
+//    PyObject* distances_pyArray = PyArray_SimpleNew(1, dims, NPY_FLOAT);
+//    if (!ids_pyArray || !distances_pyArray){
+//        PyErr_SetString(PyExc_TypeError, "either ids_pyArray = nullptr or distances_pyArray = nullptr => failed to generate allocate arrays for ids or distances");
+//        return nullptr;
+//    }
+//    auto* ids = (int64_t*)PyArray_DATA((PyArrayObject*)ids_pyArray);
+//    auto* distances = (float*)PyArray_DATA((PyArrayObject*)distances_pyArray);
+
+    mvdb::SearchResult* search_result = db->search_with_vector(nq, query, k, ret_data);
+
+    return PyCapsule_New(search_result, SEARCH_RESULT_NAME, SearchResult_delete);
+}
+
 
 static void FaissFlatIndex_delete(PyObject* capsule) {
     delete static_cast<mvdb::FaissFlatIndex*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAME));
@@ -32,12 +127,6 @@ static PyObject* FaissFlatIndex_open(PyObject *self, PyObject *args) {
     if(!PyArg_ParseTuple(args, "O", &capsule)) return nullptr;
     auto* idx_obj = static_cast<mvdb::FaissFlatIndex*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAME));
     idx_obj->open();
-//    size_t n = 4;
-//    uint64_t keys[4] = {0, 1, 2, 3};
-//    float* vecs = idx_obj->get(n, nullptr);
-//    for(int i = 0; i < n * idx_obj->dims(); i++){
-//        std::cout  << vecs[i] << (((i+1) % idx_obj->dims()) == 0 ? "\n" : " ");
-//    }
     Py_RETURN_NONE;
 }
 
@@ -105,6 +194,9 @@ static PyMethodDef MyExtensionMethods[] = {
     { "FaissFlatIndex_open", FaissFlatIndex_open, METH_VARARGS, "" },
     { "FaissFlatIndex_add", FaissFlatIndex_add, METH_VARARGS, "" },
     { "FaissFlatIndex_search", FaissFlatIndex_search, METH_VARARGS, "" },
+    { "DB_create", DB_create, METH_VARARGS, "Initialise a DB object" },
+    { "DB_add_vector", DB_add_vector, METH_VARARGS, "Add vector data using a DB object" },
+    { "DB_search_with_vector", DB_search_with_vector, METH_VARARGS, "Perform similarity using only vector data via a DB object" },
     { NULL, NULL, 0, NULL }  // Sentinel value ending the array
 };
 

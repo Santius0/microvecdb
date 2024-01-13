@@ -6,9 +6,6 @@
 #include <vector>
 
 namespace mvdb {
-    using value_t = int8_t;
-    using vector_t = value_t*;
-
     // VectorDB
     #define META_FILE_EXTENSION ".metadata"
     #define META_FILE_EXTENSION_LEN strlen(META_FILE_EXTENSION)
@@ -29,7 +26,45 @@ namespace mvdb {
     #define MAX_KEY_CHARS 21
     #define MAX_KEY_SIZE_BYTES (sizeof(char) * MAX_KEY_CHARS) // (2^64 - 1) is a number with 20 digits
 
+    enum DataType {
+        INT8 = 0,
+        FLOAT = 1,
+    };
+
+    enum class DataFormat {
+        // Image formats
+        JPEG,
+        PNG,
+        GIF,
+        BMP,
+        TIFF,
+
+        // Text formats
+        TXT,
+        PDF,
+        DOC,
+        HTML,
+        RTF,
+
+        // Audio formats
+        MP3,
+        WAV,
+        AAC,
+        FLAC,
+        OGG,
+
+        // Video formats
+        MP4,
+        AVI,
+        MOV,
+        WMV,
+        MKV
+    };
+
+
     using pkey_t = uint64_t; // numerical standard for primary keys
     using vec_count_t = uint16_t;  // numerical standard for specifying number of vectors
+    using value_t = int8_t;
+    using vector_t = value_t*;
 }
 #endif //CONTSTANTS_H

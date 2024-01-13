@@ -10,7 +10,7 @@ import numpy as np
 def main():
     index = mvdb.FaissFlatIndex_create("./test_index", 5)
     mvdb.FaissFlatIndex_open(index)
-    # query = np.array([1.2, 2.3, 3.4, 4.5, 1.2, 2.3, 3.4, 4.5, 1.2, 2.3, 3.4, 4.5], dtype=np.float32)
+    # query = np.array(3, [1.2, 2.3, 3.4, 4.5, 1.2, 2.3, 3.4, 4.5, 1.2, 2.3, 3.4, 4.5], dtype=np.float32)
     # microvecdb.FaissFlatIndex_add(index, query, 3)
     # top_k = mvdb.FaissFlatIndex_search(index, 5, query, 10)
     # print(top_k)

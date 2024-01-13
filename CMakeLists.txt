@@ -87,7 +87,8 @@ set_target_properties(microvecdb_index PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMA
 
 # microvecdb_storage:
 add_library(microvecdb_storage SHARED
-        src/storage/kv_store.cpp
+        src/storage/storage.cpp
+        include/storage/storage.h
 )
 target_include_directories(microvecdb_storage PUBLIC include/storage)
 target_link_libraries(microvecdb_storage PUBLIC microvecdb_core rocksdb)
