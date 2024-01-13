@@ -3,6 +3,7 @@
 #include <db.h>
 #include <index.h>
 #include <faiss_flat_index.h>
+#include <constants.h>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
@@ -38,18 +39,16 @@ static PyObject* DB_create(PyObject *self, PyObject *args) {
 static PyObject* DB_add_vector(PyObject *self, PyObject *args) {
     PyObject *capsule, *input_array;
     size_t nv; // number of input vectors passed in;
-    const char *v_d_type;
-    std::string v_d_type_str;
+    int v_d_type;
     if(!PyArg_ParseTuple(args, "OO!i", &capsule, &PyArray_Type, &input_array, &nv, &v_d_type)) return nullptr;
-    v_d_type_str = std::string(v_d_type);
-    if(v_d_type_str != "float" && v_d_type_str != "int8"){
+    if(static_cast<mvdb::DataType>(v_d_type) != mvdb::FLOAT && static_cast<mvdb::DataType>(v_d_type) != mvdb::INT8){
         PyErr_SetString(PyExc_TypeError, "Only data type 'float' and 'int8' are valid");
         return nullptr;
     }
     auto* db = static_cast<mvdb::DB*>(PyCapsule_GetPointer(capsule, DB_NAME));
     auto* input_pyarray = (PyArrayObject*)input_array;
     void* v;
-    if(v_d_type_str == "float") {
+    if(static_cast<mvdb::DataType>(v_d_type) == mvdb::FLOAT) {
         if (PyArray_TYPE(input_pyarray) != NPY_FLOAT) {
             PyErr_SetString(PyExc_TypeError, "float data type used but array is not of type float");
             return nullptr;
@@ -63,7 +62,7 @@ static PyObject* DB_add_vector(PyObject *self, PyObject *args) {
         v = (int8_t*)PyArray_DATA(input_pyarray);
     }
     npy_intp arr_dims[1] = {static_cast<long>(db->index()->dims())};
-    auto* keys = db->add_vector(nv, v, v_d_type);
+    auto* keys = db->add_vector(nv, v, static_cast<mvdb::DataType>(v_d_type));
     if (!keys){
         PyErr_SetString(PyExc_TypeError, "keys = nullptr => vector add failed");
         return nullptr;

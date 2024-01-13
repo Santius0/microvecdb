@@ -92,7 +92,8 @@ namespace mvdb {
          return storage_.get();
     }
 
-    uint64_t* DB::add_vector(const size_t& nv, void* v, const std::string& v_d_type) const {
+    uint64_t* DB::add_vector(const size_t& nv, void* v, const DataType& v_d_type) const {
+         // TODO: perform write ahead log for vector data here
          if(!index_->is_open()) index_->open();
          auto* keys = new uint64_t[nv];
          preprocess_vector(nv * dims_, dims_, v, v_d_type, false, false);
@@ -101,29 +102,32 @@ namespace mvdb {
          return nullptr;
     }
 
-//    bool DB::add_data(const size_t& nv, char* data, size_t* data_sizes, std::string* data_formats) const {
-//        Vectorizer vectorizer = Vectorizer("../models/cc.en.300.bin", dims_);
-//        auto * vecs = new float[nv * index_->dims()];
-//        size_t processed_bytes = 0;
-//        for(size_t i = 0; i < nv; i++) {
-//            fasttext::Vector vec = vectorizer.get_word_vector(std::string(data + processed_bytes, data_sizes[i]));
-//            processed_bytes += data_sizes[i];
-//            for(size_t j = 0; j < index_->dims(); j++)
-//                vecs[(i * index_->dims()) + j] = vec.data()[j];
-//        }
-////        return add_vector_data(nv, data, vecs);
-//        return true;
-//    }
+    // pre-processes data, generates embedding then passes them both to add_data_with_vector
+    bool DB::add_data(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, const DataType& v_d_type) const {
+        auto * vecs = new float[nv * index_->dims()];
+        size_t processed_bytes = 0;
+        for(size_t i = 0; i < nv; i++) {
+            if(data_formats[i] == RAW_TEXT) {
+                Vectorizer vectorizer = Vectorizer("../models/cc.en.300.bin", dims_);
+                fasttext::Vector vec = vectorizer.get_word_vector(std::string(data + processed_bytes, data_sizes[i]));
+                processed_bytes += data_sizes[i];
+                for(size_t j = 0; j < index_->dims(); j++)
+                    vecs[(i * index_->dims()) + j] = vec.data()[j];
+            } else {
+                // TODO: process and embed other data types
+            }
+        }
+        return add_data_with_vector(nv, data, data_sizes, data_formats, vecs, v_d_type);
+    }
 
-    bool DB::add_vector_data(const size_t& nv, void* data, void* v) const {
-//         // TODO: implement data add
-//         bool success = false;
-////         if(!kv_store_->is_open()) kv_store_->open();
-//         if(!index_->is_open()) index_->open();
-//         auto* keys = new uint64_t[nv];
-//         success = index_->add(nv, static_cast<float*>(v), keys);
-//         return kv_store_->put(std::to_string(keys[0]), data);
-        return true;
+    bool DB::add_data_with_vector(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, void* v, const DataType& v_d_type) const {
+        uint64_t* keys = add_vector(nv, v, v_d_type);
+        if(!keys) return false;
+        auto* keys_str = new std::string[nv];
+        delete[] keys;
+        // TODO: perform write ahead log for char* data here
+        if(!storage_->is_open()) storage_->open();
+        return storage_->put(nv, keys_str, data, data_sizes);
     }
 
     SearchResult* DB::search_with_vector(const size_t& nq, void* query, const long& k, const bool& ret_data) const {

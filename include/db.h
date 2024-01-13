@@ -39,9 +39,9 @@ namespace mvdb {
         void load(const std::string& load_path = "");
         Index* index();
         Storage* storage();
-        [[nodiscard]] uint64_t* add_vector(const size_t& nv, void* v, const std::string& v_d_type = "float") const;       // add nv vectors to the index
-        [[nodiscard]] bool add_data(const size_t& nv, void* data) const;      // take nv pieces of data, generate a vector for each, add vectors to the index, store raw data in kv_store
-        [[nodiscard]] bool add_vector_data(const size_t& nv, void* data, void* v) const; // take nv pieces of data and n corresponding vectors, add vectors to the index, add data to the kv_store
+        [[nodiscard]] uint64_t* add_vector(const size_t& nv, void* v, const DataType& v_d_type = FLOAT) const;       // add nv vectors to the index
+        [[nodiscard]] bool add_data(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, const DataType& v_d_type = FLOAT) const;      // take nv pieces of data, generate a vector for each, add vectors to the index, store raw data in kv_store
+        [[nodiscard]] bool add_data_with_vector(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, void* v, const DataType& v_d_type = FLOAT) const; // take nv pieces of data and n corresponding vectors, add vectors to the index, add data to the kv_store
         [[nodiscard]] SearchResult* search_with_vector(const size_t& nq, void* query, const long& k, const bool& ret_data) const; // carry out a search using only nq vectors as input
         [[nodiscard]] SearchResult search(void* data, const long& k, const bool& ret_data) const;  // carry out a search using only raw data as input
     };

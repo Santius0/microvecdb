@@ -31,7 +31,9 @@ namespace mvdb {
         FLOAT = 1,
     };
 
-    enum class DataFormat {
+    enum DataFormat {
+        RAW_TEXT,
+
         // Image formats
         JPEG,
         PNG,
