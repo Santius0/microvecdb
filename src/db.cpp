@@ -57,8 +57,13 @@ namespace mvdb {
         if(std::filesystem::exists(metadata_path_)) load();
         else {
             make_index_(index_path);
-//            kv_store_ = std::make_unique<KvStore>(data_path,true, false);
         }
+        storage_ = std::make_unique<Storage>(data_path,true, false);
+
+    }
+
+    DB::~DB(){
+         delete[] keys_;
     }
 
     void DB::make_index_(const std::string& index_path){
@@ -92,43 +97,50 @@ namespace mvdb {
          return storage_.get();
     }
 
-    uint64_t* DB::add_vector(const size_t& nv, void* v, const DataType& v_d_type) const {
+//    template<typename T>
+    uint64_t* DB::add_vector(const size_t& nv, float* v) {
          // TODO: perform write ahead log for vector data here
          if(!index_->is_open()) index_->open();
+         delete[] keys_; // free old keys if they haven't been yet
          auto* keys = new uint64_t[nv];
-         preprocess_vector(nv * dims_, dims_, v, v_d_type, false, false);
-         bool success = index_->add(nv, static_cast<float*>(v), keys);
+//         preprocess_vector(nv * dims_, dims_, v, v_d_type, false, false);
+         bool success = index_->add(nv, v, keys);
+         keys_ = keys;
          if(success) return keys;
          return nullptr;
     }
+    // Explicit instantiation
+    // TODO: implement support for other input data types like double, int8_t etc. after implementing custom index solution
+//    template uint64_t* DB::add_vector<float*>(const size_t& nv, float* v) const;      // 32-bit float
 
-    // pre-processes data, generates embedding then passes them both to add_data_with_vector
-    bool DB::add_data(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, const DataType& v_d_type) const {
-        auto * vecs = new float[nv * index_->dims()];
-        size_t processed_bytes = 0;
-        for(size_t i = 0; i < nv; i++) {
-            if(data_formats[i] == RAW_TEXT) {
-                Vectorizer vectorizer = Vectorizer("../models/cc.en.300.bin", dims_);
-                fasttext::Vector vec = vectorizer.get_word_vector(std::string(data + processed_bytes, data_sizes[i]));
-                processed_bytes += data_sizes[i];
-                for(size_t j = 0; j < index_->dims(); j++)
-                    vecs[(i * index_->dims()) + j] = vec.data()[j];
-            } else {
-                // TODO: process and embed other data types
-            }
-        }
-        return add_data_with_vector(nv, data, data_sizes, data_formats, vecs, v_d_type);
-    }
-
-    bool DB::add_data_with_vector(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, void* v, const DataType& v_d_type) const {
-        uint64_t* keys = add_vector(nv, v, v_d_type);
-        if(!keys) return false;
-        auto* keys_str = new std::string[nv];
-        delete[] keys;
-        // TODO: perform write ahead log for char* data here
-        if(!storage_->is_open()) storage_->open();
-        return storage_->put(nv, keys_str, data, data_sizes);
-    }
+//    // pre-processes data, generates embedding then passes them both to add_data_with_vector
+//    bool DB::add_data(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, const DataType& v_d_type) const {
+//        auto * vecs = new float[nv * index_->dims()];
+//        size_t processed_bytes = 0;
+//        for(size_t i = 0; i < nv; i++) {
+//            if(data_formats[i] == RAW_TEXT) {
+//                Vectorizer vectorizer = Vectorizer("../models/cc.en.300.bin", dims_);
+//                fasttext::Vector vec = vectorizer.get_word_vector(std::string(data + processed_bytes, data_sizes[i]));
+//                processed_bytes += data_sizes[i];
+//                for(size_t j = 0; j < index_->dims(); j++)
+//                    vecs[(i * index_->dims()) + j] = vec.data()[j];
+//            } else {
+//                // TODO: process and embed other data types
+//                std::runtime_error("DataFormat '" + data_formats[i] + "''");
+//            }
+//        }
+//        return add_data_with_vector(nv, data, data_sizes, data_formats, vecs, v_d_type);
+//    }
+//
+//    bool DB::add_data_with_vector(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, void* v, const DataType& v_d_type) const {
+//        uint64_t* keys = add_vector(nv, v, v_d_type);
+//        if(!keys) return false;
+//        auto* keys_str = new std::string[nv];
+//        delete[] keys;
+//        // TODO: perform write ahead log for char* data here
+//        if(!storage_->is_open()) storage_->open();
+//        return storage_->put(nv, keys_str, data, data_sizes);
+//    }
 
     SearchResult* DB::search_with_vector(const size_t& nq, void* query, const long& k, const bool& ret_data) const {
          if(!storage_->is_open()) storage_->open();
@@ -141,30 +153,46 @@ namespace mvdb {
          return new SearchResult(ids, distances, data, k);
     }
 
-//    SearchResult DB::search(const std::string& data, const long& k, const bool& ret_data) const {
-//         Vectorizer vectorizer = Vectorizer("../models/cc.en.300.bin", dims_);
-//         fasttext::Vector query = vectorizer.get_word_vector(data);
-//         return search_with_vector(query.get_data_(), k, ret_data);
+//    SearchResult* DB::search(const size_t& nq, const char* data, const size_t* data_sizes, const DataFormat* data_formats, const long& k, const bool& ret_data) const {
+//        auto * vecs = new float[nq * index_->dims()];
+//        size_t processed_bytes = 0;
+//        for(size_t i = 0; i < nq; i++) {
+//            if(data_formats[i] == RAW_TEXT) {
+//                Vectorizer vectorizer = Vectorizer("../models/cc.en.300.bin", dims_);
+//                fasttext::Vector vec = vectorizer.get_word_vector(std::string(data + processed_bytes, data_sizes[i]));
+//                processed_bytes += data_sizes[i];
+//                for(size_t j = 0; j < index_->dims(); j++)
+//                    vecs[(i * index_->dims()) + j] = vec.data()[j];
+//            } else {
+//                // TODO: process and embed other data types
+//            }
+//        }
+//        return search_with_vector(nq, vecs, k, ret_data);
 //    }
 
-    void read_from_files(const size_t& n, const std::string* file_paths, char* data, size_t* sizes) {
-        size_t curr_size = 0;
-        for (size_t i = 0; i < n; i++) {
-            std::ifstream file(file_paths[i], std::ios::binary | std::ios::ate);
-            if (!file.is_open()) {
-                std::cerr << "Failed to open " << file_paths[i] << std::endl;
-                continue;
-            }
-            size_t size = file.tellg();
-            char* buffer = new char[curr_size + size];
-            std::copy(data, data + curr_size, buffer);
-            delete[] data;
-            data = buffer;
-            file.seekg(0, std::ios::beg);
-            file.read(data + curr_size, size);
-            file.close();
-            curr_size += size;
-            sizes[i] = size;
-        }
+//    void read_from_files(const size_t& n, const std::string* file_paths, char* data, size_t* sizes) {
+//        size_t curr_size = 0;
+//        for (size_t i = 0; i < n; i++) {
+//            std::ifstream file(file_paths[i], std::ios::binary | std::ios::ate);
+//            if (!file.is_open()) {
+//                std::cerr << "Failed to open " << file_paths[i] << std::endl;
+//                continue;
+//            }
+//            size_t size = file.tellg();
+//            char* buffer = new char[curr_size + size];
+//            std::copy(data, data + curr_size, buffer);
+//            delete[] data;
+//            data = buffer;
+//            file.seekg(0, std::ios::beg);
+//            file.read(data + curr_size, size);
+//            file.close();
+//            curr_size += size;
+//            sizes[i] = size;
+//        }
+//    }
+
+    float* DB::get(size_t& n, uint64_t* keys) const {
+        if(!index_->is_open()) index_->open();
+        return index_->get(n, keys);
     }
 }

@@ -38,44 +38,35 @@ static PyObject* DB_create(PyObject *self, PyObject *args) {
 
 static PyObject* DB_add_vector(PyObject *self, PyObject *args) {
     PyObject *capsule, *input_array;
-    size_t nv; // number of input vectors passed in;
-    int v_d_type;
-    if(!PyArg_ParseTuple(args, "OO!i", &capsule, &PyArray_Type, &input_array, &nv, &v_d_type)) return nullptr;
-    if(static_cast<mvdb::DataType>(v_d_type) != mvdb::FLOAT && static_cast<mvdb::DataType>(v_d_type) != mvdb::INT8){
-        PyErr_SetString(PyExc_TypeError, "Only data type 'float' and 'int8' are valid");
-        return nullptr;
-    }
+    int nv; // number of input vectors passed in;
+    if(!PyArg_ParseTuple(args, "OO!i", &capsule, &PyArray_Type, &input_array, &nv)) return nullptr;
     auto* db = static_cast<mvdb::DB*>(PyCapsule_GetPointer(capsule, DB_NAME));
     auto* input_pyarray = (PyArrayObject*)input_array;
-    void* v;
-    if(static_cast<mvdb::DataType>(v_d_type) == mvdb::FLOAT) {
-        if (PyArray_TYPE(input_pyarray) != NPY_FLOAT) {
-            PyErr_SetString(PyExc_TypeError, "float data type used but array is not of type float");
-            return nullptr;
-        }
-        v = (float*)PyArray_DATA(input_pyarray);
-    } else {
-        if (PyArray_TYPE(input_pyarray) != NPY_INT8) {
-            PyErr_SetString(PyExc_TypeError, "int8 data type used but array is not of type int8");
-            return nullptr;
-        }
-        v = (int8_t*)PyArray_DATA(input_pyarray);
+    uint64_t* keys;
+    npy_intp return_arr_dims[1] = {nv};
+    // TODO: Add support for other data input data types after implementation of custom index
+    if (PyArray_TYPE(input_pyarray) == NPY_FLOAT) {
+        auto* v = (float*)PyArray_DATA(input_pyarray);
+        keys = db->add_vector(nv, v);
     }
-    npy_intp arr_dims[1] = {static_cast<long>(db->index()->dims())};
-    auto* keys = db->add_vector(nv, v, static_cast<mvdb::DataType>(v_d_type));
+    else {
+        PyErr_SetString(PyExc_TypeError, "input data must be of type float32");
+        return nullptr;
+    }
     if (!keys){
         PyErr_SetString(PyExc_TypeError, "keys = nullptr => vector add failed");
         return nullptr;
     }
-    PyObject* keys_npArray = PyArray_SimpleNewFromData(1, arr_dims, NPY_INT64, (void*)keys);
+    PyObject* keys_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_UINT64, (void*)keys);
     if (!keys_npArray){
         PyErr_SetString(PyExc_TypeError, "keys_npArray = nullptr => failed to generate keys nparray");
         return nullptr;
     }
+//    if()
     // If your data should not be freed by NumPy when the array is deleted,
     // you should set the WRITEABLE flag to ensure Python code doesn't change the data.
 //    PyArray_CLEARFLAGS((PyArrayObject*)np_array, NPY_ARRAY_WRITEABLE);
-    return PyTuple_Pack(2, keys_npArray);
+    return keys_npArray;
 }
 
 static PyObject* DB_search_with_vector(PyObject* self, PyObject* args) {
@@ -86,11 +77,10 @@ static PyObject* DB_search_with_vector(PyObject* self, PyObject* args) {
     auto* query_pyarray = (PyArrayObject*)query_input;
 
     // TODO: implements data typing in the index object so I can do if(db->index()->v_d_type)
-//    if (PyArray_TYPE(query_pyarray) != NPY_FLOAT) {
-//        PyErr_SetString(PyExc_TypeError, "Array should be of type float");
-//        return nullptr;
-//    }
-
+    if (PyArray_TYPE(query_pyarray) != NPY_FLOAT) {
+        PyErr_SetString(PyExc_TypeError, "Array should be of type float");
+        return nullptr;
+    }
     auto* query = (float*)PyArray_DATA(query_pyarray);
 
 //    npy_intp dims[1] = {k};
@@ -104,6 +94,9 @@ static PyObject* DB_search_with_vector(PyObject* self, PyObject* args) {
 //    auto* distances = (float*)PyArray_DATA((PyArrayObject*)distances_pyArray);
 
     mvdb::SearchResult* search_result = db->search_with_vector(nq, query, k, ret_data);
+    for(int i = 0; i < search_result->size_; i++){
+        std::cout << search_result->ids_[i] << " = " << search_result->distances_[i] << std::endl;
+    }
 
     return PyCapsule_New(search_result, SEARCH_RESULT_NAME, SearchResult_delete);
 }
@@ -146,7 +139,6 @@ static PyObject* FaissFlatIndex_add(PyObject* self, PyObject* args) {
     auto* keys = (uint64_t*)PyArray_DATA((PyArrayObject*)keys_pyArray);
     bool res = idx_obj->add(n, input, keys);
     return PyTuple_Pack(2, PyBool_FromLong(res), keys_pyArray);
-    Py_RETURN_NONE;
 }
 
 static PyObject* FaissFlatIndex_search(PyObject* self, PyObject* args) {

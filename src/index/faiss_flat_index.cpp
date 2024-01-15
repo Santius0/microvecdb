@@ -1,4 +1,5 @@
 #include "faiss_flat_index.h"
+#include "exception.h"
 #include <iostream>
 #include <filesystem>
 
@@ -89,6 +90,9 @@ namespace mvdb {
     }
 
     float* FaissFlatIndex::get(size_t& n, uint64_t* keys) const {
+        if(!is_open_)
+            throw std::runtime_error("get failed => faiss_index has not been properly opened");
+
         if (faiss_index_->is_trained) {
             if(keys != nullptr){
                 for(size_t i = 0; i < n; i++) {

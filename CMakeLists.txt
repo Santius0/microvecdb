@@ -76,6 +76,7 @@ set_target_properties(microvecdb_core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAK
 
 # microvecdb_index:
 add_library(microvecdb_index SHARED
+        include/index/index.h
         src/index/index.cpp
         src/index/faiss_flat_index.cpp
 )

@@ -24,6 +24,8 @@ namespace mvdb {
         std::unique_ptr<Index> index_; // vector storage object
         void make_index_(const std::string& index_path);
 
+        uint64_t* keys_ = nullptr; // ptr to most recent keys array returned for cleanup if necessary
+
         friend std::ostream& operator<<(std::ostream& os, const DB& obj);
         friend std::ostream& operator<<(std::ostream& os, const DB* obj);
     protected:
@@ -34,16 +36,19 @@ namespace mvdb {
         explicit DB(const std::string& path, const std::string& dbname = "db", const uint64_t& dims = 300,
                           const IndexType& index_type = IndexType::FAISS_FLAT,
                           VectorizerModelType vec_model = VectorizerModelType::FASTTEXT);
-        ~DB() override = default;
+        ~DB() override;
         void save(const std::string& save_path = "");
         void load(const std::string& load_path = "");
         Index* index();
         Storage* storage();
-        [[nodiscard]] uint64_t* add_vector(const size_t& nv, void* v, const DataType& v_d_type = FLOAT) const;       // add nv vectors to the index
-        [[nodiscard]] bool add_data(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, const DataType& v_d_type = FLOAT) const;      // take nv pieces of data, generate a vector for each, add vectors to the index, store raw data in kv_store
-        [[nodiscard]] bool add_data_with_vector(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, void* v, const DataType& v_d_type = FLOAT) const; // take nv pieces of data and n corresponding vectors, add vectors to the index, add data to the kv_store
+
+//        template<typename T>
+        [[nodiscard]] uint64_t* add_vector(const size_t& nv, float* v);       // add nv vectors to the index
+//        [[nodiscard]] bool add_data(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, const DataType& v_d_type = FLOAT) const;      // take nv pieces of data, generate a vector for each, add vectors to the index, store raw data in kv_store
+//        [[nodiscard]] bool add_data_with_vector(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, void* v, const DataType& v_d_type = FLOAT) const; // take nv pieces of data and n corresponding vectors, add vectors to the index, add data to the kv_store
         [[nodiscard]] SearchResult* search_with_vector(const size_t& nq, void* query, const long& k, const bool& ret_data) const; // carry out a search using only nq vectors as input
-        [[nodiscard]] SearchResult search(void* data, const long& k, const bool& ret_data) const;  // carry out a search using only raw data as input
+//        [[nodiscard]] SearchResult* search(const size_t& nq, const char* data, const size_t* data_sizes, const DataFormat* data_formats, const long& k, const bool& ret_data) const;  // carry out a search using only raw data as input
+        float* get(size_t& n, uint64_t* keys) const;
     };
 
 }

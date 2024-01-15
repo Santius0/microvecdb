@@ -33,5 +33,4 @@ namespace mvdb {
     uint64_t Index::dims(){
         return dims_;
     }
-
 }

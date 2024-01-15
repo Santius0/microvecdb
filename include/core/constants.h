@@ -26,11 +26,6 @@ namespace mvdb {
     #define MAX_KEY_CHARS 21
     #define MAX_KEY_SIZE_BYTES (sizeof(char) * MAX_KEY_CHARS) // (2^64 - 1) is a number with 20 digits
 
-    enum DataType {
-        INT8 = 0,
-        FLOAT = 1,
-    };
-
     enum DataFormat {
         RAW_TEXT,
 
