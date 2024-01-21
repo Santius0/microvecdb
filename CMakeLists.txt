@@ -51,6 +51,7 @@ function(include_sub_directories_recursively root_dir)
 endfunction()
 
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/core)   # all targets should have access to core headers
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/index)   # all targets should have access to core headers
 link_directories(lib)                                                     # all targets should be able to link against the contents of the lib directory
 
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
@@ -77,7 +78,8 @@ set_target_properties(microvecdb_core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAK
 # microvecdb_index:
 add_library(microvecdb_index SHARED
         include/index/index.h
-        src/index/index.cpp
+        include/index/faiss_flat_index.h
+        include/index/distances.h
         src/index/faiss_flat_index.cpp
 )
 target_include_directories(microvecdb_index PUBLIC include/index)

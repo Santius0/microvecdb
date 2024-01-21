@@ -24,18 +24,22 @@ namespace mvdb {
         Index::deserialize(in);
     }
 
-    FaissFlatIndex::FaissFlatIndex(const std::string& index_path, const uint64_t& dims):
+    FaissFlatIndex::FaissFlatIndex(const std::string& index_path, const idx_t& dims):
     Index(index_path, dims, IndexType::FAISS_FLAT) {}
 
     void FaissFlatIndex::init(){
-        faiss_index_ = std::make_unique<faiss::IndexFlatL2>(dims_);
+        faiss_index_ = std::make_unique<faiss::IndexFlatL2>(this->dims_);
     }
 
-    bool FaissFlatIndex::add(const size_t& n, const float* data, uint64_t* keys) const {
+    bool FaissFlatIndex::add(const idx_t& n, value_t* data, idx_t* ids) {
+        if(n <= 0) return false;
+        if(data == nullptr || ids == nullptr) return false;
         try {
+            if(!is_open_) throw std::runtime_error("FaissFlatIndex not open. Use index->open() before running add");
+            if(!faiss_index_) throw std::runtime_error("faiss_index_ == nullptr. Use index->open() before running add");
             for(int i = 0; i < n; i++)
-                keys[i] = faiss_index_->ntotal + i;
-            faiss_index_->add(static_cast<long>(n), data);
+                ids[i] = faiss_index_->ntotal + i;
+            faiss_index_->add(static_cast<long>(n), static_cast<float*>(data));
             save();
         } catch (const std::exception& e) {
             std::cerr << "Error adding data to index: " << e.what() << std::endl;
@@ -44,25 +48,33 @@ namespace mvdb {
         return true;
     }
 
-    bool FaissFlatIndex::remove(const size_t& n, const faiss::IDSelector& ids) const {
-        try {
-            faiss_index_->remove_ids(ids);
-            save();
-            return true;
-        } catch (const std::exception& e) {
-            std::cerr << "Error removing data from index: " << e.what() << std::endl;
-            return false;
-        }
+//    bool FaissFlatIndex::remove(const size_t& n, const faiss::IDSelector& ids) const {
+    bool FaissFlatIndex::remove(const idx_t& n, const idx_t* ids) {
+        throw not_implemented("FaissFlatIndex<T, D>::remove(const idx_t& n, idx_t* ids) const not implemented");
+//        try {
+//            faiss_index_->remove_ids(ids);
+//            save();
+//            return true;
+//        } catch (const std::exception& e) {
+//            std::cerr << "Error removing data from index: " << e.what() << std::endl;
+//            return false;
+//        }
     }
 
     void FaissFlatIndex::save() const {
-        if(is_open_){
-            faiss::write_index(faiss_index_.get(), index_path_.c_str());
+        if(this->is_open_){
+            faiss::write_index(faiss_index_.get(), this->index_path_.c_str());
         }
     }
 
     void FaissFlatIndex::load() {
-        faiss_index_.reset(faiss::read_index(index_path_.c_str()));
+//        faiss_index_.reset(faiss::read_index(index_path_.c_str(), faiss::IO_FLAG_MMAP));
+        faiss_index_.reset(faiss::read_index(this->index_path_.c_str()));
+    }
+
+    void FaissFlatIndex::close() {
+        faiss_index_->reset();
+        this->is_open_ = false;
     }
 
     /** query n vectors of dimension d to the index.
@@ -76,21 +88,16 @@ namespace mvdb {
      * @param distances     output pairwise distances, size n*k
      * @param k             number of extracted vectors
      */
-    void FaissFlatIndex::search(const int& nq, float* query, int64_t* ids, float* distances, const long& k) const{
-        faiss_index_->search(static_cast<long>(nq), query, k, distances, ids);
-    }
-
-    void FaissFlatIndex::close() {
-        faiss_index_->reset();
-        is_open_ = false;
+    void FaissFlatIndex::search(const idx_t& nq, value_t* query, idx_t* ids, value_t* distances, const idx_t& k) const{
+        faiss_index_->search(static_cast<long>(nq), static_cast<float*>(query), k, static_cast<float*>(distances), reinterpret_cast<faiss::idx_t *>(ids));
     }
 
     faiss::Index* FaissFlatIndex::faiss_index(){
         return faiss_index_.get();
     }
 
-    float* FaissFlatIndex::get(size_t& n, uint64_t* keys) const {
-        if(!is_open_)
+    value_t* FaissFlatIndex::get(idx_t& n, idx_t* keys) const {
+        if(!this->is_open_)
             throw std::runtime_error("get failed => faiss_index has not been properly opened");
 
         if (faiss_index_->is_trained) {
@@ -109,12 +116,11 @@ namespace mvdb {
         }
 
         if(keys == nullptr) n = faiss_index_->ntotal;
-        auto* reconstructed_vec = new float[n * dims_];
+        auto* reconstructed_vec = new float[n * this->dims_];
         for(faiss::idx_t i = 0; i < n; i++){
             faiss::idx_t key = (keys == nullptr ? i : static_cast<faiss::idx_t>(keys[i]));
-            faiss_index_->reconstruct(key, reconstructed_vec + (i * dims_));
+            faiss_index_->reconstruct(key, reconstructed_vec + (i * this->dims_));
         }
         return reconstructed_vec;
     }
-
 } // namespace mvdb

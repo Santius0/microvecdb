@@ -9,8 +9,11 @@
 #include <numpy/arrayobject.h>
 
 #define FAISS_FLAT_INDEX_NAME "mvdb::FaissFlatIndex"
-#define DB_NAME "mvdb::DB"
-#define SEARCH_RESULT_NAME "mvdb::DB"
+#define DB_NAME "mvdb::DB<>"
+#define SEARCH_RESULT_NAME "mvdb::DB<>"
+
+// TODO: Using templating now for DB and indexes, must update everything here to work with templates or find another solution
+
 
 // Function to be exposed - hello_world
 static PyObject* hello_world(PyObject *self, PyObject *args) {
@@ -167,7 +170,7 @@ static PyObject* FaissFlatIndex_search(PyObject* self, PyObject* args) {
     auto* ids = (int64_t*)PyArray_DATA((PyArrayObject*)ids_pyArray);
     auto* distances = (float*)PyArray_DATA((PyArrayObject*)distances_pyArray);
 
-    idx_obj->search(nq, query, ids, distances, k);
+//    idx_obj->search(nq, query, ids, distances, k);
 
     return PyTuple_Pack(2, ids_pyArray, distances_pyArray);
 }
@@ -185,9 +188,9 @@ static PyMethodDef MyExtensionMethods[] = {
     { "FaissFlatIndex_open", FaissFlatIndex_open, METH_VARARGS, "" },
     { "FaissFlatIndex_add", FaissFlatIndex_add, METH_VARARGS, "" },
     { "FaissFlatIndex_search", FaissFlatIndex_search, METH_VARARGS, "" },
-    { "DB_create", DB_create, METH_VARARGS, "Initialise a DB object" },
-    { "DB_add_vector", DB_add_vector, METH_VARARGS, "Add vector data using a DB object" },
-    { "DB_search_with_vector", DB_search_with_vector, METH_VARARGS, "Perform similarity using only vector data via a DB object" },
+    { "DB_create", DB_create, METH_VARARGS, "Initialise a DB<> object" },
+    { "DB_add_vector", DB_add_vector, METH_VARARGS, "Add vector data using a DB<> object" },
+    { "DB_search_with_vector", DB_search_with_vector, METH_VARARGS, "Perform similarity using only vector data via a DB<> object" },
     { NULL, NULL, 0, NULL }  // Sentinel value ending the array
 };
 

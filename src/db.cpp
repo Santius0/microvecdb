@@ -4,26 +4,27 @@
 #include "preprocess.h"
 #include "faiss_flat_index.h"
 #include "fasttext.h"
+#include "exception.h"
 #include <filesystem>
 #include <stdexcept>
 #include <fstream>
 
 namespace mvdb {
 
-     std::ostream& operator<<(std::ostream& os, const DB& obj) {
+    std::ostream& operator<<(std::ostream& os, const DB& obj) {
         return os   << "path_: " << obj.path_ << std::endl
                     << "dbname_: " << obj.dbname_ << std::endl
                     << "dims_: " << obj.dims_ << std::endl
                     << "index_type_: " << obj.index_type_ << std::endl
                     << "vector_index_:\n" << obj.index_.get() << std::endl
                     << "kv_store_:\n" << obj.storage_.get();
-     }
+    }
 
-     std::ostream& operator<<(std::ostream& os, const DB* obj) {
-         return os << "DB*(" << *obj << ")";
-     }
+    std::ostream& operator<<(std::ostream& os, const DB* obj) {
+        return os << "DB*(" << *obj << ")";
+    }
 
-     void DB::serialize(std::ostream &out) const {
+    void DB::serialize(std::ostream &out) const {
         serialize_string(out, path_);
         serialize_string(out, dbname_);
         serialize_numeric<uint64_t>(out, dims_);
@@ -42,8 +43,8 @@ namespace mvdb {
     }
 
     DB::DB(const std::string& path, const std::string& dbname, const uint64_t& dims, const IndexType& index_type,
-                       VectorizerModelType vec_model): path_(trim(path)), dbname_(dbname), dims_(dims), index_type_(index_type),
-                       vec_model_(vec_model){
+                       VectorizerModelType vec_model): path_(trim(path)), dbname_(dbname), dims_(dims),
+                       index_type_(index_type), vec_model_(vec_model) {
 
         const std::string index_path = path + std::filesystem::path::preferred_separator + dbname + INDEX_EXT;
         const std::string data_path = path + std::filesystem::path::preferred_separator + dbname + KV_STORE_EXT;
@@ -53,13 +54,9 @@ namespace mvdb {
             std::filesystem::create_directory(path);
         else if(!std::filesystem::is_directory(path)) // else if file exists but is not a directory throw error
             throw::std::runtime_error("invalid database path \"" + path + "\"");
-
+        make_index_(index_path);
+        make_storage_(data_path);
         if(std::filesystem::exists(metadata_path_)) load();
-        else {
-            make_index_(index_path);
-        }
-        storage_ = std::make_unique<Storage>(data_path,true, false);
-
     }
 
     DB::~DB(){
@@ -69,11 +66,18 @@ namespace mvdb {
     void DB::make_index_(const std::string& index_path){
          switch (index_type_) {
              case IndexType::FLAT:
-                 return;
-             default:
+                 break;
+             case IndexType::FAISS_FLAT:
                  index_ = std::make_unique<FaissFlatIndex>(index_path, dims_);
+                 break;
+             default:
+                 throw std::runtime_error(std::to_string(index_type_) + "' is not a valid IndexType");
          }
-     }
+    }
+
+    void DB::make_storage_(const std::string& data_path) {
+        storage_ = std::make_unique<Storage>(data_path, true, false);
+    }
 
     void DB::save(const std::string& save_path) {
         std::ofstream file(save_path.empty() ? metadata_path_ : save_path);
@@ -97,7 +101,6 @@ namespace mvdb {
          return storage_.get();
     }
 
-//    template<typename T>
     uint64_t* DB::add_vector(const size_t& nv, float* v) {
          // TODO: perform write ahead log for vector data here
          if(!index_->is_open()) index_->open();
@@ -109,12 +112,10 @@ namespace mvdb {
          if(success) return keys;
          return nullptr;
     }
-    // Explicit instantiation
-    // TODO: implement support for other input data types like double, int8_t etc. after implementing custom index solution
-//    template uint64_t* DB::add_vector<float*>(const size_t& nv, float* v) const;      // 32-bit float
 
-//    // pre-processes data, generates embedding then passes them both to add_data_with_vector
-//    bool DB::add_data(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, const DataType& v_d_type) const {
+    // pre-processes data, generates embedding then passes them both to add_data_with_vector
+    bool DB::add_data(const idx_t& nv, char* data, idx_t* data_sizes, const DataFormat* data_formats) const {
+        throw not_implemented("bool DB::add_data(const idx_t& nv, char* data, idx_t* data_sizes, const DataFormat* data_formats) const");
 //        auto * vecs = new float[nv * index_->dims()];
 //        size_t processed_bytes = 0;
 //        for(size_t i = 0; i < nv; i++) {
@@ -132,7 +133,7 @@ namespace mvdb {
 //        return add_data_with_vector(nv, data, data_sizes, data_formats, vecs, v_d_type);
 //    }
 //
-//    bool DB::add_data_with_vector(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, void* v, const DataType& v_d_type) const {
+//    bool DB::add_data_with_vector(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, value_t* v, const DataType& v_d_type) const {
 //        uint64_t* keys = add_vector(nv, v, v_d_type);
 //        if(!keys) return false;
 //        auto* keys_str = new std::string[nv];
@@ -140,15 +141,15 @@ namespace mvdb {
 //        // TODO: perform write ahead log for char* data here
 //        if(!storage_->is_open()) storage_->open();
 //        return storage_->put(nv, keys_str, data, data_sizes);
-//    }
+    }
 
-    SearchResult* DB::search_with_vector(const size_t& nq, void* query, const long& k, const bool& ret_data) const {
+    SearchResult* DB::search_with_vector(const size_t& nq, value_t* query, const long& k, const bool& ret_data) const {
          if(!storage_->is_open()) storage_->open();
          if(!index_->is_open()) index_->open();
          auto *ids = new int64_t[k];
          auto *distances = new float[k];
          auto *data = new std::string[k];
-         index_->search(nq, static_cast<float*>(query), ids, distances, k);
+         index_->search(nq, static_cast<float*>(query), reinterpret_cast<idx_t*>(ids), distances, k);
          if(ret_data) for(int i = 0 ; i < k; i++) data[i] = storage_->get(std::to_string(ids[i]));
          return new SearchResult(ids, distances, data, k);
     }
@@ -191,7 +192,7 @@ namespace mvdb {
 //        }
 //    }
 
-    float* DB::get(size_t& n, uint64_t* keys) const {
+    value_t* DB::get(idx_t& n, idx_t* keys) const {
         if(!index_->is_open()) index_->open();
         return index_->get(n, keys);
     }

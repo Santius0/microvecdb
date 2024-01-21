@@ -5,17 +5,17 @@
 #include <quantization.h>
 #include <faiss_flat_index.h>
 
-
-void populate_random_vector(const size_t& n, float* v) {
-    const unsigned int seed = 42;
-//    std::random_device rd;  // Seed for the random number engine
-    std::mt19937 gen(seed); // Standard mersenne_twister_engine
-    std::uniform_real_distribution<> dis(1.0, 100.0); // Range of generated values
-    for(size_t i = 0; i < n; i++) {
-        if (i < n / 2) v[i] = dis(gen); // Generate positive values for the first half
-        else v[i] = -dis(gen);          // Generate negative values for the second half
-    }
-}
+//
+//void populate_random_vector(const size_t& n, float* v) {
+//    const unsigned int seed = 42;
+////    std::random_device rd;  // Seed for the random number engine
+//    std::mt19937 gen(seed); // Standard mersenne_twister_engine
+//    std::uniform_real_distribution<> dis(1.0, 100.0); // Range of generated values
+//    for(size_t i = 0; i < n; i++) {
+//        if (i < n / 2) v[i] = dis(gen); // Generate positive values for the first half
+//        else v[i] = -dis(gen);          // Generate negative values for the second half
+//    }
+//}
 
 //float* generateRandomVector(size_t n) {
 //    auto* vec = new float[n];

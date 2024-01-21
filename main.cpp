@@ -39,25 +39,28 @@ void client_thread(const std::string& server_address) {
 
 // device #1: ./microvecdb_main tcp://192.168.1.11:5555
 // device #1: ./microvecdb_main tcp://192.168.1.10:5555
+
 #include "constants.h"
+#include "faiss_flat_index.h"
 int main(int argc, char* argv[]) {
-    auto* db = new mvdb::DB("../demo/deep10M_test_db", "deep10M_test_db", 96);
-    std::cout << "deep10 dims = " << db->index()->dims() << std::endl;
-//    float vec[5 * 2] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 33};
-//    if(db->add_vector(2, vec))
-//        std::cout << "added successfully" << std::endl;
-    size_t n = 5;
-    uint64_t* keys = nullptr;
-    float* vecs = db->get(n, keys);
-    std::cout << "n = " << n << "\nn x dims = " << n * db->index()->dims() << std::endl;
-    for(int i = 0; i < n * db->index()->dims(); i++){
-        if(i % db->index()->dims() == 0)
-            std::cout << i/db->index()->dims() << ". ";
-        std::cout << vecs[i] << (((i+1) % db->index()->dims()) == 0 ? "\n" : " ");
-    }
-    delete db;
-    delete[] keys;
-    delete[] vecs;
+//    auto* db = new mvdb::DB("../demo/deep10M_test_db", "deep10M_test_db", 96);
+//    std::cout << "deep10 dims = " << db->index()->dims() << std::endl;
+////    float vec[5 * 2] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 33};
+////    if(db->add_vector(2, vec))
+////        std::cout << "added successfully" << std::endl;
+//    size_t n = 5;
+//    uint64_t* keys = new uint64_t[n];
+//    float* vecs = db->get(n, keys);
+//    std::cout << "n = " << n << "\nn x dims = " << n * db->index()->dims() << std::endl;
+//    for(int i = 0; i < n * db->index()->dims(); i++){
+//        if(i % db->index()->dims() == 0)
+//            std::cout << i/db->index()->dims() << ". ";
+//        std::cout << vecs[i] << (((i+1) % db->index()->dims()) == 0 ? "\n" : " ");
+//    }
+//    std::cout << db->index()->ntotal() << std::endl;
+//    delete db;
+//    delete[] keys;
+//    delete[] vecs;
 //    std::string server_address = "tcp://localhost:5555";
 //    if (argc > 1) server_address = argv[1];
 //

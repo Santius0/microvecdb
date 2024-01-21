@@ -6,6 +6,8 @@ from pymicrovecdb import *
 import numpy as np
 import struct
 import gc
+import time
+
 
 def get_vector_count(filename):
     count = 0
@@ -73,16 +75,21 @@ def query():
             vecs = np.array(batch, dtype=np.float32).flatten()
             # print(vecs)
             res = db.search_with_vector(vecs, 5, False)
-            print(res)
+            # print(res)
             total_vectors += len(batch)
             if(total_vectors >= 1):
                 break
             print(f"Processed {total_vectors} vectors")
             del batch, vecs
             gc.collect()
-# @profile
+@profile
 def main():
+    # start_time = time.time()
     query()
+    # end_time = time.time()
+    # elapsed_time = end_time - start_time
+    # print(f"Execution time: {elapsed_time} seconds")
+
 
 if __name__ == '__main__':
     main()

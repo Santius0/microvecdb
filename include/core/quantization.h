@@ -9,7 +9,7 @@ namespace mvdb {
 
     // n = number of values in vector array v
     // v = array containing all vector values, contains nv = n/d vectors, where d = vector dimensionality
-    void scaler_quantization(const size_t& n, float* v, value_t* q);
+//    void scaler_quantization(const size_t& n, float* v, value_t* q);
 }
 
 #endif

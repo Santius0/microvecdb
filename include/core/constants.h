@@ -58,10 +58,7 @@ namespace mvdb {
         MKV
     };
 
-
-    using pkey_t = uint64_t; // numerical standard for primary keys
-    using vec_count_t = uint16_t;  // numerical standard for specifying number of vectors
-    using value_t = int8_t;
-    using vector_t = value_t*;
+    using idx_t = uint64_t; // all vector indices within an index are counted using a 64-bit unsigned int => can store up to 2^64 vectors per index
+    using value_t = float;  // all actual values stored in a vector are represented using 32-bit floating point values
 }
 #endif //CONTSTANTS_H
