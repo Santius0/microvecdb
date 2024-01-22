@@ -39,6 +39,10 @@ setup(
         os.path.join(BASE_DIR, 'lib', 'microvecdb.cpython-310-x86_64-linux-gnu.so'),
         os.path.join(BASE_DIR, 'faiss', 'lib', 'libfaiss.so'),
         os.path.join(BASE_DIR, 'faiss', 'lib', 'libfaiss_c.so')
-    ]}
+    ]},
     # data_files=[('lib', ['lib/libmicrovecdb.so', 'lib/libfaiss.so', 'lib/libfaiss_c.so'])]
+    install_requires=[
+        'numpy>=1.26.2'
+    ],
+    zip_safe=True
 )

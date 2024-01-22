@@ -1,48 +1,48 @@
 //#include <microvecdb.hpp>
-#include <zmq.hpp>
-#include <string>
-#include <iostream>
-#include <thread>
-#include <db.h>
+//#include <zmq.hpp>
+//#include <string>
+//#include <iostream>
+//#include <thread>
+//#include <db.h>
 
-void server_thread() {
-    zmq::context_t context(1);
-    zmq::socket_t socket(context, ZMQ_REP);
-    socket.bind("inproc://example");
-
-    while (true) {
-        zmq::message_t request;
-        socket.recv(&request);
-        std::string recv_msg(static_cast<char*>(request.data()), request.size());
-        std::cout << "Server received: " << recv_msg << std::endl;
-
-        zmq::message_t reply(5);
-        memcpy(reply.data(), "World", 5);
-        socket.send(reply);
-    }
-}
-
-void client_thread(const std::string& server_address) {
-    zmq::context_t context(1);
-    zmq::socket_t socket(context, ZMQ_REQ);
-    socket.connect(server_address); // Connect to the server address
-
-    zmq::message_t request(5);
-    memcpy(request.data(), "Hello", 5);
-    socket.send(request);
-
-    zmq::message_t reply;
-    socket.recv(&reply);
-    std::string recv_msg(static_cast<char*>(reply.data()), reply.size());
-    std::cout << "Client received: " << recv_msg << std::endl;
-}
+//void server_thread() {
+//    zmq::context_t context(1);
+//    zmq::socket_t socket(context, ZMQ_REP);
+//    socket.bind("inproc://example");
+//
+//    while (true) {
+//        zmq::message_t request;
+//        socket.recv(&request);
+//        std::string recv_msg(static_cast<char*>(request.data()), request.size());
+//        std::cout << "Server received: " << recv_msg << std::endl;
+//
+//        zmq::message_t reply(5);
+//        memcpy(reply.data(), "World", 5);
+//        socket.send(reply);
+//    }
+//}
+//
+//void client_thread(const std::string& server_address) {
+//    zmq::context_t context(1);
+//    zmq::socket_t socket(context, ZMQ_REQ);
+//    socket.connect(server_address); // Connect to the server address
+//
+//    zmq::message_t request(5);
+//    memcpy(request.data(), "Hello", 5);
+//    socket.send(request);
+//
+//    zmq::message_t reply;
+//    socket.recv(&reply);
+//    std::string recv_msg(static_cast<char*>(reply.data()), reply.size());
+//    std::cout << "Client received: " << recv_msg << std::endl;
+//}
 
 // device #1: ./microvecdb_main tcp://192.168.1.11:5555
 // device #1: ./microvecdb_main tcp://192.168.1.10:5555
 
-#include "constants.h"
-#include "faiss_flat_index.h"
-int main(int argc, char* argv[]) {
+//#include "constants.h"
+//#include "faiss_flat_index.h"
+//int main(int argc, char* argv[]) {
 //    auto* db = new mvdb::DB("../demo/deep10M_test_db", "deep10M_test_db", 96);
 //    std::cout << "deep10 dims = " << db->index()->dims() << std::endl;
 ////    float vec[5 * 2] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 33};
@@ -100,5 +100,10 @@ int main(int argc, char* argv[]) {
 //    const mvdb::SearchResult sr = collection->search("The fast brown fox jumps over the lazy hound in the forest", 11, true);
 //    std::cout << "Search Results -\n" << sr << std::endl;
 //    delete micro_vec_db;
+//    return 0;
+//}
+
+int main() {
     return 0;
 }
+

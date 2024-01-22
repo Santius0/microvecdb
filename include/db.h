@@ -1,8 +1,6 @@
 #ifndef DB_H
 #define DB_H
 
-#pragma once
-
 #include "storage.h"
 #include "index.h"
 #include "vectorizer.h"
@@ -13,8 +11,8 @@
 namespace mvdb {
 
     class DB : Serializable {
-        std::string path_;                                  // location of database
         std::string dbname_;                                // name of database
+        std::string dbpath_;                                // location of database
         idx_t dims_ = 0;                                    // number of dimension each vector in this system will have
         IndexType index_type_ = FAISS_FLAT;                 // type of vector index
         VectorizerModelType
@@ -32,7 +30,7 @@ namespace mvdb {
         void deserialize(std::istream &in) override;
     public:
         DB() = default;
-        explicit DB(const std::string& path, const std::string& dbname = "db", const uint64_t& dims = 300,
+        explicit DB(const std::string& dbname = "db", const std::string& dbpath = ".", const uint64_t& dims = 300,
                           const IndexType& index_type = IndexType::FAISS_FLAT,
                           VectorizerModelType vec_model = VectorizerModelType::FASTTEXT);
         ~DB() override;

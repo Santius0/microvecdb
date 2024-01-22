@@ -111,13 +111,25 @@ set_target_properties(microvecdb_vectorizer PROPERTIES LIBRARY_OUTPUT_DIRECTORY 
 
 
 # microvecdb:
-add_library(microvecdb SHARED
-        src/db.cpp
-        include/cli.h
-)
+add_library(microvecdb SHARED src/db.cpp)
 target_include_directories(microvecdb PUBLIC include)
 target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C microvecdb_core microvecdb_index microvecdb_storage microvecdb_vectorizer)
 set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+
+
+# microvecdb_cli:
+include(FetchContent)
+FetchContent_Declare(
+        cli11
+        GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
+        GIT_TAG v2.3.1 # Specify the version you want
+)
+FetchContent_MakeAvailable(cli11)
+add_executable(microvecdb_cli src/cli.cpp)
+target_include_directories(microvecdb_cli PUBLIC include)
+target_link_libraries(microvecdb_cli PRIVATE CLI11::CLI11)
+target_link_libraries(microvecdb_cli PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C microvecdb microvecdb_core microvecdb_index microvecdb_storage microvecdb_vectorizer)
+set_target_properties(microvecdb_cli PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 
 # microvecdb.cpython
