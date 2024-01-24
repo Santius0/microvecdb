@@ -70,8 +70,10 @@ add_library(microvecdb_core SHARED
         src/core/utils.cpp
         src/core/quantization.cpp
         src/core/preprocess.cpp
+        include/core/server.h
+        src/core/server.cpp
 )
-target_link_libraries(microvecdb_core PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C)
+target_link_libraries(microvecdb_core PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C zmq pthread)
 set_target_properties(microvecdb_core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 
