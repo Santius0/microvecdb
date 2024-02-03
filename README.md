@@ -20,8 +20,10 @@ to tools included in the rocksdb build such as db_bench.
 ### Compilation
 `g++ main.cpp -o main -lrocksdb -std=c++11 -lpthread -ldla` or use cmake
 
+#### Installing ZMQ
 `sudo apt-get install libzmq3-dev`
 
+#### Install Memory Profiler
 `pip install memory_profiler`
 
 Profiler Settings:

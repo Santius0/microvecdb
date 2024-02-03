@@ -29,14 +29,14 @@ BASE_DIR = os.path.dirname(CURRENT_DIR)
 setup(
     name='pymicrovecdb',
     version='0.1.0',
-    description='C++ package',
+    description='MicroVecDB C++ Interface Package',
     # ext_modules=[pymicrovecdb_module],
     package_dir={'': '.'},
     packages=['pymicrovecdb'],
     include_package_data=True,
     package_data={'pymicrovecdb': [
-        os.path.join(BASE_DIR, 'lib', 'libmicrovecdb.so'),
-        os.path.join(BASE_DIR, 'lib', 'microvecdb.cpython-310-x86_64-linux-gnu.so'),
+        os.path.join(BASE_DIR, 'out', 'lib', 'libmicrovecdb.so'),
+        os.path.join(BASE_DIR, 'out', 'lib', 'microvecdb.cpython-310-x86_64-linux-gnu.so'),
         os.path.join(BASE_DIR, 'faiss', 'lib', 'libfaiss.so'),
         os.path.join(BASE_DIR, 'faiss', 'lib', 'libfaiss_c.so')
     ]},

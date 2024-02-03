@@ -24,6 +24,7 @@ int main(int argc, char* argv[]) {
     std::vector<float> query_vector;
     long k = 5;
     bool ret_data = false;
+    bool detach = false;
 
     CLI::App *open_cmd = app.add_subcommand("open", "Open a database");
     open_cmd->add_option("-d,--dbname", dbname, "Database name")->required();
@@ -43,6 +44,9 @@ int main(int argc, char* argv[]) {
     search_cmd->add_option("-q,--query", query_vector, "Query vector")->required();
     search_cmd->add_option("-k,--top_k", k, "Number of top results");
     search_cmd->add_option("-r,--return_data", ret_data, "Return data flag");
+
+    CLI::App *start_cmd = app.add_subcommand("start", "Start database server");
+    start_cmd->add_flag("-d,--detach", detach, "Detach for silent run in background");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -70,7 +74,11 @@ int main(int argc, char* argv[]) {
         for (size_t i = 0; i < vector.size(); ++i)
             std::cout << results[i] << std::endl;
         delete[] results;
-    } else {
+    } else if(*start_cmd){
+        if(detach) std::cout << "start server detached";
+        else std::cout << "start server not detached";
+    }
+    else {
         app.exit(CLI::CallForHelp());
     }
     return 0;
