@@ -87,7 +87,7 @@ add_library(microvecdb_index SHARED
 )
 target_include_directories(microvecdb_index PUBLIC include/index)
 target_link_directories(microvecdb_index PUBLIC faiss/lib)
-target_link_libraries(microvecdb_index PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C microvecdb_core faiss faiss_c)
+target_link_libraries(microvecdb_index PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C openblas microvecdb_core faiss faiss_c)
 set_target_properties(microvecdb_index PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/lib)
 
 

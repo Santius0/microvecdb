@@ -31,6 +31,6 @@ Profiler Settings:
 `--leak-check=full --leak-resolution=med --track-origins=yes --vgdb=no`
 `python -m memory_profiler main.py`
 
-[//]: # (Might need `sudo apt-get install libopenblas-dev`. Not sure if just installing MKL gived everything needed.)
+Might need `sudo apt-get install libopenblas-dev`. Not sure if just installing MKL gived everything needed.
 [//]: # (sudo ln -s /opt/cmake-3.*your_version*/bin/* /usr/local/bin)
 
