@@ -84,6 +84,8 @@ add_library(microvecdb_index SHARED
         include/index/faiss_flat_index.h
         include/index/distances.h
         src/index/faiss_flat_index.cpp
+        include/index/flat_index.h
+        src/index/flat_index.cpp
 )
 target_include_directories(microvecdb_index PUBLIC include/index)
 target_link_directories(microvecdb_index PUBLIC faiss/lib)

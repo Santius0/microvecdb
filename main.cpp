@@ -73,7 +73,62 @@
 //    return 0;
 //}
 
+#include <flat_index.h>
+#include <iostream>
+
 int main() {
+    // Setup
+    std::string indexPath = "test_index.bin";
+    uint64_t dimensions = 3; // Example: 3-dimensional vectors
+
+    mvdb::FlatIndex index(indexPath, dimensions);
+
+    // Open or create the index
+    index.open();
+    if (!index.is_open()) {
+        std::cerr << "Failed to open the index." << std::endl;
+        return 1;
+    }
+    std::cout << "Index is open and ready for operations." << std::endl;
+
+    // Add data to the index
+    std::vector<mvdb::value_t> data = {
+            1.0f, 2.0f, 3.0f, // Vector 1
+            4.0f, 5.0f, 6.0f, // Vector 2
+            7.0f, 8.0f, 9.0f  // Vector 3
+    };
+    std::vector<mvdb::idx_t> ids(data.size() / dimensions); // IDs for the added vectors
+
+    if (!index.add(data.size() / dimensions, data.data(), ids.data())) {
+        std::cerr << "Failed to add data to the index." << std::endl;
+        return 1;
+    }
+    std::cout << "Data added successfully." << std::endl;
+
+    // Save the index
+    index.save();
+    std::cout << "Index saved to " << indexPath << std::endl;
+
+    // Close and reopen the index to simulate reloading
+    index.close();
+    index.open();
+    if (!index.is_open()) {
+        std::cerr << "Failed to reload the index." << std::endl;
+        return 1;
+    }
+    std::cout << "Index reloaded successfully." << std::endl;
+
+    // Prepare a query vector
+    mvdb::value_t query[] = {2.0f, 3.0f, 4.0f}; // Example query
+    mvdb::idx_t query_ids[1]; // Assuming we want the closest vector to this query
+    mvdb::value_t distances[1]; // Distances from the query to the closest vectors
+
+    // Perform the search
+    index.search(1, query, query_ids, distances, 1); // Search for the closest vector to the query
+
+    // Output the search results
+    std::cout << "Closest vector to query is at index " << query_ids[0] << " with distance " << distances[0] << std::endl;
+
     return 0;
 }
 

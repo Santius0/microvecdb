@@ -14,7 +14,7 @@ to tools included in the rocksdb build such as db_bench.
 
 #### FAISS (built from source):
 1. [Download FAISS](https://github.com/facebookresearch/faiss/) 
-2. Build make using `sudo cmake -B build -DBUILD_TESTING=OFF -DFAISS_ENABLE_GPU=OFF -DFAISS_OPT_LEVEL=avx2 -DFAISS_ENABLE_C_API=ON -DFAISS_ENABLE_PYTHON=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release`
+2. Build make using `sudo cmake -B build -DBUILD_TESTING=OFF -DFAISS_ENABLE_GPU=OFF -DFAISS_OPT_LEVEL=generic -DFAISS_ENABLE_C_API=ON -DFAISS_ENABLE_PYTHON=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -DBLA_VENDOR=OpenBLAS`
 3. Make using `sudo make -C build -j faiss_c`
 
 ### Compilation
@@ -31,6 +31,16 @@ Profiler Settings:
 `--leak-check=full --leak-resolution=med --track-origins=yes --vgdb=no`
 `python -m memory_profiler main.py`
 
+to tansfer files to and connect to the jetson nano, connect via it's micro-usb port then:
+
+For example if your user name is nvidia for Jetson module;
+    scp <file_name> nvidia@192.168.55.1:/home/nvidia
+
+and also you connect to your Jetson module
+
+    ssh nvidia@192.168.55.1
+
+
 Might need `sudo apt-get install libopenblas-dev`. Not sure if just installing MKL gived everything needed.
 [//]: # (sudo ln -s /opt/cmake-3.*your_version*/bin/* /usr/local/bin)
-
+[//]: # (cmake-3.26.5-linux-x86_64/bin/cmake --build /home/santius/microvecdb/build --target all -- -j 10)

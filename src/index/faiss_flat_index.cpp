@@ -5,31 +5,36 @@
 
 namespace mvdb {
 
+    IndexType FaissFlatIndex::type() const {
+        return FAISS_FLAT;
+    }
+
     std::ostream& operator<<(std::ostream& os, const FaissFlatIndex& obj){
         return os   << "index_path_: " << obj.index_path_ << std::endl
                     << "dims_: " << obj.dims_ << std::endl
-                    << "index_type_: " << obj.index_type_ << std::endl;
+                    << "index_type_: " << obj.type() << std::endl;
     }
 
     std::ostream& operator<<(std::ostream& os, const FaissFlatIndex* obj){
         return os << "*(" << *obj << ")";
     }
 
+    // this should always save the index type along with all other data
     void FaissFlatIndex::serialize(std::ostream& out) const {
-        Index::serialize(out);
+        serialize_numeric<uint64_t>(out, static_cast<uint64_t>(type()));
+        serialize_numeric<uint64_t>(out, dims_);
+        serialize_string(out, index_path_);
         save();
     }
 
+    // this should only be run when you have already read the index type and know you're creating this specific index type
     void FaissFlatIndex::deserialize(std::istream& in) {
-        Index::deserialize(in);
+        dims_ = deserialize_numeric<uint64_t>(in);
+        index_path_ = deserialize_string(in);
     }
 
     FaissFlatIndex::FaissFlatIndex(const std::string& index_path, const idx_t& dims):
-    Index(index_path, dims, IndexType::FAISS_FLAT) {}
-
-    void FaissFlatIndex::init(){
-        faiss_index_ = std::make_unique<faiss::IndexFlatL2>(this->dims_);
-    }
+    Index(index_path, dims) {}
 
     bool FaissFlatIndex::add(const idx_t& n, value_t* data, idx_t* ids) {
         if(n <= 0) return false;
@@ -63,16 +68,30 @@ namespace mvdb {
 
     void FaissFlatIndex::save() const {
         if(this->is_open_){
-            faiss::write_index(faiss_index_.get(), this->index_path_.c_str());
+            faiss::write_index(faiss_index_.get(), index_path_.c_str());
         }
     }
 
     void FaissFlatIndex::load() {
-//        faiss_index_.reset(faiss::read_index(index_path_.c_str(), faiss::IO_FLAG_MMAP));
-        faiss_index_.reset(faiss::read_index(this->index_path_.c_str()));
+//        if(this->is_open_){
+//            faiss::write_index(faiss_index_.get(), this->index_path_.c_str());
+//        }
     }
 
-    void FaissFlatIndex::close() {
+    void FaissFlatIndex::open() {
+        if(!is_open_) {
+            if(std::filesystem::exists(index_path_)) {
+                if (std::filesystem::is_directory(index_path_))
+                    throw std::runtime_error(index_path_ + " already exists as directory");
+//                faiss_index_.reset(faiss::read_index(index_path_.c_str(), faiss::IO_FLAG_MMAP));
+                faiss_index_.reset(faiss::read_index(this->index_path_.c_str()));   // load the faiss index from file
+            }
+            else faiss_index_ = std::make_unique<faiss::IndexFlatL2>(this->dims_); // initialise internal faiss index
+            is_open_ = true;
+        }
+    }
+
+    void FaissFlatIndex::close(bool force) {
         faiss_index_->reset();
         this->is_open_ = false;
     }
@@ -122,5 +141,17 @@ namespace mvdb {
             faiss_index_->reconstruct(key, reconstructed_vec + (i * this->dims_));
         }
         return reconstructed_vec;
+    }
+
+    bool FaissFlatIndex::is_open() const {
+        return is_open_;
+    }
+
+    idx_t FaissFlatIndex::dims() const {
+        return dims_;
+    }
+
+    idx_t FaissFlatIndex::ntotal() const {
+        return ntotal_;
     }
 } // namespace mvdb
