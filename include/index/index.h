@@ -3,7 +3,6 @@
 
 #include "constants.h"
 #include "serializable.h"
-#include <faiss/IndexIDMap.h>
 #include <string>
 #include <memory>
 #include <ostream>
@@ -75,7 +74,7 @@ namespace mvdb {
         ~Index() override = default;
         Index(const Index&) = delete;
         Index& operator=(const Index&) = delete;
-        virtual IndexType type() const = 0;
+        [[nodiscard]] virtual IndexType type() const = 0;
         virtual void save() const = 0;          // save current index state and data to location specified via index_path_
         virtual void load() = 0;                // save current index state and data to location specified via index_path_
         virtual void open() = 0;                                            // creates internal index instance or loads one from file if exists. sets is_open to true
@@ -85,9 +84,9 @@ namespace mvdb {
         virtual void search(const idx_t& nq, value_t* query,                // perform searches for nq queries in parallel
                             idx_t* ids, value_t* distances, const idx_t& k) const = 0;
         virtual value_t* get(idx_t& n, idx_t* ids) const = 0;               // reconstruct and return the n vectors specified by ids
-        virtual bool is_open() const  = 0;                                  // returns current is_open value
-        virtual idx_t dims() const = 0;                                     // returns dimensions of index
-        virtual idx_t ntotal() const  = 0;                                  // returns current number of values in index
+        [[nodiscard]] virtual bool is_open() const  = 0;                                  // returns current is_open value
+        [[nodiscard]] virtual idx_t dims() const = 0;                                     // returns dimensions of index
+        [[nodiscard]] virtual idx_t ntotal() const  = 0;                                  // returns current number of values in index
     };
 
 } // namespace mvdb

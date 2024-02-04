@@ -3,7 +3,7 @@
 
 #include <index.h>
 #include <quantization.h>
-#include <faiss_flat_index.h>
+//#include <faiss_flat_index.h>
 
 //
 //void populate_random_vector(const size_t& n, float* v) {

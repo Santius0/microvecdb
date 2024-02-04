@@ -54,7 +54,7 @@ include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/core)   # all 
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/index)   # all targets should have access to core headers
 link_directories(lib)                                                     # all targets should be able to link against the contents of the lib directory
 
-include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
+#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/numpy/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
 
@@ -81,15 +81,17 @@ set_target_properties(microvecdb_core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAK
 # microvecdb_index:
 add_library(microvecdb_index SHARED
         include/index/index.h
-        include/index/faiss_flat_index.h
+#        include/index/faiss_flat_index.h
         include/index/distances.h
-        src/index/faiss_flat_index.cpp
+#        src/index/faiss_flat_index.cpp
         include/index/flat_index.h
         src/index/flat_index.cpp
 )
 target_include_directories(microvecdb_index PUBLIC include/index)
-target_link_directories(microvecdb_index PUBLIC faiss/lib)
-target_link_libraries(microvecdb_index PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C openblas microvecdb_core faiss faiss_c)
+#target_link_directories(microvecdb_index PUBLIC faiss/lib)
+target_link_libraries(microvecdb_index PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C openblas microvecdb_core
+#        faiss faiss_c
+)
 set_target_properties(microvecdb_index PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/lib)
 
 

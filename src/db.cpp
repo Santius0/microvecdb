@@ -2,7 +2,7 @@
 #include "utils.h"
 #include "constants.h"
 #include "preprocess.h"
-#include "faiss_flat_index.h"
+//#include "faiss_flat_index.h"
 #include "fasttext.h"
 #include "exception.h"
 #include <filesystem>
@@ -67,7 +67,7 @@ namespace mvdb {
              case IndexType::FLAT:
                  break;
              case IndexType::FAISS_FLAT:
-                 index_ = std::make_unique<FaissFlatIndex>(index_path, dims_);
+//                 index_ = std::make_unique<FaissFlatIndex>(index_path, dims_);
                  break;
              default:
                  throw std::runtime_error(std::to_string(index_type_) + "' is not a valid IndexType");
