@@ -33,12 +33,11 @@ Profiler Settings:
 
 to tansfer files to and connect to the jetson nano, connect via it's micro-usb port then:
 
-For example if your user name is nvidia for Jetson module;
-    scp <file_name> nvidia@192.168.55.1:/home/nvidia
+For example if your user name is nvidia for Jetson module;<br/>
+    `scp <file_name> nvidia@192.168.55.1:/home/nvidia`
 
-and also you connect to your Jetson module
-
-    ssh nvidia@192.168.55.1
+and also you connect to your Jetson module<br/>
+    `ssh nvidia@192.168.55.1`
 
 
 Might need `sudo apt-get install libopenblas-dev`. Not sure if just installing MKL gived everything needed.
