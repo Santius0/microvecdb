@@ -80,6 +80,9 @@ namespace mvdb {
             // insert any cleanup code that should run before object deletion here
             // TODO: if something is running on another thread wait for it to finish first then close, unless force == true
             std::cout << "closing '" << index_path_ << "'..." << std::endl;
+            index_.reset();
+            ntotal_ = 0;
+            dims_ = 0;
             is_open_ = false;
         } else
             throw std::runtime_error("index at '" + index_path_ + "'  not open");
