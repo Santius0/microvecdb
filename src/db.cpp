@@ -3,6 +3,7 @@
 #include "constants.h"
 #include "preprocess.h"
 //#include "faiss_flat_index.h"
+#include "flat_index.h"
 #include "fasttext.h"
 #include "exception.h"
 #include <filesystem>
@@ -27,22 +28,22 @@ namespace mvdb {
     void DB::serialize(std::ostream &out) const {
         serialize_string(out, dbpath_);
         serialize_string(out, dbname_);
-        serialize_numeric<uint64_t>(out, dims_);
+        serialize_numeric<idx_t>(out, dims_);
         serialize_numeric<int8_t>(out, static_cast<int8_t>(index_type_));
-        index_->serialize(out);
-        storage_->serialize(out);
+//        index_->serialize(out);   // index and storage have their own save methods. we are not storing everything in one file serialising them here doesn't make sense
+//        storage_->serialize(out);
     }
 
     void DB::deserialize(std::istream &in) {
         dbpath_ = deserialize_string(in);
         dbname_ = deserialize_string(in);
-        dims_ = deserialize_numeric<uint64_t>(in);
+        dims_ = deserialize_numeric<idx_t>(in);
         index_type_ = static_cast<IndexType>(deserialize_numeric<int8_t>(in));
-        index_->deserialize(in);
-        storage_->deserialize(in);
+//        index_->deserialize(in);  // index and storage are automatically loaded if necessary at object instantiation
+//        storage_->deserialize(in);
     }
 
-    DB::DB(const std::string& dbname, const std::string& dbpath, const uint64_t& dims, const IndexType& index_type,
+    DB::DB(const std::string& dbname, const std::string& dbpath, const idx_t& dims, const IndexType& index_type,
                        VectorizerModelType vec_model): dbname_(dbname), dbpath_(trim(dbpath)), dims_(dims),
                        index_type_(index_type), vec_model_(vec_model) {
         const std::string index_path = dbpath + std::filesystem::path::preferred_separator + dbname + INDEX_EXT;
@@ -59,12 +60,13 @@ namespace mvdb {
     }
 
     DB::~DB(){
-         delete[] keys_;
+         delete[] ids_;
     }
 
     void DB::make_index_(const std::string& index_path){
          switch (index_type_) {
              case IndexType::FLAT:
+                 index_ = std::make_unique<FlatIndex>(index_path, dims_);
                  break;
              case IndexType::FAISS_FLAT:
 //                 index_ = std::make_unique<FaissFlatIndex>(index_path, dims_);
@@ -79,6 +81,9 @@ namespace mvdb {
     }
 
     void DB::save(const std::string& save_path) {
+        index_->save();
+        // we don't actually save storage metadata, and the actual data part is kept up by rocksdb
+        // TODO: maybe revisit that and actually store storage metadata
         std::ofstream file(save_path.empty() ? metadata_path_ : save_path);
         if (!file) throw std::runtime_error("Error opening file for writing: \"" + dbpath_ + "\"\n");
         serialize(file);
@@ -100,15 +105,15 @@ namespace mvdb {
          return storage_.get();
     }
 
-    uint64_t* DB::add_vector(const size_t& nv, float* v) {
+    idx_t* DB::add_vector(const idx_t& nv, value_t* v) {
          // TODO: perform write ahead log for vector data here
          if(!index_->is_open()) index_->open();
-         delete[] keys_; // free old keys if they haven't been yet
-         auto* keys = new uint64_t[nv];
+         delete[] ids_; // free old ids if they haven't been yet
+         auto* ids = new idx_t[nv];
 //         preprocess_vector(nv * dims_, dims_, v, v_d_type, false, false);
-         bool success = index_->add(nv, v, keys);
-         keys_ = keys;
-         if(success) return keys;
+         bool success = index_->add(nv, v, ids);
+         ids_ = ids;
+         if(success) return ids;
          return nullptr;
     }
 
@@ -142,15 +147,10 @@ namespace mvdb {
 //        return storage_->put(nv, keys_str, data, data_sizes);
     }
 
-    SearchResult* DB::search_with_vector(const size_t& nq, value_t* query, const long& k, const bool& ret_data) const {
+    void DB::search_with_vector(const size_t& nq, value_t* query, const long& k, idx_t* ids, value_t* distances) const {
          if(!storage_->is_open()) storage_->open();
          if(!index_->is_open()) index_->open();
-         auto *ids = new int64_t[k];
-         auto *distances = new float[k];
-         auto *data = new std::string[k];
          index_->search(nq, static_cast<float*>(query), reinterpret_cast<idx_t*>(ids), distances, k);
-         if(ret_data) for(int i = 0 ; i < k; i++) data[i] = storage_->get(std::to_string(ids[i]));
-         return new SearchResult(ids, distances, data, k);
     }
 
 //    SearchResult* DB::search(const size_t& nq, const char* data, const size_t* data_sizes, const DataFormat* data_formats, const long& k, const bool& ret_data) const {

@@ -8,6 +8,7 @@
 //#include <limits>
 #include <queue>
 #include <utility>
+#include "heap.h"
 
 namespace mvdb {
 
@@ -38,8 +39,8 @@ namespace mvdb {
     void FlatIndex::deserialize(std::istream& in) {
         auto type = static_cast<IndexType>(deserialize_numeric<uint64_t>(in));
         if (type != FLAT) throw std::runtime_error("Unexpected index type: " + std::to_string(type));
-        dims_ = deserialize_numeric<uint64_t>(in);
-        ntotal_ = deserialize_numeric<uint64_t>(in);
+        dims_ = deserialize_numeric<idx_t>(in);
+        ntotal_ = deserialize_numeric<idx_t>(in);
 //        // TODO: implement metric_type and read it here
         index_ = std::make_shared<std::vector<value_t>>(ntotal_ * dims_);
         in.read(reinterpret_cast<char*>(index_->data()), ntotal_ * dims_ * sizeof(value_t));
@@ -124,6 +125,7 @@ namespace mvdb {
         // For each query vector
         for (idx_t i = 0; i < nq; ++i) {
             // Use a max heap to keep track of the k nearest neighbors found so far
+//            MinHeap<std::pair<value_t, idx_t>> heap;
             std::priority_queue<std::pair<value_t, idx_t>> heap;
 
             // Pointer to the current query vector
@@ -139,17 +141,30 @@ namespace mvdb {
                     if (heap.size() == k) {
                         heap.pop(); // Remove the farthest neighbor
                     }
-                    heap.emplace(dist, j); // Add the current vector
+                    heap.push(std::pair<value_t, idx_t>(dist, j)); // Add the current vector
                 }
             }
 
             // Extract the results from the heap into the output arrays
-            for (idx_t j = 0; j < k && !heap.empty(); ++j) {
-                // Since we're using a max heap, we need to extract results in reverse order
-                auto& top = heap.top();
-                ids[(nq - 1 - i) * k + (k - 1 - j)] = top.second;
-                distances[(nq - 1 - i) * k + (k - 1 - j)] = top.first;
-                heap.pop();
+            idx_t j = 0;
+            if(heap.size() < k){
+                idx_t diff = k - heap.size();
+                while(diff > 0){
+                    ids[(nq * k) - 1 - (i * k + j)] = -1;
+                    distances[(nq * k) - 1 - (i * k + j)] = -1.0f;
+                    --diff;
+                    ++j;
+                }
+            }
+            while(j < k) {
+                if(!heap.empty()) {
+                    // Since we're using a max heap, we need to extract results in reverse order
+                    auto &top = heap.top();
+                    ids[(nq * k) - 1 - (i * k + j)] = top.second;
+                    distances[(nq * k) - 1 - (i * k + j)] = top.first;
+                    heap.pop();
+                }
+                ++j;
             }
         }
     }

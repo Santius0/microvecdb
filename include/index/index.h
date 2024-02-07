@@ -26,34 +26,31 @@ namespace mvdb {
         return os << "*(" << *obj << ")";
     }
 
-    class SearchResult {
-        friend std::ostream& operator<<(std::ostream& os, const SearchResult& obj) {
-            for(int i = 0; i < obj.size_; i++)
-                os << "id: " << obj.ids_[i]
-                   << "\tdistance: "
-                   << obj.distances_[i]
-                   << "\tdata: " << obj.data_[i]
-                   << std::endl
-                ;
-            return os;
-        }
-
-        friend std::ostream& operator<<(std::ostream& os, const SearchResult* obj) {
-            return os << "*(" << *obj << ")";
-        }
-    public:
-        int64_t *ids_;
-        float* distances_;
-        std::string *data_;
-        const long size_;
-        SearchResult(int64_t* ids, float* distances, std::string* data, const long& size):
-        ids_(ids), distances_(distances), data_(data), size_(size) {}
-        ~SearchResult() {
-            delete[] ids_;
-            delete[] distances_;
-            delete[] data_;
-        };
-    };
+//    class SearchResult {
+//        friend std::ostream& operator<<(std::ostream& os, const SearchResult& obj) {
+//            for(int i = 0; i < obj.size_; i++)
+//                os << "id: " << obj.ids_[i]
+//                   << "\tdistance: "
+//                   << obj.distances_[i]
+//                   << std::endl
+//                ;
+//            return os;
+//        }
+//
+//        friend std::ostream& operator<<(std::ostream& os, const SearchResult* obj) {
+//            return os << "*(" << *obj << ")";
+//        }
+//    public:
+//        idx_t* ids_;
+//        value_t* distances_;
+//        const long size_;
+//        SearchResult(idx_t* ids, value_t* distances, const long& size):
+//        ids_(ids), distances_(distances), size_(size) {}
+//        ~SearchResult() {
+//            delete[] ids_;
+//            delete[] distances_;
+//        };
+//    };
 
     // Note: This class did not have to be an abstract class with all functions being pure virtual as
     //       many of these functions will have the same functionality across the board for all index types,

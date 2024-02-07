@@ -8,7 +8,6 @@
 #include <numpy/arrayobject.h>
 
 #define DB_NAME "mvdb::DB"
-#define SEARCH_RESULT_NAME "mvdb::SearchResult"
 
 // Function to be exposed - hello_world
 static PyObject* hello_world(PyObject *self, PyObject *args) {
@@ -18,9 +17,6 @@ static PyObject* hello_world(PyObject *self, PyObject *args) {
     Py_RETURN_NONE;
 }
 
-static void SearchResult_delete(PyObject* capsule) {
-    delete static_cast<mvdb::SearchResult*>(PyCapsule_GetPointer(capsule, SEARCH_RESULT_NAME));
-}
 
 static void DB_delete(PyObject* capsule) {
     delete static_cast<mvdb::DB*>(PyCapsule_GetPointer(capsule, DB_NAME));
@@ -46,12 +42,12 @@ static PyObject* DB_add_vector(PyObject *self, PyObject *args) {
         return nullptr;
     }
     auto* v = (float*)PyArray_DATA(input_pyarray);
-    uint64_t* keys = db->add_vector(nv, v);
+    int64_t* keys = db->add_vector(nv, v);
     if (!keys){
         PyErr_SetString(PyExc_TypeError, "keys = nullptr => vector add failed");
         return nullptr;
     }
-    PyObject* keys_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_UINT64, (void*)keys);
+    PyObject* keys_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, (void*)keys);
     if (!keys_npArray){
         PyErr_SetString(PyExc_TypeError, "keys_npArray = nullptr => failed to generate keys nparray");
         return nullptr;
@@ -74,8 +70,8 @@ static PyObject* DB_add_data_with_vector(PyObject *self, PyObject *args) {
 
 static PyObject* DB_search_with_vector(PyObject* self, PyObject* args) {
     PyObject *capsule, *query_input;
-    int nq, k, ret_data; // nq = total size of query vector, should be a multiple of index dimensionality. k = number of results to be returned
-    if (!PyArg_ParseTuple(args, "OiO!ip", &capsule, &nq, &PyArray_Type, &query_input, &k, &ret_data)) return nullptr;
+    int nq, k; // nq = total size of query vector, should be a multiple of index dimensionality. k = number of results to be returned
+    if (!PyArg_ParseTuple(args, "OiO!i", &capsule, &nq, &PyArray_Type, &query_input, &k)) return nullptr;
     auto* db = static_cast<mvdb::DB*>(PyCapsule_GetPointer(capsule, DB_NAME));
     auto* query_pyarray = (PyArrayObject*)query_input;
     if (PyArray_TYPE(query_pyarray) != NPY_FLOAT) {
@@ -83,23 +79,46 @@ static PyObject* DB_search_with_vector(PyObject* self, PyObject* args) {
         return nullptr;
     }
     auto* query = (float*)PyArray_DATA(query_pyarray);
+    npy_intp return_arr_dims[1] = {nq*k};
 
-//    npy_intp dims[1] = {k};
-//    PyObject* ids_pyArray = PyArray_SimpleNew(1, dims, NPY_INT64);
-//    PyObject* distances_pyArray = PyArray_SimpleNew(1, dims, NPY_FLOAT);
-//    if (!ids_pyArray || !distances_pyArray){
-//        PyErr_SetString(PyExc_TypeError, "either ids_pyArray = nullptr or distances_pyArray = nullptr => failed to generate allocate arrays for ids or distances");
-//        return nullptr;
-//    }
-//    auto* ids = (int64_t*)PyArray_DATA((PyArrayObject*)ids_pyArray);
-//    auto* distances = (float*)PyArray_DATA((PyArrayObject*)distances_pyArray);
+    // numpy used c-style de-allocation, so using c-style allocation  to avoid any undefined behaviour
+    auto *ids = (mvdb::idx_t*)malloc(k * sizeof(mvdb::idx_t));
+    auto *distances = (mvdb::value_t*)malloc(k * sizeof(mvdb::value_t));
+    if (!ids || !distances){
+        PyErr_SetString(PyExc_TypeError, "either ids = nullptr or distances = nullptr => failed to generate allocate arrays for ids or distances");
+        return nullptr;
+    }
+    db->search_with_vector(nq, query, k, ids, distances);
 
-    mvdb::SearchResult* search_result = db->search_with_vector(nq, query, k, ret_data);
-    for(int i = 0; i < search_result->size_; i++){
-        std::cout << search_result->ids_[i] << " = " << search_result->distances_[i] << std::endl;
+    PyObject* ids_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, (void*)ids);
+    PyObject* distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_FLOAT, (void*)distances);
+    PyArray_ENABLEFLAGS((PyArrayObject*)ids_npArray, NPY_ARRAY_OWNDATA); // ensure numpy owns and manages this data. this will make sure numpy frees the data when it's done
+    PyArray_ENABLEFLAGS((PyArrayObject*)distances_npArray, NPY_ARRAY_OWNDATA); // ensure numpy owns and manages this data. this will make sure numpy frees the data when it's done
+    if (!ids_npArray || !distances_npArray){
+        PyErr_SetString(PyExc_TypeError, "either ids_npArray = nullptr or distances_npArray = nullptr => failed to generate allocate arrays for ids or distances");
+        return nullptr;
     }
 
-    return PyCapsule_New(search_result, SEARCH_RESULT_NAME, SearchResult_delete);
+    PyObject* return_tuple = PyTuple_New(2);
+    if (!return_tuple) {
+        PyErr_SetString(PyExc_AssertionError, "return_tuple == nullptr => failed to create python return tuple");
+        return nullptr;
+    }
+
+    // PyTuple_SetItem steals a reference to the item
+    if (0 != PyTuple_SetItem(return_tuple, 0, ids_npArray)) {
+        // Handle error (and avoid memory leak)
+        Py_DECREF(return_tuple);
+        return nullptr;
+    }
+
+    if (0 != PyTuple_SetItem(return_tuple, 1, distances_npArray)) {
+        // Handle error (and avoid memory leak)
+        Py_DECREF(return_tuple);
+        return nullptr;
+    }
+
+    return return_tuple;
 }
 
 static PyObject* DB_search(PyObject* self, PyObject* args){
@@ -119,19 +138,16 @@ static PyObject* DB_connect(PyObject* self, PyObject* args){
 
 // Method definition object for this extension, describes the hello_world function
 static PyMethodDef MyExtensionMethods[] = {
-    { "hello_world",  // Python method name
-      hello_world,    // C function to be called
-      METH_VARARGS,    // No arguments for this function
-      "Print 'Hello, World!'" }, // Docstring for this function
-    { "DB_create", DB_create, METH_VARARGS, "Initialise a DB<> object" },
-    { "DB_add_vector", DB_add_vector, METH_VARARGS, "Add vector data using a DB object" },
-    { "DB_add_data", DB_add_data, METH_VARARGS, "Add data using a DB object" },
-    { "DB_add_data_with_vector", DB_add_data_with_vector, METH_VARARGS, "Add raw data and vector data using a DB object" },
-    { "DB_search_with_vector", DB_search_with_vector, METH_VARARGS, "Perform similarity using only vector data via a DB<> object" },
-    { "DB_search", DB_search, METH_VARARGS, "Perform similarity using raw data via a DB object" },
-    { "DB_start", DB_start, METH_VARARGS, "Start DB server" },
-    { "DB_connect", DB_connect, METH_VARARGS, "Connect to distributed DB server" },
-    { NULL, NULL, 0, NULL }  // Sentinel value ending the array
+//        { Python method name, C function to be called, arguments for this function, Docstring for this function },
+        { "DB_create", DB_create, METH_VARARGS, "Initialise a DB<> object" },
+        { "DB_add_vector", DB_add_vector, METH_VARARGS, "Add vector data using a DB object" },
+        { "DB_add_data", DB_add_data, METH_VARARGS, "Add data using a DB object" },
+        { "DB_add_data_with_vector", DB_add_data_with_vector, METH_VARARGS, "Add raw data and vector data using a DB object" },
+        { "DB_search_with_vector", DB_search_with_vector, METH_VARARGS, "Perform similarity using only vector data via a DB<> object" },
+        { "DB_search", DB_search, METH_VARARGS, "Perform similarity using raw data via a DB object" },
+        { "DB_start", DB_start, METH_VARARGS, "Start DB server" },
+        { "DB_connect", DB_connect, METH_VARARGS, "Connect to distributed DB server" },
+        { NULL, NULL, 0, NULL }  // Sentinel value ending the array
 };
 
 // Module definition

@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
         db.save();
     } else if (*add_cmd) {
         mvdb::DB db(dbname, dbpath, dims, index_type, vec_model);
-        uint64_t* keys = db.add_vector(vector.size(), vector.data());
+        mvdb::idx_t* keys = db.add_vector(vector.size(), vector.data());
         if (keys) {
             std::cout << "Vector added. Keys: ";
             for (size_t i = 0; i < vector.size(); ++i)
@@ -70,10 +70,13 @@ int main(int argc, char* argv[]) {
         }
     } else if (*search_cmd) {
         mvdb::DB db(dbname, dbpath, dims, index_type, vec_model);
-        mvdb::SearchResult* results = db.search_with_vector(query_vector.size(), query_vector.data(), k, ret_data);
-        for (size_t i = 0; i < vector.size(); ++i)
-            std::cout << results[i] << std::endl;
-        delete[] results;
+        auto *ids = new mvdb::idx_t[k];
+        auto *distances = new mvdb::value_t[k];
+        db.search_with_vector(query_vector.size(), query_vector.data(), k, ids, distances);
+        for (size_t i = 0; i < vector.size()*k; ++i)
+            std::cout << ids[i] << " => " << distances[i] << std::endl;
+        delete[] ids;
+        delete[] distances;
     } else if(*start_cmd){
         if(detach) std::cout << "start server detached";
         else std::cout << "start server not detached";

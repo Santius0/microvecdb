@@ -79,6 +79,8 @@
 int main() {
     // Setup
     std::string indexPath = "test_index.bin";
+    if (std::filesystem::exists(indexPath))
+        std::filesystem::remove(indexPath);
     uint64_t dimensions = 3; // Example: 3-dimensional vectors
 
     mvdb::FlatIndex index(indexPath, dimensions);
@@ -93,8 +95,8 @@ int main() {
 
     // Add data to the index
     std::vector<mvdb::value_t> data = {
-            1.0f, 2.0f, 3.0f, // Vector 1
-            4.0f, 5.0f, 6.0f, // Vector 2
+            4.0f, 5.0f, 6.0f, // Vector 1
+            1.0f, 2.0f, 3.0f, // Vector 2
             7.0f, 8.0f, 9.0f  // Vector 3
     };
     std::vector<mvdb::idx_t> ids(data.size() / dimensions); // IDs for the added vectors
@@ -104,6 +106,11 @@ int main() {
         return 1;
     }
     std::cout << "Data added successfully." << std::endl;
+    mvdb::idx_t n = 0;
+    mvdb::value_t* curr_data = index.get(n, nullptr);
+    for(mvdb::idx_t i = 0; i < index.ntotal(); i++)
+        std::cout << curr_data[i] << (i % dimensions == 0 &&  i > 0 ? "\n" : " ");
+    std::cout << std::endl;
 
     // Save the index
     index.save();
@@ -119,15 +126,18 @@ int main() {
     std::cout << "Index reloaded successfully." << std::endl;
 
     // Prepare a query vector
+    int k = 5;
+    int nq = 1;
     mvdb::value_t query[] = {2.0f, 3.0f, 4.0f}; // Example query
-    mvdb::idx_t query_ids[1]; // Assuming we want the closest vector to this query
-    mvdb::value_t distances[1]; // Distances from the query to the closest vectors
+    mvdb::idx_t query_ids[nq * k]; // Assuming we want the closest vector to this query
+    mvdb::value_t distances[nq * k]; // Distances from the query to the closest vectors
 
     // Perform the search
-    index.search(1, query, query_ids, distances, 1); // Search for the closest vector to the query
+    index.search(nq, query, query_ids, distances, k); // Search for the closest vector to the query
 
     // Output the search results
-    std::cout << "Closest vector to query is at index " << query_ids[0] << " with distance " << distances[0] << std::endl;
+    for(int i = 0; i < k; i++)
+        std::cout << "Closest vector to query is at index " << query_ids[i] << " with distance " << distances[i] << std::endl;
 
     return 0;
 }

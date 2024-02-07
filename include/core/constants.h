@@ -61,7 +61,7 @@ namespace mvdb {
         MKV
     };
 
-    using idx_t = uint64_t; // all vector indices within an index are counted using a 64-bit unsigned int => can store up to 2^64 vectors per index
+    using idx_t = int64_t; // all vector indices within an index are counted using a 64-bit unsigned int => can store up to 2^64 vectors per index
     using value_t = float;  // all actual values stored in a vector are represented using 32-bit floating point values
 }
 #endif //CONTSTANTS_H

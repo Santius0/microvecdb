@@ -73,9 +73,10 @@ add_library(microvecdb_core SHARED
         include/core/server.h
         src/core/server.cpp
         include/core/settings.h
+        include/index/heap.h
 )
 target_link_libraries(microvecdb_core PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C zmq pthread)
-set_target_properties(microvecdb_core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/lib)
+set_target_properties(microvecdb_core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 
 # microvecdb_index:
@@ -92,7 +93,7 @@ target_include_directories(microvecdb_index PUBLIC include/index)
 target_link_libraries(microvecdb_index PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C openblas microvecdb_core
 #        faiss faiss_c
 )
-set_target_properties(microvecdb_index PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/lib)
+set_target_properties(microvecdb_index PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 
 # microvecdb_storage:
@@ -102,7 +103,7 @@ add_library(microvecdb_storage SHARED
 )
 target_include_directories(microvecdb_storage PUBLIC include/storage)
 target_link_libraries(microvecdb_storage PUBLIC microvecdb_core rocksdb)
-set_target_properties(microvecdb_storage PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/lib)
+set_target_properties(microvecdb_storage PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 
 # microvecdb_vectorizer
@@ -114,14 +115,14 @@ add_library(microvecdb_vectorizer SHARED
 )
 target_include_directories(microvecdb_vectorizer PUBLIC include/vectorizer)
 target_link_libraries(microvecdb_vectorizer PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C microvecdb_core)
-set_target_properties(microvecdb_vectorizer PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/lib)
+set_target_properties(microvecdb_vectorizer PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 
 # microvecdb:
 add_library(microvecdb SHARED src/db.cpp)
 target_include_directories(microvecdb PUBLIC include)
 target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C microvecdb_core microvecdb_index microvecdb_storage microvecdb_vectorizer)
-set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/lib)
+set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 
 # microvecdb_cli:
@@ -136,7 +137,7 @@ add_executable(microvecdb_cli src/cli.cpp)
 target_include_directories(microvecdb_cli PUBLIC include)
 target_link_libraries(microvecdb_cli PRIVATE CLI11::CLI11)
 target_link_libraries(microvecdb_cli PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C microvecdb microvecdb_core microvecdb_index microvecdb_storage microvecdb_vectorizer)
-set_target_properties(microvecdb_cli PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
+set_target_properties(microvecdb_cli PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 
 # microvecdb.cpython
@@ -148,7 +149,7 @@ target_include_directories(${PYTHON_EXTENSION_TARGET} PUBLIC ${PYTHON_INCLUDE_DI
 target_link_directories(${PYTHON_EXTENSION_TARGET} PUBLIC lib)
 target_link_libraries(${PYTHON_EXTENSION_TARGET} ${PYTHON_LIBRARIES} microvecdb)
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
-set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/lib)
+set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 #set(PYTHON_PACKAGE_BUILD_SCRIPT "/python/pymicrovecdb.sh")
 #file(CHMOD +x ${PYTHON_PACKAGE_BUILD_SCRIPT})
 #add_custom_command(
