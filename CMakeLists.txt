@@ -57,6 +57,7 @@ link_directories(lib)                                                     # all 
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/numpy/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/spdlog/include)
 
 # <<<< Configuring sources headers and link directories ----------------------------------------------------------
 
