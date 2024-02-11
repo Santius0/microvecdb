@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.26)
 project(microvecdb)
 set(CMAKE_CXX_STANDARD 17)
 
+include(FetchContent)
+
 find_program(READELF_EXECUTABLE readelf)
 if(NOT READELF_EXECUTABLE)
     message(FATAL_ERROR "readelf not found")
@@ -57,9 +59,15 @@ link_directories(lib)                                                     # all 
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/numpy/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
-include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/spdlog/include)
 
 # <<<< Configuring sources headers and link directories ----------------------------------------------------------
+
+FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.13.0
+)
+FetchContent_MakeAvailable(spdlog)
 
 # Configuring targets >>>> ----------------------------------------------------------
 # microvecdb_core:
@@ -77,7 +85,7 @@ add_library(microvecdb_core SHARED
         include/index/heap.h
         include/core/wal.h
 )
-target_link_libraries(microvecdb_core PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C zmq pthread)
+target_link_libraries(microvecdb_core PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C zmq pthread spdlog::spdlog)
 set_target_properties(microvecdb_core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 
@@ -128,11 +136,10 @@ set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOU
 
 
 # microvecdb_cli:
-include(FetchContent)
 FetchContent_Declare(
         cli11
         GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
-        GIT_TAG v2.3.1 # Specify the version you want
+        GIT_TAG v2.3.1
 )
 FetchContent_MakeAvailable(cli11)
 add_executable(microvecdb_cli src/cli.cpp)
@@ -182,7 +189,6 @@ file(MAKE_DIRECTORY "${LIBRARY_OUTPUT_DIRECTORY}")
 ## <<<< Post build analysis ----------------------------------------------------------
 
 
-include(FetchContent)
 FetchContent_Declare(
         googletest
         # Specify the commit you depend on and update it regularly.

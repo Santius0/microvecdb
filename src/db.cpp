@@ -60,7 +60,9 @@ namespace mvdb {
     }
 
     DB::~DB(){
-         delete[] ids_;
+         delete[] add_ids_;
+         delete[] search_ids_;
+         delete[] search_distances_;
     }
 
     void DB::make_index_(const std::string& index_path){
@@ -69,10 +71,12 @@ namespace mvdb {
                  index_ = std::make_unique<FlatIndex>(index_path, dims_);
                  break;
              case IndexType::FAISS_FLAT:
+                 throw std::runtime_error("'" + std::to_string(index_type_) + "' is no longer a supported IndexType");
 //                 index_ = std::make_unique<FaissFlatIndex>(index_path, dims_);
+
                  break;
              default:
-                 throw std::runtime_error(std::to_string(index_type_) + "' is not a valid IndexType");
+                 throw std::runtime_error("'" + std::to_string(index_type_) + "' is not a valid IndexType");
          }
     }
 
@@ -108,17 +112,22 @@ namespace mvdb {
     idx_t* DB::add_vector(const idx_t& nv, value_t* v) {
          // TODO: perform write ahead log for vector data here
          if(!index_->is_open()) index_->open();
-         delete[] ids_; // free old ids if they haven't been yet
+         delete[] add_ids_; // free old ids if they haven't been yet
          auto* ids = new idx_t[nv];
 //         preprocess_vector(nv * dims_, dims_, v, v_d_type, false, false);
          bool success = index_->add(nv, v, ids);
-         ids_ = ids;
+         add_ids_ = ids;
          if(success) return ids;
          return nullptr;
     }
 
+    std::future<idx_t*> DB::add_vector_async(const idx_t& nv, value_t* v) {
+        // std::launch::async ensures the function is executed in a new thread immediately
+        return std::async(std::launch::async, &DB::add_vector, this, nv, v);
+    }
+
     // pre-processes data, generates embedding then passes them both to add_data_with_vector
-    bool DB::add_data(const idx_t& nv, char* data, idx_t* data_sizes, const DataFormat* data_formats) const {
+    bool DB::add_data(const idx_t& nv, char* data, idx_t* data_sizes, const DataFormat* data_formats) {
         throw not_implemented("bool DB::add_data(const idx_t& nv, char* data, idx_t* data_sizes, const DataFormat* data_formats) const");
 //        auto * vecs = new float[nv * index_->dims()];
 //        size_t processed_bytes = 0;
@@ -147,10 +156,17 @@ namespace mvdb {
 //        return storage_->put(nv, keys_str, data, data_sizes);
     }
 
-    void DB::search_with_vector(const size_t& nq, value_t* query, const long& k, idx_t* ids, value_t* distances) const {
+    void DB::search_with_vector(const size_t& nq, value_t* query, const long& k, idx_t* ids, value_t* distances) {
          if(!storage_->is_open()) storage_->open();
          if(!index_->is_open()) index_->open();
          index_->search(nq, static_cast<float*>(query), reinterpret_cast<idx_t*>(ids), distances, k);
+         search_ids_ = ids;
+         search_distances_ = distances;
+    }
+
+    std::future<void> DB::search_with_vector_async(const size_t &nq, mvdb::value_t *query, const long &k,
+                                                   mvdb::idx_t *ids, mvdb::value_t *distances) {
+        return std::async(std::launch::async, &DB::search_with_vector, this, nq, query, k, ids, distances);
     }
 
 //    SearchResult* DB::search(const size_t& nq, const char* data, const size_t* data_sizes, const DataFormat* data_formats, const long& k, const bool& ret_data) const {

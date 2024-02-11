@@ -21,4 +21,12 @@ namespace mvdb {
         return timestampStream.str();
     }
 
+//    template<typename Func, typename Callback>
+//    auto run_task_with_callback(Func task, Callback callback) {
+//        return [task, callback]() {
+//            auto result = task(); // Execute the task
+//            callback(result); // Execute the callback with the result
+//        };
+//    }
+
 }

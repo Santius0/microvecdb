@@ -73,7 +73,7 @@ namespace mvdb {
         Index& operator=(const Index&) = delete;
         [[nodiscard]] virtual IndexType type() const = 0;
         virtual void save() const = 0;          // save current index state and data to location specified via index_path_
-        virtual void load() = 0;                // save current index state and data to location specified via index_path_
+        virtual void load() = 0;                // load current index state and data from location specified via index_path_
         virtual void open() = 0;                                            // creates internal index instance or loads one from file if exists. sets is_open to true
         virtual void close(bool force = false) = 0;                                           // shuts off and neatly cleans up internal index object. sets is_open to false
         virtual bool add(const idx_t& n, value_t* data, idx_t* ids) = 0;    // add n to elements to index

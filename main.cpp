@@ -73,72 +73,60 @@
 //    return 0;
 //}
 
-#include <flat_index.h>
+#include <db.h>
 #include <iostream>
+#include <future>
 
-int main() {
-    // Setup
-    std::string indexPath = "test_index.bin";
-    if (std::filesystem::exists(indexPath))
-        std::filesystem::remove(indexPath);
-    uint64_t dimensions = 3; // Example: 3-dimensional vectors
-
-    mvdb::FlatIndex index(indexPath, dimensions);
-
-    // Open or create the index
-    index.open();
-    if (!index.is_open()) {
-        std::cerr << "Failed to open the index." << std::endl;
-        return 1;
+// Example task that performs a computation
+int compute(int x) {
+    for(int i = 0; i < 10000000000; i++){
+        x += 1;
     }
-    std::cout << "Index is open and ready for operations." << std::endl;
-
-    // Add data to the index
-    std::vector<mvdb::value_t> data = {
-            4.0f, 5.0f, 6.0f, // Vector 1
-            1.0f, 2.0f, 3.0f, // Vector 2
-            7.0f, 8.0f, 9.0f  // Vector 3
-    };
-    std::vector<mvdb::idx_t> ids(data.size() / dimensions); // IDs for the added vectors
-
-    if (!index.add(data.size() / dimensions, data.data(), ids.data())) {
-        std::cerr << "Failed to add data to the index." << std::endl;
-        return 1;
-    }
-    std::cout << "Data added successfully." << std::endl;
-    mvdb::idx_t n = 0;
-    mvdb::value_t* curr_data = index.get(n, nullptr);
-    for(mvdb::idx_t i = 0; i < index.ntotal(); i++)
-        std::cout << curr_data[i] << (i % dimensions == 0 &&  i > 0 ? "\n" : " ");
-    std::cout << std::endl;
-
-    // Save the index
-    index.save();
-    std::cout << "Index saved to " << indexPath << std::endl;
-
-    // Close and reopen the index to simulate reloading
-    index.close();
-    index.open();
-    if (!index.is_open()) {
-        std::cerr << "Failed to reload the index." << std::endl;
-        return 1;
-    }
-    std::cout << "Index reloaded successfully." << std::endl;
-
-    // Prepare a query vector
-    int k = 5;
-    int nq = 1;
-    mvdb::value_t query[] = {2.0f, 3.0f, 4.0f}; // Example query
-    mvdb::idx_t query_ids[nq * k]; // Assuming we want the closest vector to this query
-    mvdb::value_t distances[nq * k]; // Distances from the query to the closest vectors
-
-    // Perform the search
-    index.search(nq, query, query_ids, distances, k); // Search for the closest vector to the query
-
-    // Output the search results
-    for(int i = 0; i < k; i++)
-        std::cout << "Closest vector to query is at index " << query_ids[i] << " with distance " << distances[i] << std::endl;
-
-    return 0;
+    return x * 2; // Just an example computation
 }
 
+// Example callback function
+void onCompletion(int result) {
+    std::cout << "Computation result: " << result << std::endl;
+}
+
+// Wrapper function that executes the task and then the callback
+template<typename Func, typename Callback>
+auto runTaskWithCallback(Func task, Callback callback) {
+    return [task, callback]() {
+        auto result = task(); // Execute the task
+        callback(result); // Execute the callback with the result
+    };
+}
+int main() {
+    // Example usage
+    auto task = []() { return compute(10); };
+    auto future = std::async(std::launch::async,
+                             runTaskWithCallback(task, onCompletion));
+
+    // The future here is used to wait for the wrapper (and thus the callback) to complete
+    // It's not strictly necessary if you don't need to synchronize on the callback's completion
+
+//    auto* db = new mvdb::DB("./test_db", "test_db", 3);
+//    // Add data to the index
+//    std::vector<mvdb::value_t> data = {
+//            4.0f, 5.0f, 6.0f, // Vector 1
+//            1.0f, 2.0f, 3.0f, // Vector 2
+//            7.0f, 8.0f, 9.0f,  // Vector 3
+//    };
+//    std::vector<mvdb::idx_t> ids(data.size() / db->index()->dims()); // IDs for the added vectors
+//
+//    if (!db->add_vector(data.size()/db->index()->dims(), data.data())) {
+//        std::cerr << "Failed to add data to the index." << std::endl;
+//        return 1;
+//    }
+//    std::cout << "Data added successfully." << std::endl;
+//    mvdb::idx_t n = 0;
+//    mvdb::value_t* curr_data = db->get(n, nullptr);
+//    std::cout << "ntotal: " << db->index()->ntotal() << std::endl;
+//    for(mvdb::idx_t i = 0; i < db->index()->ntotal(); i++)
+//        std::cout << curr_data[i] << (i % db->index()->dims() == 0 &&  i > 0 ? "\n" : " ");
+//    std::cout << std::endl;
+//    delete db;
+    return 0;
+}
