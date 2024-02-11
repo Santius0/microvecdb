@@ -8,6 +8,7 @@
 //#include <limits>
 #include <queue>
 #include <utility>
+#include <thread>
 #include "heap.h"
 
 namespace mvdb {
