@@ -77,49 +77,20 @@
 #include <iostream>
 #include <future>
 
-// Example task that performs a computation
-int compute(int x) {
-    for(int i = 0; i < 10000000000; i++){
-        x += 1;
-    }
-    return x * 2; // Just an example computation
-}
-
-// Example callback function
-void onCompletion(int result) {
-    std::cout << "Computation result: " << result << std::endl;
-}
-
-// Wrapper function that executes the task and then the callback
-template<typename Func, typename Callback>
-auto runTaskWithCallback(Func task, Callback callback) {
-    return [task, callback]() {
-        auto result = task(); // Execute the task
-        callback(result); // Execute the callback with the result
-    };
-}
 int main() {
-    // Example usage
-    auto task = []() { return compute(10); };
-    auto future = std::async(std::launch::async,
-                             runTaskWithCallback(task, onCompletion));
+    auto* db = new mvdb::DB("./test_db", "test_db", 3);
+    // Add data to the index
+    std::vector<mvdb::value_t> data = {
+            4.0f, 5.0f, 6.0f, // Vector 1
+            1.0f, 2.0f, 3.0f, // Vector 2
+            7.0f, 8.0f, 9.0f,  // Vector 3
+    };
+    std::vector<mvdb::idx_t> ids(data.size() / db->index()->dims()); // IDs for the added vectors
 
-    // The future here is used to wait for the wrapper (and thus the callback) to complete
-    // It's not strictly necessary if you don't need to synchronize on the callback's completion
-
-//    auto* db = new mvdb::DB("./test_db", "test_db", 3);
-//    // Add data to the index
-//    std::vector<mvdb::value_t> data = {
-//            4.0f, 5.0f, 6.0f, // Vector 1
-//            1.0f, 2.0f, 3.0f, // Vector 2
-//            7.0f, 8.0f, 9.0f,  // Vector 3
-//    };
-//    std::vector<mvdb::idx_t> ids(data.size() / db->index()->dims()); // IDs for the added vectors
-//
-//    if (!db->add_vector(data.size()/db->index()->dims(), data.data())) {
-//        std::cerr << "Failed to add data to the index." << std::endl;
-//        return 1;
-//    }
+    if (!db->add_vector(data.size()/db->index()->dims(), data.data())) {
+        std::cerr << "Failed to add data to the index." << std::endl;
+        return 1;
+    }
 //    std::cout << "Data added successfully." << std::endl;
 //    mvdb::idx_t n = 0;
 //    mvdb::value_t* curr_data = db->get(n, nullptr);
@@ -127,6 +98,6 @@ int main() {
 //    for(mvdb::idx_t i = 0; i < db->index()->ntotal(); i++)
 //        std::cout << curr_data[i] << (i % db->index()->dims() == 0 &&  i > 0 ? "\n" : " ");
 //    std::cout << std::endl;
-//    delete db;
+    delete db;
     return 0;
 }

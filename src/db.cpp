@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <stdexcept>
 #include <fstream>
+#include <chrono>
 
 namespace mvdb {
 
@@ -48,6 +49,7 @@ namespace mvdb {
                        index_type_(index_type), vec_model_(vec_model) {
         const std::string index_path = dbpath + std::filesystem::path::preferred_separator + dbname + INDEX_EXT;
         const std::string data_path = dbpath + std::filesystem::path::preferred_separator + dbname + KV_STORE_EXT;
+        const std::string wal_path = dbpath + std::filesystem::path::preferred_separator + dbname + ".log";
         metadata_path_ = dbpath + std::filesystem::path::preferred_separator + dbname_ + META_FILE_EXTENSION;
 
         if(!std::filesystem::exists(dbpath))  // if directory doesn't exist create it
@@ -57,6 +59,9 @@ namespace mvdb {
         make_index_(index_path);
         make_storage_(data_path);
         if(std::filesystem::exists(metadata_path_)) load();
+//        wal = WAL(wal_path);
+//        wal_processor = WALSubscriber();
+//        wal->add_subscriber(wal_processor.get());
     }
 
     DB::~DB(){
@@ -111,6 +116,8 @@ namespace mvdb {
 
     idx_t* DB::add_vector(const idx_t& nv, value_t* v) {
          // TODO: perform write ahead log for vector data here
+//         WALEntry wal_entry = WALEntry(ADD_VECTOR, nv, dims_, nv * dims_, v);
+//         std::cout << wal_entry;
          if(!index_->is_open()) index_->open();
          delete[] add_ids_; // free old ids if they haven't been yet
          auto* ids = new idx_t[nv];

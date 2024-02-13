@@ -4,6 +4,7 @@
 #include "storage.h"
 #include "index.h"
 #include "vectorizer.h"
+#include "wal.h"
 #include <utility>
 #include <vector>
 #include <memory>
@@ -14,7 +15,13 @@
 namespace mvdb {
 
     class DB final : Serializable {
-        std::thread ingestion_thread;
+//        WAL wal;                                            // all data changes, i.e add, remove, update are immediately written to a write ahead log (WAL).
+//                                                            // the wal has a list of subscribers that are automatically notified when a new record is added.
+//        WALSubscriber wal_processor;       // the wal_processor subscribes to the wal and is notified when a new record comes into the wal,
+//                                                            // it runs on a separate thread and constantly processes the entries on the wal.
+//                                                            // it will stop and wait if there is nothing left to process but will look again when notified
+
+
         std::thread search_thread;
         std::string dbname_;                                // name of database
         std::string dbpath_;                                // location of database

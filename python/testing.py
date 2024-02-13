@@ -46,5 +46,9 @@ class TestDB(unittest.TestCase):
         if os.path.exists(self.db_path):
             shutil.rmtree(self.db_path)
 
-if __name__ == '__main__':
+@profile
+def main():
     unittest.main()
+
+if __name__ == '__main__':
+    main()
