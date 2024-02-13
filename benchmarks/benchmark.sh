@@ -96,7 +96,7 @@ echo "Monitor PID: $MONITOR_PID"
 eval $COMMAND
 
 # Wait a bit for the last measurements to be logged
-sleep 2
+sleep 10
 
 # Stop the performance monitoring
 echo "Stopping performance monitoring..."
