@@ -1,15 +1,14 @@
 #include "db.h"
 #include "utils.h"
 #include "constants.h"
-#include "preprocess.h"
-//#include "faiss_flat_index.h"
 #include "flat_index.h"
 #include "fasttext.h"
 #include "exception.h"
+//#include "preprocess.h"
+//#include "faiss_flat_index.h"
 #include <filesystem>
 #include <stdexcept>
 #include <fstream>
-#include <chrono>
 
 namespace mvdb {
 
@@ -31,6 +30,7 @@ namespace mvdb {
         serialize_string(out, dbname_);
         serialize_numeric<idx_t>(out, dims_);
         serialize_numeric<int8_t>(out, static_cast<int8_t>(index_type_));
+        serialize_numeric<long long int>(out, wal_id_counter);
 //        index_->serialize(out);   // index and storage have their own save methods. we are not storing everything in one file serialising them here doesn't make sense
 //        storage_->serialize(out);
     }
@@ -40,6 +40,7 @@ namespace mvdb {
         dbname_ = deserialize_string(in);
         dims_ = deserialize_numeric<idx_t>(in);
         index_type_ = static_cast<IndexType>(deserialize_numeric<int8_t>(in));
+        wal_id_counter = deserialize_numeric<long long int>(in);
 //        index_->deserialize(in);  // index and storage are automatically loaded if necessary at object instantiation
 //        storage_->deserialize(in);
     }
@@ -116,8 +117,8 @@ namespace mvdb {
 
     idx_t* DB::add_vector(const idx_t& nv, value_t* v) {
          // TODO: perform write ahead log for vector data here
-//         WALEntry wal_entry = WALEntry(ADD_VECTOR, nv, dims_, nv * dims_, v);
-//         std::cout << wal_entry;
+         WALEntry wal_entry = WALEntry(getCurrentTimeStamp(), wal_id_counter++, ADD_VECTOR, nv, dims_, nv * dims_, v);
+         std::cout << wal_entry;
          if(!index_->is_open()) index_->open();
          delete[] add_ids_; // free old ids if they haven't been yet
          auto* ids = new idx_t[nv];
@@ -127,11 +128,11 @@ namespace mvdb {
          if(success) return ids;
          return nullptr;
     }
-
-    std::future<idx_t*> DB::add_vector_async(const idx_t& nv, value_t* v) {
-        // std::launch::async ensures the function is executed in a new thread immediately
-        return std::async(std::launch::async, &DB::add_vector, this, nv, v);
-    }
+//
+//    std::future<idx_t*> DB::add_vector_async(const idx_t& nv, value_t* v) {
+//        // std::launch::async ensures the function is executed in a new thread immediately
+//        return std::async(std::launch::async, &DB::add_vector, this, nv, v);
+//    }
 
     // pre-processes data, generates embedding then passes them both to add_data_with_vector
     bool DB::add_data(const idx_t& nv, char* data, idx_t* data_sizes, const DataFormat* data_formats) {
@@ -171,10 +172,10 @@ namespace mvdb {
          search_distances_ = distances;
     }
 
-    std::future<void> DB::search_with_vector_async(const size_t &nq, mvdb::value_t *query, const long &k,
-                                                   mvdb::idx_t *ids, mvdb::value_t *distances) {
-        return std::async(std::launch::async, &DB::search_with_vector, this, nq, query, k, ids, distances);
-    }
+//    std::future<void> DB::search_with_vector_async(const size_t &nq, mvdb::value_t *query, const long &k,
+//                                                   mvdb::idx_t *ids, mvdb::value_t *distances) {
+//        return std::async(std::launch::async, &DB::search_with_vector, this, nq, query, k, ids, distances);
+//    }
 
 //    SearchResult* DB::search(const size_t& nq, const char* data, const size_t* data_sizes, const DataFormat* data_formats, const long& k, const bool& ret_data) const {
 //        auto * vecs = new float[nq * index_->dims()];

@@ -2,7 +2,11 @@ cmake_minimum_required(VERSION 3.26)
 project(microvecdb)
 set(CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 include(FetchContent)
+
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 find_program(READELF_EXECUTABLE readelf)
 if(NOT READELF_EXECUTABLE)
@@ -87,9 +91,7 @@ add_library(microvecdb_core SHARED
         include/core/wal.h
         src/core/wal.cpp
 )
-target_link_libraries(microvecdb_core PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C zmq pthread
-#        spdlog::spdlog
-)
+target_link_libraries(microvecdb_core PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C zmq pthread spdlog::spdlog)
 set_target_properties(microvecdb_core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 
@@ -171,10 +173,44 @@ set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIREC
 #        COMMENT "Building python package"
 #)
 
-
 # main:
 add_executable(microvecdb_main main.cpp)
-target_link_libraries(microvecdb_main PUBLIC microvecdb zmq pthread)
+target_link_libraries(microvecdb_main PUBLIC microvecdb zmq pthread Eigen3::Eigen)
+
+#################################################
+# Check if we are cross-compiling for Jetson
+##if(JETSON_CROSS_COMPILE)
+#
+#    # Jetson Nano-specific executable, using Linaro for cross-compilation
+#    add_executable(my_jetson_app main.cpp)
+#
+#    # Set custom compiler for my_jetson_app
+#    set_target_properties(my_jetson_app PROPERTIES
+#            CXX_STANDARD 17
+#            CXX_STANDARD_REQUIRED YES
+#            CXX_EXTENSIONS NO
+#    )
+#    # Specify the path to your Linaro toolchain here
+#    set(LINARO_TOOLCHAIN_PATH "/usr/bin")
+#
+#    set_property(TARGET my_jetson_app PROPERTY CMAKE_SYSTEM_NAME Linux)
+#    set_property(TARGET my_jetson_app PROPERTY CMAKE_C_COMPILER "${LINARO_TOOLCHAIN_PATH}/arm-linux-gnueabihf-gcc")
+#    set_property(TARGET my_jetson_app PROPERTY CMAKE_CXX_COMPILER "${LINARO_TOOLCHAIN_PATH}/arm-linux-gnueabihf-g++")
+#    target_compile_options(my_jetson_app PRIVATE -march=armv8-a)
+
+
+    # Manually specify the cross-compiler from Linaro
+
+
+    # Target-specific compile options for Jetson Nano
+#    target_include_directories(my_jetson_app PRIVATE "${LINARO_TOOLCHAIN_PATH}/include")
+#    target_link_libraries(my_jetson_app PRIVATE )
+
+    # Additional configurations specific to the Jetson target
+    # For example, setting the SYSROOT (if needed)
+    # set(CMAKE_SYSROOT "${LINARO_TOOLCHAIN_PATH}/arm-linux-gnueabihf/libc")
+#endif()
+
 # <<<< Configuring targets ----------------------------------------------------------
 
 ## making sure output directory exists

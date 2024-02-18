@@ -1,35 +1,34 @@
-//#ifndef MICROVECDB_WAL_H
-//#define MICROVECDB_WAL_H
-//
-//#include "constants.h"
-//#include <string>
-//
-//#include "spdlog/spdlog.h"
-//#include "spdlog/async.h"
-//#include "spdlog/sinks/basic_file_sink.h"
-//
-//namespace mvdb {
-//    enum WALActionType {
-//        ADD_VECTOR = 0,
-//        REMOVE_VECTOR = 1,
-//        UPDATE_VECTOR = 2
-//    };
-//
-//    struct WALEntry {
-////        std::string timestamp;
-////        std::string id;
-//        WALActionType type;
-//        idx_t num_vecs;
-//        idx_t dims;
-//        idx_t num_elements;
-//        value_t* vecs;
-//
-//        friend std::ostream& operator<<(std::ostream& os, const WALEntry& obj);
-//
-//        WALEntry() = default;
-//        WALEntry(WALActionType type, idx_t num_vecs, idx_t dims, idx_t num_elements, value_t* vecs);
-//    };
-//
+#ifndef MICROVECDB_WAL_H
+#define MICROVECDB_WAL_H
+
+#include "constants.h"
+#include <string>
+
+#include "spdlog/spdlog.h"
+#include "spdlog/async.h"
+#include "spdlog/sinks/basic_file_sink.h"
+
+namespace mvdb {
+    enum WALActionType {
+        ADD_VECTOR = 0,
+        REMOVE_VECTOR = 1,
+        UPDATE_VECTOR = 2
+    };
+
+    struct WALEntry {
+        std::string timestamp;
+        long long int id;
+        WALActionType type;
+        idx_t num_vecs;
+        idx_t dims;
+        idx_t num_elements;
+        value_t* vecs;
+
+        friend std::ostream& operator<<(std::ostream& os, const WALEntry& obj);
+        WALEntry() = default;
+        WALEntry(std::string timestamp, long long int id, WALActionType type, idx_t num_vecs, idx_t dims, idx_t num_elements, value_t* vecs);
+    };
+
 //    class WAL {
 //        std::shared_ptr<spdlog::logger> logger;
 //        std::string wal_path;
@@ -51,6 +50,6 @@
 //        void move_checkpoint_by(std::streampos value);
 //        void update_checkpoint(std::streampos new_pos);
 //    };
-//}
-//
-//#endif //MICROVECDB_WAL_H
+}
+
+#endif //MICROVECDB_WAL_H

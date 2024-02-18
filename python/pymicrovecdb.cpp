@@ -9,15 +9,6 @@
 
 #define DB_NAME "mvdb::DB"
 
-// Function to be exposed - hello_world
-static PyObject* hello_world(PyObject *self, PyObject *args) {
-    const char *str;
-    if(!PyArg_ParseTuple(args, "s", &str)) return nullptr;
-    std::cout << "Hello " << str << std::endl;
-    Py_RETURN_NONE;
-}
-
-
 static void DB_delete(PyObject* capsule) {
     delete static_cast<mvdb::DB*>(PyCapsule_GetPointer(capsule, DB_NAME));
 }
@@ -136,7 +127,6 @@ static PyObject* DB_connect(PyObject* self, PyObject* args){
     Py_RETURN_NONE;
 }
 
-// Method definition object for this extension, describes the hello_world function
 static PyMethodDef MyExtensionMethods[] = {
 //        { Python method name, C function to be called, arguments for this function, Docstring for this function },
         { "DB_create", DB_create, METH_VARARGS, "Initialise a DB<> object" },

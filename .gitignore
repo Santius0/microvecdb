@@ -136,3 +136,4 @@ _deps
 /python/build/
 /python/dist/
 /faiss_src/
+/jetson/jetson_password.txt

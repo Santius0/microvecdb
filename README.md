@@ -39,6 +39,7 @@ For example if your user name is nvidia for Jetson module;<br/>
 and also you connect to your Jetson module<br/>
     `ssh nvidia@192.168.55.1`
 
+`sudo apt-get install libeigen3-dev`
 
 Might need `sudo apt-get install libopenblas-dev`. Not sure if just installing MKL gived everything needed.
 [//]: # (sudo ln -s /opt/cmake-3.*your_version*/bin/* /usr/local/bin)

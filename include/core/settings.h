@@ -26,6 +26,9 @@ namespace mvdb {
         Settings(bool pca, float pca_var, bool quantize, int pq_nprobe, int pq_nlist) :
         pca_(pca), pca_var_(pca_var), quantize_(quantize), pq_nprobe_(pq_nprobe), pq_nlist_(pq_nlist) {}
         ~Settings() override = default;
+        void optimise(){
+
+        };
     };
 
 }

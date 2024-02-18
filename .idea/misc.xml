@@ -13,6 +13,7 @@
       <file path="$PROJECT_DIR$/annoy" />
       <file path="$PROJECT_DIR$/faiss" />
       <file path="$PROJECT_DIR$/fasttext" />
+      <file path="$PROJECT_DIR$/jetson/linario" />
       <file path="$PROJECT_DIR$/numpy" />
       <file path="$PROJECT_DIR$/rocksdb" />
       <file path="$PROJECT_DIR$/spdlog" />

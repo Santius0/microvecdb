@@ -5,23 +5,11 @@
 #include "index.h"
 #include "vectorizer.h"
 #include "wal.h"
-#include <utility>
-#include <vector>
-#include <memory>
-#include <filesystem>
-#include <thread>
-#include <future>
 
 namespace mvdb {
 
     class DB final : Serializable {
-//        WAL wal;                                            // all data changes, i.e add, remove, update are immediately written to a write ahead log (WAL).
-//                                                            // the wal has a list of subscribers that are automatically notified when a new record is added.
-//        WALSubscriber wal_processor;       // the wal_processor subscribes to the wal and is notified when a new record comes into the wal,
-//                                                            // it runs on a separate thread and constantly processes the entries on the wal.
-//                                                            // it will stop and wait if there is nothing left to process but will look again when notified
-
-
+        long long int wal_id_counter = 0;
         std::thread search_thread;
         std::string dbname_;                                // name of database
         std::string dbpath_;                                // location of database
@@ -53,11 +41,11 @@ namespace mvdb {
         Index* index();
         Storage* storage();
         [[nodiscard]] idx_t* add_vector(const idx_t& nv, value_t* v);       // add nv vectors to the index
-        [[nodiscard]] std::future<idx_t*> add_vector_async(const idx_t& nv, value_t* v);       // add nv vectors to the index asynchronously
+//        [[nodiscard]] std::future<idx_t*> add_vector_async(const idx_t& nv, value_t* v);       // add nv vectors to the index asynchronously
         [[nodiscard]] bool add_data(const idx_t& nv, char* data, idx_t* data_sizes, const DataFormat* data_formats);      // take nv pieces of data, generate a vector for each, add vectors to the index, store raw data in kv_store
 //        [[nodiscard]] bool add_data_with_vector(const size_t& nv, char* data, size_t* data_sizes, const DataFormat* data_formats, void* v, const DataType& v_d_type = FLOAT) const; // take nv pieces of data and n corresponding vectors, add vectors to the index, add data to the kv_store
         void search_with_vector(const size_t& nq, value_t* query, const long& k, idx_t* ids, value_t* distances); // carry out a search using only nq vectors as input
-        std::future<void> search_with_vector_async(const size_t& nq, value_t* query, const long& k, idx_t* ids, value_t* distances); // carry out a search using only nq vectors as input
+//        std::future<void> search_with_vector_async(const size_t& nq, value_t* query, const long& k, idx_t* ids, value_t* distances); // carry out a search using only nq vectors as input
 //        [[nodiscard]] SearchResult* search(const size_t& nq, const char* data, const size_t* data_sizes, const DataFormat* data_formats, const long& k, const bool& ret_data) const;  // carry out a search using only raw data as input
         value_t* get(idx_t& n, idx_t* keys) const;
     };
