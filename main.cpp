@@ -170,6 +170,7 @@
 #include <cmath>
 #include <iomanip>
 #include <chrono>
+#include <thread>
 
 // Helper function to calculate the Euclidean distance between a vector and a centroid
 float calculateDistance(const Eigen::VectorXf& vec, const Eigen::VectorXf& centroid) {
@@ -279,7 +280,8 @@ int calculateIndexForQuantizedVector(const std::vector<int>& quantizedVector, in
 }
 
 int main() {
-    std::cout << "Hello World" << std::endl;
+    std::cout << "Hello World making thread..." << std::endl;
+    std::thread thread;
     // Initialize a set of hardcoded 15-dimensional vectors
     std::vector<Eigen::VectorXf> vectors = {
             (Eigen::VectorXf(15) << 1.1, 2.2, 3.3, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0).finished(),
