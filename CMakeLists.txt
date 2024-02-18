@@ -8,15 +8,15 @@ include(FetchContent)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
-find_program(READELF_EXECUTABLE readelf)
-if(NOT READELF_EXECUTABLE)
-    message(FATAL_ERROR "readelf not found")
-endif()
-
-find_program(SIZE_EXECUTABLE size)
-if(NOT SIZE_EXECUTABLE)
-    message(FATAL_ERROR "size tool not found")
-endif()
+#find_program(READELF_EXECUTABLE readelf)
+#if(NOT READELF_EXECUTABLE)
+#    message(FATAL_ERROR "readelf not found")
+#endif()
+#
+#find_program(SIZE_EXECUTABLE size)
+#if(NOT SIZE_EXECUTABLE)
+#    message(FATAL_ERROR "size tool not found")
+#endif()
 
 # Constructing Platform Tag >>>> ----------------------------------------------------------
 set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})

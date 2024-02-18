@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.26)
 project(microvecdb-jetson-nano-2gb)
 
-#message(FATAL_ERROR ${CMAKE_CURRENT_SOURCE_DIR})
+#set(PROJECT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/..")
+#set(CMAKE_SOURCE_DIR "${CMAKE_SOURCE_DIR}/..")
+set(CMAKE_SYSROOT "${CMAKE_SOURCE_DIR}/tegra_fs/filesystem")
+#message(FATAL_ERROR ${CMAKE_SYSROOT})
 
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR aarch64)
@@ -17,9 +20,40 @@ set(CMAKE_CXX_FLAGS "-march=armv8-a")
 #set(CMAKE_CXX_FLAGS "-march=armv8-a -mfloat-abi=hard -mfpu=crypto-neon-fp-armv8")
 set(CMAKE_CXX_STANDARD 17)
 
-#add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../src ${CMAKE_CURRENT_BINARY_DIR}/src)
+#include(FetchContent)
+#
+#FetchContent_Declare(
+#        spdlog
+#        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+#        GIT_TAG v1.13.0
+#)
+#FetchContent_MakeAvailable(spdlog)
 
-add_executable(my_jetson_app ../jetson_main_test.cpp)
-#target_link_directories(my_jetson_app PRIVATE Eigen3::Eigen)
+function(include_sub_directories_recursively root_dir)
+    if (IS_DIRECTORY ${root_dir})
+        message("Including directory: ${root_dir}")
+        include_directories(${root_dir})
+        file(GLOB sub_dirs LIST_DIRECTORIES true RELATIVE ${root_dir} ${root_dir}/*)
+        foreach(sub_dir ${sub_dirs})
+            if (IS_DIRECTORY ${root_dir}/${sub_dir})
+                include_sub_directories_recursively(${root_dir}/${sub_dir})
+            endif()
+        endforeach()
+    endif()
+endfunction()
+
+include_sub_directories_recursively(${CMAKE_CURRENT_SOURCE_DIR}/../include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../eigen)
+
+add_executable(my_jetson_app
+        ${CMAKE_CURRENT_SOURCE_DIR}/../main.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/utils.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/quantization.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/preprocess.cpp
+#        ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/server.cpp
+#        ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/wal.cpp
+)
+target_include_directories(my_jetson_app PRIVATE ${eigen_SOURCE_DIR})
+target_link_directories(my_jetson_app PRIVATE Eigen3::Eigen)
 
 #target_compile_options(my_jetson_app PRIVATE -march=armv8-a)
