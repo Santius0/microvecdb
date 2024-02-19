@@ -14,6 +14,7 @@
       <file path="$PROJECT_DIR$/eigen" />
       <file path="$PROJECT_DIR$/faiss" />
       <file path="$PROJECT_DIR$/fasttext" />
+      <file path="$PROJECT_DIR$/jetson/jetson-nano-sysroot" />
       <file path="$PROJECT_DIR$/jetson/linario" />
       <file path="$PROJECT_DIR$/jetson/tegra_fs" />
       <file path="$PROJECT_DIR$/numpy" />

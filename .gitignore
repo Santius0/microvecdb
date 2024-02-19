@@ -139,4 +139,4 @@ _deps
 /jetson/jetson_password.txt
 /jetson/jetson-nano-2gb-jp461-sd-card-image.zip
 /jetson/linario/
-/jetson/tegra_fs/
+/jetson/jetson-nano-sysroot/

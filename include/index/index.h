@@ -6,7 +6,6 @@
 #include <string>
 #include <memory>
 #include <ostream>
-#include <filesystem>
 
 namespace mvdb {
 

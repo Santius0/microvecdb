@@ -1,5 +1,6 @@
 #include "flat_index.h"
 #include "distances.h"
+#include "filesystem.h"
 #include <iostream>
 #include <fstream>
 
@@ -63,8 +64,8 @@ namespace mvdb {
 
     void FlatIndex::open() {
         if(!is_open_) {
-            if(std::filesystem::exists(index_path_)) {
-                if (std::filesystem::is_directory(index_path_))
+            if(fs::exists(index_path_.c_str())) {
+                if (fs::is_directory(index_path_.c_str()))
                     throw std::runtime_error("'" + index_path_ + "' already exists as a directory");
                 load();
             }
