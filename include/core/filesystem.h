@@ -1,11 +1,14 @@
 #ifndef MICROVECDB_FILESYSTEM_H
 #define MICROVECDB_FILESYSTEM_H
 
+#include <string>
+
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <sys/stat.h>
 #include <unistd.h>
+#include <sys/types.h>
 #endif
 
 namespace fs {
@@ -19,6 +22,10 @@ namespace fs {
         #endif
     }
 
+    bool exists(const std::string& path) {
+        return exists(path.c_str());
+    }
+
     bool is_directory(const char* path) {
         #ifdef _WIN32
                 DWORD dwAttrib = GetFileAttributes(path);
@@ -29,7 +36,32 @@ namespace fs {
                 return S_ISDIR(path_stat.st_mode);
         #endif
     }
-}
 
+    bool remove(const char* path) {
+        #ifdef _WIN32
+            DWORD dwAttrib = GetFileAttributes(path);
+
+            if(dwAttrib == INVALID_FILE_ATTRIBUTES)
+                return false; // Path does not exist
+
+            if(dwAttrib & FILE_ATTRIBUTE_DIRECTORY)
+                return RemoveDirectory(path) != 0; // Remove directory
+            else
+                return DeleteFile(path) != 0; // Remove file
+        #else
+            struct stat path_stat;
+            stat(path, &path_stat);
+
+            if(S_ISDIR(path_stat.st_mode))
+                return rmdir(path) == 0; // Remove directory
+            else
+                return unlink(path) == 0; // Remove file
+        #endif
+    }
+
+    bool remove(const std::string& path) {
+        return remove(path.c_str());
+    }
+}
 
 #endif //MICROVECDB_FILESYSTEM_H
