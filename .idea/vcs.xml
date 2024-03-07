@@ -3,8 +3,5 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/cmake-build-debug-wsl/_deps/cli11-src" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/cmake-build-debug-wsl/_deps/spdlog-src" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/eigen" vcs="Git" />
   </component>
 </project>
