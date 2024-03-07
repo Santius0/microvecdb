@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.27)
 project(microvecdb)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -37,8 +37,10 @@ message(STATUS "Platform Tag: ${PLATFORM_TAG}")
 
 # Getting Python Major & Minor Version >>>> ----------------------------------------------------------
 find_package(OpenMP REQUIRED)
-find_package(PythonLibs REQUIRED)
-string(REPLACE "." ";" PYTHON_VERSION_LIST ${PYTHONLIBS_VERSION_STRING})
+#find_package(PythonLibs REQUIRED) # deprecated. use find_package(Python3 COMPONENTS Interpreter Development REQUIRED) for cmake 3.27.x +
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+#string(REPLACE "." ";" PYTHON_VERSION_LIST ${PYTHONLIBS_VERSION_STRING}) # deprecated with new find_package method use Python3_VERSION instead
+string(REPLACE "." ";" PYTHON_VERSION_LIST ${Python3_VERSION})
 list(GET PYTHON_VERSION_LIST 0 PYTHON_MAJOR_VERSION)
 list(GET PYTHON_VERSION_LIST 1 PYTHON_MINOR_VERSION)
 message(STATUS "CPython Version: ${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}")
@@ -93,7 +95,9 @@ add_library(microvecdb_core SHARED
         include/core/wal.h
         src/core/wal.cpp
 )
-target_link_libraries(microvecdb_core PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C zmq pthread spdlog::spdlog)
+target_link_libraries(microvecdb_core PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C
+#        zmq
+        pthread spdlog::spdlog)
 set_target_properties(microvecdb_core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 
@@ -162,9 +166,11 @@ set(PYTHON_EXTENSION_TARGET "microvecdb.cpython-${PYTHON_MAJOR_VERSION}${PYTHON_
 add_library(${PYTHON_EXTENSION_TARGET} MODULE
         python/pymicrovecdb.cpp
 )
-target_include_directories(${PYTHON_EXTENSION_TARGET} PUBLIC ${PYTHON_INCLUDE_DIRS})
+#target_include_directories(${PYTHON_EXTENSION_TARGET} PUBLIC ${PYTHON_INCLUDE_DIRS})
+target_include_directories(${PYTHON_EXTENSION_TARGET} PUBLIC ${Python3_INCLUDE_DIRS})
 target_link_directories(${PYTHON_EXTENSION_TARGET} PUBLIC lib)
-target_link_libraries(${PYTHON_EXTENSION_TARGET} ${PYTHON_LIBRARIES} microvecdb)
+#target_link_libraries(${PYTHON_EXTENSION_TARGET} ${PYTHON_LIBRARIES} microvecdb)
+target_link_libraries(${PYTHON_EXTENSION_TARGET} ${Python3_LIBRARIES} microvecdb)
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 #set(PYTHON_PACKAGE_BUILD_SCRIPT "/python/pymicrovecdb.sh")
