@@ -1,4 +1,5 @@
 #include "flat_index.h"
+#include "filesystem.h"
 #include <gtest/gtest.h>
 #include <vector>
 #include <cmath>
@@ -12,8 +13,8 @@ protected:
 
     void SetUp() override {
         // Ensure any existing index file is removed before a test starts
-        if (std::filesystem::exists(indexPath))
-            std::filesystem::remove(indexPath);
+        if (fs::exists(indexPath))
+            fs::remove(indexPath);
 
         // Initialize the FlatIndex object
         index = new mvdb::FlatIndex(indexPath, dimensions);
@@ -29,8 +30,8 @@ protected:
             delete index;
             index = nullptr;
         }
-        if (std::filesystem::exists(indexPath))
-            std::filesystem::remove(indexPath);
+        if (fs::exists(indexPath))
+            fs::remove(indexPath);
     }
 };
 
