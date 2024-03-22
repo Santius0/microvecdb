@@ -279,129 +279,167 @@ int calculateIndexForQuantizedVector(const std::vector<int>& quantizedVector, in
     return index;
 }
 
-int main() {
-    std::cout << "Hello World making thread..." << std::endl;
-    std::thread thread;
-    // Initialize a set of hardcoded 15-dimensional vectors
-    std::vector<Eigen::VectorXf> vectors = {
-            (Eigen::VectorXf(15) << 1.1, 2.2, 3.3, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0).finished(),
-            (Eigen::VectorXf(15) << 2.2, 3.3, 4.4, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0).finished(),
-            // Add more vectors as needed
-    };
-
-    const int num_segments = 5;
-    const int segment_length = 3;
-    const int num_centroids = 6;
-
-    std::vector<Eigen::MatrixXf> all_centroids(num_segments);
-
-    // Divide vectors into segments and perform k-means clustering for each segment
-    for (int i = 0; i < num_segments; ++i) {
-        std::vector<Eigen::VectorXf> segment_data;
-
-        for (const auto& vec : vectors) {
-            Eigen::VectorXf segment = vec.segment(i * segment_length, segment_length);
-            segment_data.push_back(segment);
-        }
-
-        // Perform k-means clustering on the current segment
-        all_centroids[i] = kMeansClustering(segment_data, num_centroids);
-
-        // Print out the segment number and its centroids
-        std::cout << "Segment " << i + 1 << " Centroids:" << std::endl;
-        std::cout << all_centroids[i] << std::endl << std::endl;
-    }
-
-    Eigen::VectorXf newVector = (Eigen::VectorXf(15) << 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5).finished();
-
-    std::vector<int> quantizedIndices(num_segments);
-
-    // Quantize the new vector
-    for (int i = 0; i < num_segments; ++i) {
-        Eigen::VectorXf segment = newVector.segment(i * segment_length, segment_length);
-        int nearestCentroidIndex = findNearestCentroidIndex(segment, all_centroids[i]);
-        quantizedIndices[i] = nearestCentroidIndex;
-
-        std::cout << "Segment " << i + 1 << ", Nearest Centroid Index: " << nearestCentroidIndex << std::endl;
-    }
-    std::cout << "Quantized Vector: ";
-    for (int i = 0; i < num_segments; ++i)
-        std::cout << quantizedIndices[i] << " ";
-
-
-    std::vector<Eigen::VectorXf> combinations;
-    Eigen::VectorXf initialCombination(all_centroids.size() * all_centroids[0].rows()); // Assuming all segments have the same length
-    generateCombinations(all_centroids, combinations, initialCombination, 0);
-
-    size_t numCombinations = combinations.size();
-    Eigen::MatrixXf distanceMatrix(numCombinations, numCombinations);
-
-    // Compute the Euclidean distance between every pair of combinations
-    for (int i = 0; i < numCombinations; ++i) {
-        for (int j = 0; j < numCombinations; ++j) {
-            if (i == j) {
-                distanceMatrix(i, j) = 0;
-            } else {
-                distanceMatrix(i, j) = calculateDistance(combinations[i], combinations[j]);
-            }
-        }
-    }
-
-    // Print the combinations
-    std::cout << "Combinations:" << std::endl;
-    for (int i = 0; i < combinations.size(); ++i) {
-        std::cout << "Combination " << i + 1 << ": [";
-        for (int j = 0; j < combinations[i].size(); ++j) {
-            std::cout << combinations[i](j);
-            if (j < combinations[i].size() - 1) std::cout << ", ";
-        }
-        std::cout << "]" << std::endl;
-    }
-
-    // Print the distance matrix
-    std::cout << "\nDistance Matrix (" << distanceMatrix.rows() << " x " << distanceMatrix.cols() << ")" << std::endl;
-//    for (int i = 0; i < distanceMatrix.rows(); ++i) {
-//        for (int j = 0; j < distanceMatrix.cols(); ++j) {
-//            // Use std::setw for aligned output if the distances vary in length
-//            std::cout << std::setw(8) << distanceMatrix(i, j) << " ";
+//int main() {
+//    std::cout << "Hello World making thread..." << std::endl;
+//    std::thread thread;
+//    // Initialize a set of hardcoded 15-dimensional vectors
+//    std::vector<Eigen::VectorXf> vectors = {
+//            (Eigen::VectorXf(15) << 1.1, 2.2, 3.3, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0).finished(),
+//            (Eigen::VectorXf(15) << 2.2, 3.3, 4.4, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0).finished(),
+//            // Add more vectors as needed
+//    };
+//
+//    const int num_segments = 5;
+//    const int segment_length = 3;
+//    const int num_centroids = 6;
+//
+//    std::vector<Eigen::MatrixXf> all_centroids(num_segments);
+//
+//    // Divide vectors into segments and perform k-means clustering for each segment
+//    for (int i = 0; i < num_segments; ++i) {
+//        std::vector<Eigen::VectorXf> segment_data;
+//
+//        for (const auto& vec : vectors) {
+//            Eigen::VectorXf segment = vec.segment(i * segment_length, segment_length);
+//            segment_data.push_back(segment);
 //        }
-//        std::cout << std::endl;
+//
+//        // Perform k-means clustering on the current segment
+//        all_centroids[i] = kMeansClustering(segment_data, num_centroids);
+//
+//        // Print out the segment number and its centroids
+//        std::cout << "Segment " << i + 1 << " Centroids:" << std::endl;
+//        std::cout << all_centroids[i] << std::endl << std::endl;
 //    }
+//
+//    Eigen::VectorXf newVector = (Eigen::VectorXf(15) << 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5).finished();
+//
+//    std::vector<int> quantizedIndices(num_segments);
+//
+//    // Quantize the new vector
+//    for (int i = 0; i < num_segments; ++i) {
+//        Eigen::VectorXf segment = newVector.segment(i * segment_length, segment_length);
+//        int nearestCentroidIndex = findNearestCentroidIndex(segment, all_centroids[i]);
+//        quantizedIndices[i] = nearestCentroidIndex;
+//
+//        std::cout << "Segment " << i + 1 << ", Nearest Centroid Index: " << nearestCentroidIndex << std::endl;
+//    }
+//    std::cout << "Quantized Vector: ";
+//    for (int i = 0; i < num_segments; ++i)
+//        std::cout << quantizedIndices[i] << " ";
+//
+//
+//    std::vector<Eigen::VectorXf> combinations;
+//    Eigen::VectorXf initialCombination(all_centroids.size() * all_centroids[0].rows()); // Assuming all segments have the same length
+//    generateCombinations(all_centroids, combinations, initialCombination, 0);
+//
+//    size_t numCombinations = combinations.size();
+//    Eigen::MatrixXf distanceMatrix(numCombinations, numCombinations);
+//
+//    // Compute the Euclidean distance between every pair of combinations
+//    for (int i = 0; i < numCombinations; ++i) {
+//        for (int j = 0; j < numCombinations; ++j) {
+//            if (i == j) {
+//                distanceMatrix(i, j) = 0;
+//            } else {
+//                distanceMatrix(i, j) = calculateDistance(combinations[i], combinations[j]);
+//            }
+//        }
+//    }
+//
+//    // Print the combinations
+//    std::cout << "Combinations:" << std::endl;
+//    for (int i = 0; i < combinations.size(); ++i) {
+//        std::cout << "Combination " << i + 1 << ": [";
+//        for (int j = 0; j < combinations[i].size(); ++j) {
+//            std::cout << combinations[i](j);
+//            if (j < combinations[i].size() - 1) std::cout << ", ";
+//        }
+//        std::cout << "]" << std::endl;
+//    }
+//
+//    // Print the distance matrix
+//    std::cout << "\nDistance Matrix (" << distanceMatrix.rows() << " x " << distanceMatrix.cols() << ")" << std::endl;
+////    for (int i = 0; i < distanceMatrix.rows(); ++i) {
+////        for (int j = 0; j < distanceMatrix.cols(); ++j) {
+////            // Use std::setw for aligned output if the distances vary in length
+////            std::cout << std::setw(8) << distanceMatrix(i, j) << " ";
+////        }
+////        std::cout << std::endl;
+////    }
+//
+//    // Example quantized vectors (represented as indices of chosen centroids for each segment)
+//    std::vector<int> quantizedVector1 = {0, 1, 2, 3, 4}; // Example indices for the first vector
+//    std::vector<int> quantizedVector2 = {1, 2, 3, 4, 5}; // Example indices for the second vector
+//
+//    auto start = std::chrono::steady_clock::now();
+//
+//
+//    Eigen::VectorXf query_vec1 = (Eigen::VectorXf(15) << 3, 6, 8, 1, 3, 4, 7, 9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5).finished();
+//    Eigen::VectorXf query_vec2 = (Eigen::VectorXf(15) << 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5).finished();
+//    std::vector<int> quantized_query_vec1(num_segments);
+//    std::vector<int> quantized_query_vec2(num_segments);
+//
+//    for (int i = 0; i < num_segments; ++i) {
+//        Eigen::VectorXf segment1 = query_vec1.segment(i * segment_length, segment_length);
+//        Eigen::VectorXf segment2 = query_vec2.segment(i * segment_length, segment_length);
+//        quantized_query_vec1[i] = findNearestCentroidIndex(segment1, all_centroids[i]);;
+//        quantized_query_vec2[i] = findNearestCentroidIndex(segment2, all_centroids[i]);;
+//    }
+//
+//    // Calculate the index in the distance matrix for each quantized vector
+//    int index1 = calculateIndexForQuantizedVector(quantized_query_vec1, num_centroids);
+//    int index2 = calculateIndexForQuantizedVector(quantized_query_vec2, num_centroids);
+//
+//    // Assuming distanceMatrix is defined and populated elsewhere
+//    // Eigen::MatrixXf distanceMatrix;
+//
+//    // Extract the distance between the two quantized vectors
+//    float distance = distanceMatrix(index1, index2);
+//
+//    std::cout << "Distance between the two quantized vectors: " << index1 << " and " << index2 << " = " << distance << std::endl;
+//
+//    auto end = std::chrono::steady_clock::now();
+//    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+//    std::cout << "Time taken: " << elapsed.count() << " microseconds" << std::endl;
+//
+//    return 0;
+//}
 
-    // Example quantized vectors (represented as indices of chosen centroids for each segment)
-    std::vector<int> quantizedVector1 = {0, 1, 2, 3, 4}; // Example indices for the first vector
-    std::vector<int> quantizedVector2 = {1, 2, 3, 4, 5}; // Example indices for the second vector
+#include "distances.h"
+
+int main() {
+    // Example vectors
+    float vec[] = {1.0f, 2.0f, 3.0f, 4.0f}; // 2 vectors of dimension 2
+    size_t n = 2, d = 2;
+    float vec_comp[] = {5.0f, 6.0f, 7.0f, 8.0f}; // 2 vectors of dimension 2
+    size_t vec_comp_n = 2;
 
     auto start = std::chrono::steady_clock::now();
 
-
-    Eigen::VectorXf query_vec1 = (Eigen::VectorXf(15) << 3, 6, 8, 1, 3, 4, 7, 9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5).finished();
-    Eigen::VectorXf query_vec2 = (Eigen::VectorXf(15) << 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5).finished();
-    std::vector<int> quantized_query_vec1(num_segments);
-    std::vector<int> quantized_query_vec2(num_segments);
-
-    for (int i = 0; i < num_segments; ++i) {
-        Eigen::VectorXf segment1 = query_vec1.segment(i * segment_length, segment_length);
-        Eigen::VectorXf segment2 = query_vec2.segment(i * segment_length, segment_length);
-        quantized_query_vec1[i] = findNearestCentroidIndex(segment1, all_centroids[i]);;
-        quantized_query_vec2[i] = findNearestCentroidIndex(segment2, all_centroids[i]);;
-    }
-
-    // Calculate the index in the distance matrix for each quantized vector
-    int index1 = calculateIndexForQuantizedVector(quantized_query_vec1, num_centroids);
-    int index2 = calculateIndexForQuantizedVector(quantized_query_vec2, num_centroids);
-
-    // Assuming distanceMatrix is defined and populated elsewhere
-    // Eigen::MatrixXf distanceMatrix;
-
-    // Extract the distance between the two quantized vectors
-    float distance = distanceMatrix(index1, index2);
-
-    std::cout << "Distance between the two quantized vectors: " << index1 << " and " << index2 << " = " << distance << std::endl;
+    float* distances = mvdb::l2_distance_blas(vec, n, d, vec_comp, vec_comp_n);
 
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Time taken: " << elapsed.count() << " microseconds" << std::endl;
+    std::cout << "Time taken BLAS: " << elapsed.count() << " microseconds" << std::endl;
+
+    // Print distances
+//    std::cout << "L2 Distances:" << std::endl;
+//    for (size_t i = 0; i < n * vec_comp_n; ++i) {
+//        std::cout << std::fixed << std::setprecision(2) << distances[i] << " ";
+//        if ((i + 1) % vec_comp_n == 0) std::cout << std::endl;
+//    }
+    // Clean up
+    delete[] distances;
+
+    start = std::chrono::steady_clock::now();
+
+    distances = mvdb::l2_distance_naive(vec, n, d, vec_comp, vec_comp_n);
+
+    end = std::chrono::steady_clock::now();
+    elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "Time taken Naive: " << elapsed.count() << " microseconds" << std::endl;
+    delete[] distances;
 
     return 0;
 }

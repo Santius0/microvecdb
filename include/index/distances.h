@@ -2,84 +2,65 @@
 #define MICROVECDB_DISTANCES_H
 
 #include "constants.h"
-//#include <iostream>
-//#include <vector>
+
+#include <iostream>
 #include <cmath>
-#include <omp.h>
-//#include <queue>
-//#include <utility>
+#include <cstddef>
+
+#ifdef __AVX2__
+#include <immintrin.h> // AVX2 intrinsics
+#elif defined(__AVX__)
+#include <immintrin.h> // AVX intrinsics
+#elif defined(__ARM_NEON)
+#include <arm_neon.h> // NEON intrinsics
+#endif
+
+
+#include <cblas.h> // BLAS
 
 namespace mvdb {
 
-    // computes the l2_distance between two vectors a and b, both with dims dimensions.
-    // computed distance returned as a single value_t.
-    inline value_t l2_distance(const value_t* a, const value_t* b, idx_t dims) {
-        value_t distance = 0;
-        #pragma omp simd reduction(+:distance)
-        for (size_t d = 0; d < dims; ++d) {
-            value_t diff = a[d] - b[d];
-            distance += diff * diff;
-        }
-        return std::sqrt(distance);
-    }
+    /**
+     * Computes the L2 (Euclidean) distance between vectors in two sets, optimized with SIMD and OpenMP.
+     *
+     * @param vec Array of vectors.
+     * @param n Number of vectors in vec.
+     * @param d Dimensionality of each vector.
+     * @param vec_comp Array of vectors to compare against.
+     * @param vec_comp_n Number of vectors in vec_comp.
+     * @return Dynamically allocated array of distances, size n * vec_comp_n.
+    */
+    float *l2_distance_intrinsics(const float *vec, size_t n, size_t d, const float *vec_comp, size_t vec_comp_n);
 
-    // computes the l2_distance between n vectors, a_0, a_1, ..., a_n and b, all with dims dimensions.
-    // the respective distances of [a_0, b], [a_1, b], ... , [a_n, b] are returned as a value_t*.
-    inline value_t* l2_distance(const value_t* a, const value_t* b, idx_t n, idx_t dims) {
-        auto* distances = new value_t[n];
-        #pragma omp parallel for // default(none) shared(a, b, n, dims) private(i)
-        for (idx_t i = 0; i < n; ++i) {
-            value_t distance = 0;
-            // Pointer to the start of the i-th vector in a
-            const value_t* a_i = a + i * dims;
+    /**
+     * Computes the squared L2 distance between two vectors using BLAS.
+     * This helper function calculates ||vec1 - vec2||^2.
+     */
+    float squared_l2_distance_naive(const float *vec1, const float *vec2, const idx_t& d);
 
-            // Enable SIMD vectorization for the inner loop
-            #pragma omp simd reduction(+:distance)
-            for (idx_t d = 0; d < dims; ++d) {
-                value_t diff = a_i[d] - b[d];
-                distance += diff * diff;
-            }
-            distances[i] = std::sqrt(distance);
-        }
-        return distances;
-    }
+    /**
+     * Computes the L2 distance between sets of vectors using no extra optimisations.
+     * @param vec Array of the first set of vectors.
+     * @param n Number of vectors in the first set.
+     * @param d Dimensionality of vectors.
+     * @param vec_comp Array of the second set of vectors to compare against.
+     * @param vec_comp_n Number of vectors in the second set.
+     * @return Dynamically allocated array of distances of size n * vec_comp_n.
+     */
+    float *l2_distance_naive(const float *vec, size_t n, size_t d, const float *vec_comp, size_t vec_comp_n);
 
-//// Function to find the k nearest neighbors
-//    inline std::vector<uint64_t> knn(const std::vector<float> &query, const std::vector<std::vector<float>> &dataset, int k) {
-//        // Use a max heap to keep track of the k nearest neighbors found so far
-//        std::priority_queue<std::pair<float, int>> neighbors;
-//
-//        for (size_t i = 0; i < dataset.size(); ++i) {
-//            float distance = l2_distance(query, dataset[i]);
-//            if (neighbors.size() < k) {
-//                neighbors.emplace(distance, i);
-//            } else if (distance < neighbors.top().first) {
-//                neighbors.pop();
-//                neighbors.emplace(distance, i);
-//            }
-//        }
-//
-//        // Extract the indices of the k nearest neighbors
-//        std::vector<uint64_t> nearestIndices;
-//        while (!neighbors.empty()) {
-//            nearestIndices.push_back(neighbors.top().second);
-//            neighbors.pop();
-//        }
-//        return nearestIndices;
-//    }
-//
-//    template<typename T, typename D>
-//    inline std::vector<D> L2_distance_vectorized(const T* query, const T* datasetVector, idx_t nq, idx_t dims) {
-//        std::vector<D> distances(nq);
-//        for (idx_t i = 0; i < nq; ++i) {
-//            D sum = 0;
-//            for (idx_t j = 0; j < dims; ++j) {
-//                D diff = static_cast<D>(query[i * dims + j] - datasetVector[j]);
-//                sum += diff * diff;
-//            }
-//            distances[i] = std::sqrt(sum);
-//        }
-//        return distances;
-//    }
-}
+    /**
+     * Computes the L2 distances between two sets of vectors using BLAS for optimization.
+     *
+     * @param vec Array of the first set of vectors, each of dimension d.
+     * @param n Number of vectors in the first set.
+     * @param d Dimensionality of the vectors.
+     * @param vec_comp Array of the second set of vectors to compare against, each of dimension d.
+     * @param vec_comp_n Number of vectors in the second set.
+     * @return Dynamically allocated array of distances, size n * vec_comp_n.
+    */
+    float *l2_distance_blas(const float *vec, size_t n, size_t d, const float *vec_comp, size_t vec_comp_n);
+
+} // namespace mvdb
+
 #endif //MICROVECDB_DISTANCES_H

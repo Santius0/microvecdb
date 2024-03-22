@@ -61,6 +61,11 @@ namespace mvdb {
         MKV
     };
 
+    enum DISTANCE_METRIC {
+        L2_DISTANCE,
+        MAHALANOBIS_DISTANCE
+    };
+
     using idx_t = int64_t; // all vector indices within an index are counted using a 64-bit unsigned int => can store up to 2^64 vectors per index
     using value_t = float;  // all actual values stored in a vector are represented using 32-bit floating point values
 }
