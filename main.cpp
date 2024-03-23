@@ -406,7 +406,22 @@ int calculateIndexForQuantizedVector(const std::vector<int>& quantizedVector, in
 //    return 0;
 //}
 
+#include "flat_index.h"
 #include "distances.h"
+#include <fstream>
+
+// reads a single vector from the .fvecs file
+std::vector<float> readVector(std::ifstream& file) {
+    std::vector<float> vec;
+    int dimension;
+    if (file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) { // Read the dimension of the vector
+        vec.resize(dimension); // Resize the vector to hold all components
+        for (int i = 0; i < dimension; ++i) {
+            file.read(reinterpret_cast<char*>(&vec[i]), sizeof(float)); // Read each component of the vector
+        }
+    }
+    return vec;
+}
 
 int main() {
     // Example vectors
@@ -440,6 +455,47 @@ int main() {
     elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     std::cout << "Time taken Naive: " << elapsed.count() << " microseconds" << std::endl;
     delete[] distances;
+
+    // reading multiple fvecs file
+    auto *index = new mvdb::FlatIndex(96, "../benchmarks/testing.index");
+    mvdb::value_t *vecs = index->get_all();
+    mvdb::idx_t dims = index->dims();
+    for(int i = 0; i < index->ntotal(); ++i) {
+        std::cout << "Vector " << i + 1 << ": [";
+        for (size_t j = 0; j < dims; j++) {
+            std::cout << vecs[i * dims + j] << (j < dims - 1 ? ", " : "");
+        }
+        std::cout << "]\n";
+    }
+
+//    std::string filename = "../benchmarks/data/deep10M.fvecs";
+//    int num_fvecs = 10000;
+//    std::ifstream file(filename, std::ios::binary);
+//    if (!file) {
+//        std::cerr << "Cannot open file\n";
+//        return 1;
+//    }
+//    for (int i = 0; i < num_fvecs; ++i) {
+//        if (file.eof()) {
+//            std::cout << "Reached the end of file before reading " << num_fvecs << " records.\n";
+//            break;
+//        }
+//        std::vector<float> vec = readVector(file);
+//        if(index->add(1, vec.data(), nullptr)) {
+//            std::cout << "Vector " << i + 1 << ": [";
+//            for (size_t j = 0; j < vec.size(); j++) {
+//                std::cout << vec[j] << (j < vec.size() - 1 ? ", " : "");
+//            }
+//            std::cout << "]\n";
+//        } else {
+//            std::cout << "FAIL!!" << std::endl;
+//        }
+//        index->save("../benchmarks/testing.index");
+//
+//        // Process the vector here
+//    }
+//    file.close();
+
 
     return 0;
 }

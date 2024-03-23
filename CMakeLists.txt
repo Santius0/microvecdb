@@ -86,7 +86,6 @@ add_library(microvecdb_core SHARED
         include/core/utils.h
         include/core/quantization.h
         include/core/preprocess.h
-        include/core/kmeans.h
 
         src/core/utils.cpp
         src/core/quantization.cpp
@@ -94,7 +93,6 @@ add_library(microvecdb_core SHARED
         include/core/server.h
         src/core/server.cpp
         include/core/settings.h
-        include/index/heap.h
         include/core/wal_old.h
         include/core/wal.h
         src/core/wal.cpp
@@ -110,9 +108,10 @@ set_target_properties(microvecdb_core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAK
 
 # microvecdb_index:
 add_library(microvecdb_index SHARED
-        include/index/index.h
         src/index/distances.cpp
-        src/index/kmeans.cpp
+        src/index/knn.cpp
+        include/index/index.h
+        src/index/flat_index.cpp
 )
 target_include_directories(microvecdb_index PUBLIC include/index)
 #target_link_directories(microvecdb_index PUBLIC faiss/lib)

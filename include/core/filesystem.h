@@ -37,6 +37,10 @@ namespace fs {
         #endif
     }
 
+    bool is_directory(const std::string& path) {
+        return is_directory(path.c_str());
+    }
+
     bool remove(const char* path) {
         #ifdef _WIN32
             DWORD dwAttrib = GetFileAttributes(path);

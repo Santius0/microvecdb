@@ -49,8 +49,10 @@ namespace mvdb {
         virtual bool remove(const idx_t& n, const idx_t* ids) = 0;          // remove n elements from index
         virtual void search(const idx_t& nq, value_t* query,                // perform searches for nq queries in parallel
                             idx_t* ids, value_t* distances,
-                            const idx_t& k) const = 0;
+                            const idx_t& k,
+                            const DISTANCE_METRIC& distance_metric) const = 0;
         virtual value_t* get(idx_t& n, idx_t* ids) const = 0;               // reconstruct and return the n vectors specified by ids
+        virtual value_t* get_all() const = 0;                     // reconstruct and return all vectors
         [[nodiscard]] virtual idx_t dims() const = 0;                       // returns dimensions of index
         [[nodiscard]] virtual idx_t ntotal() const  = 0;                    // returns current number of values in index
     };

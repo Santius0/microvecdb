@@ -6,9 +6,6 @@
 #include "constants.h"
 
 namespace mvdb {
-
-    value_t* kmeans(const value_t* v, const idx_t& nv, const idx_t& d, const value_t* q, const idx_t& nq, const idx_t& k);
-
 //
 //    float calculateDistance(const Eigen::VectorXf &vec, const Eigen::VectorXf &centroid) {
 //        return (vec - centroid).norm();

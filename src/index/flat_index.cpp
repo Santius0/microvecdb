@@ -1,16 +1,17 @@
 #include "flat_index.h"
+#include "kmeans.h"
 #include "distances.h"
 #include "filesystem.h"
+#include "constants.h"
+
+
 #include <iostream>
 #include <fstream>
+#include <omp.h>
 
 //#include <vector>
 //#include <cmath>
 //#include <limits>
-#include <queue>
-#include <utility>
-#include <thread>
-#include "heap.h"
 
 namespace mvdb {
 
@@ -46,8 +47,9 @@ namespace mvdb {
     }
 
     FlatIndex::FlatIndex(const idx_t& dims, const std::string& path): Index(dims, path) {
-        if(!path.empty())
-            load(path);
+        index_ = std::make_shared<std::vector<value_t>>();
+        if(!path.empty() && fs::exists(path) && !fs::is_directory(path)) load(path);
+        else index_->reserve(100);
     }
 
     void FlatIndex::save(const std::string& path) const {
@@ -62,7 +64,7 @@ namespace mvdb {
         in_file.close();
     }
 
-    bool FlatIndex::add(const mvdb::idx_t &n, mvdb::value_t *data, mvdb::idx_t *ids) {
+    bool FlatIndex::add(const mvdb::idx_t &n, mvdb::value_t *data, mvdb::idx_t *ids = nullptr) {
         if (n <= 0 || !data) return false;
         if(!index_) throw std::runtime_error("index_ == nullptr. Use index->open() before running add");
 
@@ -72,7 +74,8 @@ namespace mvdb {
                 for (idx_t j = 0; j < dims_; ++j) {
                     index_->push_back(data[i * dims_ + j]);
                 }
-                ids[i] = ++ntotal_;
+                ntotal_++;
+                if(ids) ids[i] = ntotal_;
             }
             if (ntotal_ != (index_->size() / dims_))    // num vectors must be equal to num elements/num dimensions
                 std::cerr << "ERROR: ntotal_ != (index_->size()/dims_) => " << ntotal_ << " != " << index_->size() / dims_ << std::endl;
@@ -87,55 +90,72 @@ namespace mvdb {
         return false;
     }
 
-    void FlatIndex::search(const idx_t &nq, value_t *queries, idx_t *ids, mvdb::value_t *distances, const idx_t &k) const {
-        // For each query vector
-        for (idx_t i = 0; i < nq; ++i) {
-            // Use a max heap to keep track of the k nearest neighbors found so far
-            // MinHeap<std::pair<value_t, idx_t>> heap;
-            std::priority_queue<std::pair<value_t, idx_t>> heap;
-
-            // Pointer to the current query vector
-            const value_t* query = queries + i * dims_;
-
-            // Compute distance to each vector in the index
-            for (idx_t j = 0; j < ntotal_; ++j) {
-                const value_t* index_vector = index_->data() + j * dims_;
-                value_t dist = squared_l2_distance_naive(query, index_vector, dims_);
-                dist = std::sqrt(dist);
-                // If the heap is not full yet or the current distance is smaller than the largest distance in the heap
-                if (heap.size() < k || dist < heap.top().first) {
-                    if (heap.size() == k) {
-                        heap.pop(); // Remove the farthest neighbor
-                    }
-                    heap.push(std::pair<value_t, idx_t>(dist, j)); // Add the current vector
-                }
-            }
-
-            // Extract the results from the heap into the output arrays
-            idx_t j = 0;
-            if(heap.size() < k){
-                idx_t diff = k - heap.size();
-                while(diff > 0){
-                    ids[(nq * k) - 1 - (i * k + j)] = -1;
-                    distances[(nq * k) - 1 - (i * k + j)] = -1.0f;
-                    --diff;
-                    ++j;
-                }
-            }
-            while(j < k) {
-                if(!heap.empty()) {
-                    // Since we're using a max heap, we need to extract results in reverse order
-                    auto &top = heap.top();
-                    ids[(nq * k) - 1 - (i * k + j)] = top.second;
-                    distances[(nq * k) - 1 - (i * k + j)] = top.first;
-                    heap.pop();
-                }
-                ++j;
-            }
-        }
+    void FlatIndex::search(const idx_t &nq, value_t *queries, idx_t *ids, value_t *distances, const idx_t &k, const DISTANCE_METRIC& distance_metric) const {
+        if(!index_ || !index_->data()) throw std::runtime_error("index_ not properly initialized. index_ == nullptr || index_data == nullptr");
+        kmeans(index_->data(), ntotal_, dims_, queries, nq, k, ids, distances, distance_metric);
     }
 
-    value_t* FlatIndex::get(mvdb::idx_t &n, mvdb::idx_t *keys) const {
+//    void FlatIndex::search(const idx_t &nq, value_t *queries, idx_t *ids, mvdb::value_t *distances, const idx_t &k) const {
+//        // For each query vector
+//        for (idx_t i = 0; i < nq; ++i) {
+//            // Use a max heap to keep track of the k nearest neighbors found so far
+//            // MinHeap<std::pair<value_t, idx_t>> heap;
+//            std::priority_queue<std::pair<value_t, idx_t>> heap;
+//
+//            // Pointer to the current query vector
+//            const value_t* query = queries + i * dims_;
+//
+//            // Compute distance to each vector in the index
+//            for (idx_t j = 0; j < ntotal_; ++j) {
+//                const value_t* index_vector = index_->data() + j * dims_;
+//                value_t dist = squared_l2_distance_naive(query, index_vector, dims_);
+//                dist = std::sqrt(dist);
+//                // If the heap is not full yet or the current distance is smaller than the largest distance in the heap
+//                if (heap.size() < k || dist < heap.top().first) {
+//                    if (heap.size() == k) {
+//                        heap.pop(); // Remove the farthest neighbor
+//                    }
+//                    heap.push(std::pair<value_t, idx_t>(dist, j)); // Add the current vector
+//                }
+//            }
+//
+//            // Extract the results from the heap into the output arrays
+//            idx_t j = 0;
+//            if(heap.size() < k){
+//                idx_t diff = k - heap.size();
+//                while(diff > 0){
+//                    ids[(nq * k) - 1 - (i * k + j)] = -1;
+//                    distances[(nq * k) - 1 - (i * k + j)] = -1.0f;
+//                    --diff;
+//                    ++j;
+//                }
+//            }
+//            while(j < k) {
+//                if(!heap.empty()) {
+//                    // Since we're using a max heap, we need to extract results in reverse order
+//                    auto &top = heap.top();
+//                    ids[(nq * k) - 1 - (i * k + j)] = top.second;
+//                    distances[(nq * k) - 1 - (i * k + j)] = top.first;
+//                    heap.pop();
+//                }
+//                ++j;
+//            }
+//        }
+//    }
+
+    value_t* FlatIndex::get(idx_t &n, idx_t *keys) const {
+        if(n <= 0 || !keys) return nullptr;
+        auto *vecs = new value_t[n * dims_];
+        #pragma omp parallel for collapse(2)
+        for(idx_t i = 0; i < n; ++i) {
+            for (idx_t j = 0; j < dims_; ++j) {
+                vecs[i * dims_ + j] = index_->at(keys[i] * dims_ + j);
+            }
+        }
+        return vecs;
+    }
+
+    value_t* FlatIndex::get_all() const {
         return index_->data();
     }
 

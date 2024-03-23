@@ -22,8 +22,9 @@ namespace mvdb {
         void load(const std::string& path) override;
         [[nodiscard]] bool add(const idx_t& n, value_t* data, idx_t* ids) override;
         [[nodiscard]] bool remove(const idx_t& n, const idx_t* ids) override;
-        void search(const idx_t& nq, value_t* query, idx_t* ids, value_t* distances, const idx_t& k) const override;
+        void search(const idx_t& nq, value_t* query, idx_t* ids, value_t* distances, const idx_t& k, const DISTANCE_METRIC& distance_metric) const override;
         value_t* get(idx_t& n, idx_t* keys) const override;
+        value_t* get_all() const override;
         [[nodiscard]] idx_t dims() const override;
         [[nodiscard]] idx_t ntotal() const override;
         [[nodiscard]] value_t* index() const;
