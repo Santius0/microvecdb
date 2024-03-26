@@ -29,10 +29,10 @@ namespace mvdb {
             for (idx_t j = 0; j < nq; ++j) {
                 switch (distance_metric) {
                     case MAHALANOBIS_DISTANCE:
-                        distance = squared_l2_distance_naive(v + i * d, q + j * d, d);
+                        distance = l2_distance_naive_single(v + i * d, q + j * d, d);
                         break;
                     default:
-                        distance = squared_l2_distance_naive(v + i * d, q + j * d, d);
+                        distance = l2_distance_naive_single(v + i * d, q + j * d, d);
                 }
                 IndexDistanceMap idx_map = IndexDistanceMap(i, distance);
                 min_heap.push(idx_map);

@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.27)
+project(microvecdb-bencharks)
+set(CMAKE_CXX_STANDARD 17)
+
+add_executable(distance_metrics_benchmarks index/distance_metrics_benchmarks.cpp)
+target_link_libraries(distance_metrics_benchmarks benchmark::benchmark microvecdb)

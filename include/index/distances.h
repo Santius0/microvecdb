@@ -30,13 +30,13 @@ namespace mvdb {
      * @param vec_comp_n Number of vectors in vec_comp.
      * @return Dynamically allocated array of distances, size n * vec_comp_n.
     */
-    float *l2_distance_intrinsics(const float *vec, size_t n, size_t d, const float *vec_comp, size_t vec_comp_n);
+    float *l2_distance_optimised(const float *vec, size_t n, size_t d, const float *vec_comp, size_t vec_comp_n);
 
     /**
      * Computes the squared L2 distance between two vectors using BLAS.
      * This helper function calculates ||vec1 - vec2||^2.
      */
-    float squared_l2_distance_naive(const float *vec1, const float *vec2, const idx_t& d);
+    float l2_distance_naive_single(const float *vec1, const float *vec2, const size_t& d);
 
     /**
      * Computes the L2 distance between sets of vectors using no extra optimisations.

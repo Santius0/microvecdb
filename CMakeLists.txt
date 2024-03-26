@@ -240,14 +240,23 @@ file(MAKE_DIRECTORY "${LIBRARY_OUTPUT_DIRECTORY}")
 ## <<<< Post build analysis ----------------------------------------------------------
 
 
+#FetchContent_Declare(
+#        googletest
+#        URL https://github.com/google/googletest/archive/f8d7d77c06936315286eb55f8de22cd23c188571.zip
+#)
+## For Windows: Prevent overriding the parent project's compiler/linker settings
+#set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+#FetchContent_MakeAvailable(googletest)
+
 FetchContent_Declare(
-        googletest
-        # Specify the commit you depend on and update it regularly.
-        URL https://github.com/google/googletest/archive/f8d7d77c06936315286eb55f8de22cd23c188571.zip
+        googlebenchmark
+        GIT_REPOSITORY https://github.com/google/benchmark.git
+        GIT_TAG        main  # You can specify a specific release tag or commit hash here
 )
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "Enable testing of the benchmark library.")
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Enable testing of the benchmark library." FORCE)
+FetchContent_MakeAvailable(googlebenchmark)
 
 enable_testing()
-add_subdirectory(tests)
+#add_subdirectory(tests)
+add_subdirectory(benchmarks)

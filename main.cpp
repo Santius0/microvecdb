@@ -432,7 +432,7 @@ int main() {
 
     auto start = std::chrono::steady_clock::now();
 
-    float* distances = mvdb::l2_distance_blas(vec, n, d, vec_comp, vec_comp_n);
+    float* distances = mvdb::l2_distance_optimised(vec, n, d, vec_comp, vec_comp_n);
 
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);

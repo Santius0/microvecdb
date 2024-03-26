@@ -1,5 +1,5 @@
 #include "flat_index.h"
-#include "kmeans.h"
+#include "knn.h"
 #include "distances.h"
 #include "filesystem.h"
 #include "constants.h"
@@ -92,7 +92,7 @@ namespace mvdb {
 
     void FlatIndex::search(const idx_t &nq, value_t *queries, idx_t *ids, value_t *distances, const idx_t &k, const DISTANCE_METRIC& distance_metric) const {
         if(!index_ || !index_->data()) throw std::runtime_error("index_ not properly initialized. index_ == nullptr || index_data == nullptr");
-        kmeans(index_->data(), ntotal_, dims_, queries, nq, k, ids, distances, distance_metric);
+        knn(index_->data(), ntotal_, dims_, queries, nq, k, ids, distances, distance_metric);
     }
 
 //    void FlatIndex::search(const idx_t &nq, value_t *queries, idx_t *ids, mvdb::value_t *distances, const idx_t &k) const {
