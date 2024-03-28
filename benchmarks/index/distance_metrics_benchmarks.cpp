@@ -1,6 +1,6 @@
+#include "distances.h"
 #include <benchmark/benchmark.h>
 #include <fstream>
-#include "distances.h"
 #include <cstdlib>
 
 /**
@@ -93,8 +93,13 @@ static void BM_L2_distance_blas(benchmark::State& state) {
 static void BM_L2_distance_intrinsics(benchmark::State& state) {
     const int num_vecs = 10000, num_queries = 10, dims = 96;
     const std::string vector_file = "../../benchmarks/data/deep10M.fvecs", query_file = "../../benchmarks/data/deep10M.fvecs";
-    auto *vecs = static_cast<mvdb::value_t*>(aligned_alloc(32, nextClosestMultiple(sizeof(mvdb::value_t) * num_vecs * dims, 32)));
-    auto *queries = static_cast<mvdb::value_t*>(aligned_alloc(32, nextClosestMultiple(sizeof(mvdb::value_t) * num_queries * dims, 32)));
+    #if defined(__AVX2__) || defined(__AVX__) // if using avx will be using __mm256
+        auto *vecs = static_cast<mvdb::value_t*>(aligned_alloc(32, nextClosestMultiple(sizeof(mvdb::value_t) * num_vecs * dims, 32)));
+        auto *queries = static_cast<mvdb::value_t*>(aligned_alloc(32, nextClosestMultiple(sizeof(mvdb::value_t) * num_queries * dims, 32)));
+    #elif defined(__ARM_NEON)                // if using neon will be using float32x4
+        auto *vecs = static_cast<mvdb::value_t*>(aligned_alloc(16, nextClosestMultiple(sizeof(mvdb::value_t) * num_vecs * dims, 16)));
+        auto *queries = static_cast<mvdb::value_t*>(aligned_alloc(16, nextClosestMultiple(sizeof(mvdb::value_t) * num_queries * dims, 16)));
+    #endif
     read_vectors(vector_file, num_vecs, dims, vecs);
     read_vectors(query_file, num_queries, dims, queries);
     float *distances = nullptr;

@@ -41,6 +41,8 @@ and also you connect to your Jetson module<br/>
 
 `sudo apt-get install libeigen3-dev`
 
-Might need `sudo apt-get install libopenblas-dev`. Not sure if just installing MKL gived everything needed.
+Google benchmark: `sudo apt-get install libbenchmark-dev` 
+
+Might need `sudo apt-get install libopenblas-dev libblas-dev libatlas-base-dev`. Not sure if just installing MKL gived everything needed.
 [//]: # (sudo ln -s /opt/cmake-3.*your_version*/bin/* /usr/local/bin)
 [//]: # (cmake-3.26.5-linux-x86_64/bin/cmake --build /home/santius/microvecdb/build --target all -- -j 10)

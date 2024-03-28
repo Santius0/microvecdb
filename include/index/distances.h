@@ -15,10 +15,11 @@
 #include <arm_neon.h> // NEON intrinsics
 #endif
 
-
 #include <cblas.h> // BLAS
 
 namespace mvdb {
+
+    float l2_distance_optimised_single(const float* vec1, const float* vec2, const size_t& d);
 
     /**
      * Computes the L2 (Euclidean) distance between vectors in two sets, optimized with SIMD and OpenMP.

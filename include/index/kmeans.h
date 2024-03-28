@@ -89,6 +89,9 @@ namespace mvdb {
 //        }
 //        return index;s
 //    }
+
+    float* kmeans(const float* vec, const size_t& n, const size_t& d, const size_t& k, const int& max_iterations = 100, const DISTANCE_METRIC& distance_metric = L2_DISTANCE);
+
 }
 
 #endif //MICROVECDB_KMEANS_H
