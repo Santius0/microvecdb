@@ -411,7 +411,7 @@ int calculateIndexForQuantizedVector(const std::vector<int>& quantizedVector, in
 #include <fstream>
 
 // reads a single vector from the .fvecs file
-std::vector<float> readVector(std::ifstream& file) {
+std::vector<float> read_vector(std::ifstream& file) {
     std::vector<float> vec;
     int dimension;
     if (file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) { // Read the dimension of the vector
@@ -458,15 +458,15 @@ int main() {
 
     // reading multiple fvecs file
     auto *index = new mvdb::FlatIndex(96, "../benchmarks/testing.index");
-    mvdb::value_t *vecs = index->get_all();
-    mvdb::idx_t dims = index->dims();
-    for(int i = 0; i < index->ntotal(); ++i) {
-        std::cout << "Vector " << i + 1 << ": [";
-        for (size_t j = 0; j < dims; j++) {
-            std::cout << vecs[i * dims + j] << (j < dims - 1 ? ", " : "");
-        }
-        std::cout << "]\n";
-    }
+//    mvdb::value_t *vecs = index->get_all();
+//    mvdb::idx_t dims = index->dims();
+//    for(int i = 0; i < index->ntotal(); ++i) {
+//        std::cout << "Vector " << i + 1 << ": [";
+//        for (size_t j = 0; j < dims; j++) {
+//            std::cout << vecs[i * dims + j] << (j < dims - 1 ? ", " : "");
+//        }
+//        std::cout << "]\n";
+//    }
 
 //    std::string filename = "../benchmarks/data/deep10M.fvecs";
 //    int num_fvecs = 10000;

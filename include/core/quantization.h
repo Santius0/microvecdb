@@ -3,6 +3,7 @@
 
 #include "constants.h"
 #include "kmeans.h"
+#include "distances.h"
 #include <Eigen/Dense>
 #include <string>
 #include <cmath>

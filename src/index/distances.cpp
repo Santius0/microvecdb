@@ -88,17 +88,15 @@ namespace mvdb {
             size_t k;
             #if defined(__AVX2__) || defined(__AVX__)
                 for (k = 0; k <= d - 8; k += 8) {
-                    __m256 vec1_chunk = _mm256_load_ps(&vec1[k]);
-                    __m256 vec2_chunk = _mm256_load_ps(&vec2[k]);
+                    __m256 vec1_chunk = _mm256_loadu_ps(&vec1[k]);
+                    __m256 vec2_chunk = _mm256_loadu_ps(&vec2[k]);
                     __m256 diff = _mm256_sub_ps(vec1_chunk, vec2_chunk);
                     __m256 sq_diff = _mm256_mul_ps(diff, diff);
                     __m256 sum_vec = _mm256_hadd_ps(sq_diff, sq_diff); // horizontal add
                     sum_vec = _mm256_hadd_ps(sum_vec, sum_vec);        // second hadd for reduction
-                    sum_vec - _mm256_hadd_ps(sum_vec, sum_vec);       // third hadd for further reduction
                     float temp[8];
                     _mm256_storeu_ps(temp, sum_vec);
-//                    sum += temp[0] + temp[4];
-                    sum += temp[0];
+                    sum += temp[0] + temp[4];
                 }
             #elif defined(__ARM_NEON)
                 for (k = 0; k <= d - 4; k += 4) {

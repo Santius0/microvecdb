@@ -2,6 +2,7 @@
 #define INDEX_H
 
 #include "constants.h"
+#include "distances.h"
 #include "serializable.h"
 #include <string>
 #include <memory>
@@ -9,7 +10,7 @@
 
 namespace mvdb {
 
-    enum IndexType {
+    enum IndexType : unsigned char {
         FAISS_FLAT = 0,
         FLAT = 1
     };

@@ -19,6 +19,11 @@
 
 namespace mvdb {
 
+    enum DISTANCE_METRIC {
+        L2_DISTANCE,
+        MAHALANOBIS_DISTANCE
+    };
+
     float l2_distance_optimised_single(const float* vec1, const float* vec2, const size_t& d);
 
     /**

@@ -17,5 +17,5 @@ FetchContent_MakeAvailable(googlebenchmark)
 #find_package(benchmark REQUIRED)
 
 
-add_executable(distance_metrics_benchmarks index/distance_metrics_benchmarks.cpp)
-target_link_libraries(distance_metrics_benchmarks microvecdb benchmark::benchmark pthread)
+add_executable(run_benchmarks benchmarks_src/run_benchmarks.cpp benchmarks_src/distance_metrics.cpp benchmarks_src/index.cpp)
+target_link_libraries(run_benchmarks microvecdb benchmark::benchmark pthread)

@@ -2,6 +2,7 @@
 #define MICROVECDB_KNN_H
 
 #include "constants.h"
+#include "distances.h"
 
 namespace mvdb {
 

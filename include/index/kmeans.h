@@ -4,6 +4,7 @@
 //#include <Eigen/Dense>
 
 #include "constants.h"
+#include "distances.h"
 
 namespace mvdb {
 //
