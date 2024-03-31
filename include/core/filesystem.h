@@ -12,7 +12,8 @@
 #endif
 
 namespace fs {
-    bool exists(const char* path) {
+
+    inline bool exists(const char* path) {
         #ifdef _WIN32
                 DWORD dwAttrib = GetFileAttributes(path);
                 return (dwAttrib != INVALID_FILE_ATTRIBUTES);
@@ -22,11 +23,11 @@ namespace fs {
         #endif
     }
 
-    bool exists(const std::string& path) {
+    inline bool exists(const std::string& path) {
         return exists(path.c_str());
     }
 
-    bool is_directory(const char* path) {
+    inline bool is_directory(const char* path) {
         #ifdef _WIN32
                 DWORD dwAttrib = GetFileAttributes(path);
                 return (dwAttrib != INVALID_FILE_ATTRIBUTES && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
@@ -37,11 +38,11 @@ namespace fs {
         #endif
     }
 
-    bool is_directory(const std::string& path) {
+    inline bool is_directory(const std::string& path) {
         return is_directory(path.c_str());
     }
 
-    bool remove(const char* path) {
+    inline bool remove(const char* path) {
         #ifdef _WIN32
             DWORD dwAttrib = GetFileAttributes(path);
 
@@ -63,9 +64,10 @@ namespace fs {
         #endif
     }
 
-    bool remove(const std::string& path) {
+    inline bool remove(const std::string& path) {
         return remove(path.c_str());
     }
+
 }
 
 #endif //MICROVECDB_FILESYSTEM_H

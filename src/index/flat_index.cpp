@@ -4,11 +4,8 @@
 #include "filesystem.h"
 #include "constants.h"
 
-
 #include <iostream>
 #include <fstream>
-#include <omp.h>
-
 
 namespace mvdb {
 
@@ -50,13 +47,13 @@ namespace mvdb {
     }
 
     void FlatIndex::save(const std::string& path) const {
-        std::ofstream out_file(path, std::ios::binary);
+        std::ofstream out_file(path, std::ios::binary | std::ios::out);
         serialize(out_file);
         out_file.close();
     }
 
     void FlatIndex::load(const std::string& path) {
-        std::ifstream in_file(path, std::ios::binary);
+        std::ifstream in_file(path, std::ios::binary | std::ios::in);
         deserialize(in_file);
         in_file.close();
     }

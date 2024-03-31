@@ -68,7 +68,7 @@ include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/core)   # all 
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/index)   # all targets should have access to core headers
 link_directories(lib)                                                     # all targets should be able to link against the contents of the lib directory
 
-#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/numpy/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
 
@@ -87,24 +87,29 @@ add_library(microvecdb_core SHARED
         include/core/utils.h
         include/core/quantization.h
         include/core/preprocess.h
-
         src/core/utils.cpp
-        src/core/quantization.cpp
-        src/core/preprocess.cpp
-        include/core/server.h
-        src/core/server.cpp
-        include/core/settings.h
-        include/core/wal_old.h
-        include/core/wal.h
-        src/core/wal.cpp
+#        src/core/quantization.cpp
+#        src/core/preprocess.cpp
+#        include/core/server.h
+#        src/core/server.cpp
+#        include/core/settings.h
+#        include/core/wal_old.h
+#        include/core/wal.h
+#        src/core/wal.cpp
 )
 target_link_libraries(microvecdb_core PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C
 #        zmq
         pthread
-        spdlog::spdlog
-        Eigen3::Eigen
+#        spdlog::spdlog
+#        Eigen3::Eigen
 )
 set_target_properties(microvecdb_core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+
+# Find MKL libraries
+set(MKL_LIBRARY_DIR /opt/intel/oneapi/mkl/latest/lib/intel64)
+find_library(MKL_CORE libmkl_core.so PATHS ${MKL_LIBRARY_DIR} NO_DEFAULT_PATH)
+find_library(MKL_INTEL_LP64 libmkl_intel_lp64.so PATHS ${MKL_LIBRARY_DIR} NO_DEFAULT_PATH)
+find_library(MKL_SEQUENTIAL libmkl_sequential.so PATHS ${MKL_LIBRARY_DIR} NO_DEFAULT_PATH)
 
 
 # microvecdb_index:
@@ -113,11 +118,16 @@ add_library(microvecdb_index SHARED
         src/index/knn.cpp
         include/index/index.h
         src/index/flat_index.cpp
+        src/index/faiss_flat_index.cpp
 )
-target_include_directories(microvecdb_index PUBLIC include/index)
-#target_link_directories(microvecdb_index PUBLIC faiss/lib)
-target_link_libraries(microvecdb_index PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C openblas microvecdb_core
-#        faiss faiss_c
+message(WARNING "${MKL_LIBRARY_DIR}")
+target_include_directories(microvecdb_index PUBLIC include/index "${MKL_LIBRARY_DIR}")
+target_link_directories(microvecdb_index PUBLIC faiss/lib)
+target_link_libraries(microvecdb_index PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C
+        ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL} pthread m dl
+#        openblas
+        microvecdb_core
+        faiss faiss_c
 )
 set_target_properties(microvecdb_index PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 

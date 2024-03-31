@@ -15,7 +15,8 @@ to tools included in the rocksdb build such as db_bench.
 #### FAISS (built from source):
 1. [Download FAISS](https://github.com/facebookresearch/faiss/) 
 2. Build make using `sudo cmake -B build -DBUILD_TESTING=OFF -DFAISS_ENABLE_GPU=OFF -DFAISS_OPT_LEVEL=generic -DFAISS_ENABLE_C_API=ON -DFAISS_ENABLE_PYTHON=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -DBLA_VENDOR=OpenBLAS`
-3. Make using `sudo make -C build -j faiss_c`
+3. OR `sudo cmake -B build -DBUILD_TESTING=OFF -DFAISS_ENABLE_GPU=OFF -DFAISS_OPT_LEVEL=generic -DFAISS_ENABLE_C_API=ON -DFAISS_ENABLE_PYTHON=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DBLA_VENDOR=Intel10_64_dyn -DMKL_LIBRARIES="/opt/intel/oneapi/mkl/latest/lib/intel64/libmkl_intel_lp64.so;/opt/intel/oneapi/mkl/latest/lib/intel64/libmkl_sequential.so;/opt/intel/oneapi/mkl/latest/lib/intel64/libmkl_core.so"`
+4. Make using `sudo make -C build -j faiss_c`
 
 ### Compilation
 `g++ main.cpp -o main -lrocksdb -std=c++11 -lpthread -ldla` or use cmake

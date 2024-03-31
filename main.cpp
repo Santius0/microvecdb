@@ -407,6 +407,7 @@ int calculateIndexForQuantizedVector(const std::vector<int>& quantizedVector, in
 //}
 
 #include "flat_index.h"
+#include "faiss_flat_index.h"
 #include "distances.h"
 #include <fstream>
 
@@ -424,19 +425,19 @@ std::vector<float> read_vector(std::ifstream& file) {
 }
 
 int main() {
-    // Example vectors
-    float vec[] = {1.0f, 2.0f, 3.0f, 4.0f}; // 2 vectors of dimension 2
-    size_t n = 2, d = 2;
-    float vec_comp[] = {5.0f, 6.0f, 7.0f, 8.0f}; // 2 vectors of dimension 2
-    size_t vec_comp_n = 2;
-
-    auto start = std::chrono::steady_clock::now();
-
-    float* distances = mvdb::l2_distance_optimised(vec, n, d, vec_comp, vec_comp_n);
-
-    auto end = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Time taken BLAS: " << elapsed.count() << " microseconds" << std::endl;
+//    // Example vectors
+//    float vec[] = {1.0f, 2.0f, 3.0f, 4.0f}; // 2 vectors of dimension 2
+//    size_t n = 2, d = 2;
+//    float vec_comp[] = {5.0f, 6.0f, 7.0f, 8.0f}; // 2 vectors of dimension 2
+//    size_t vec_comp_n = 2;
+//
+//    auto start = std::chrono::steady_clock::now();
+//
+//    float* distances = mvdb::l2_distance_optimised(vec, n, d, vec_comp, vec_comp_n);
+//
+//    auto end = std::chrono::steady_clock::now();
+//    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+//    std::cout << "Time taken BLAS: " << elapsed.count() << " microseconds" << std::endl;
 
     // Print distances
 //    std::cout << "L2 Distances:" << std::endl;
@@ -445,19 +446,20 @@ int main() {
 //        if ((i + 1) % vec_comp_n == 0) std::cout << std::endl;
 //    }
     // Clean up
-    delete[] distances;
-
-    start = std::chrono::steady_clock::now();
-
-    distances = mvdb::l2_distance_naive(vec, n, d, vec_comp, vec_comp_n);
-
-    end = std::chrono::steady_clock::now();
-    elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Time taken Naive: " << elapsed.count() << " microseconds" << std::endl;
-    delete[] distances;
+//    delete[] distances;
+//
+//    start = std::chrono::steady_clock::now();
+//
+//    distances = mvdb::l2_distance_naive(vec, n, d, vec_comp, vec_comp_n);
+//
+//    end = std::chrono::steady_clock::now();
+//    elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+//    std::cout << "Time taken Naive: " << elapsed.count() << " microseconds" << std::endl;
+//    delete[] distances;
 
     // reading multiple fvecs file
-    auto *index = new mvdb::FlatIndex(96, "../benchmarks/testing.index");
+    auto *flat_index = new mvdb::FlatIndex(96, "../benchmarks/flat_index_test.index");
+    auto *faiss_flat_index = new mvdb::FaissFlatIndex(96, "../benchmarks/faiss_flat_index_test.index");
 //    mvdb::value_t *vecs = index->get_all();
 //    mvdb::idx_t dims = index->dims();
 //    for(int i = 0; i < index->ntotal(); ++i) {
@@ -468,34 +470,35 @@ int main() {
 //        std::cout << "]\n";
 //    }
 
-//    std::string filename = "../benchmarks/data/deep10M.fvecs";
-//    int num_fvecs = 10000;
-//    std::ifstream file(filename, std::ios::binary);
-//    if (!file) {
-//        std::cerr << "Cannot open file\n";
-//        return 1;
-//    }
-//    for (int i = 0; i < num_fvecs; ++i) {
-//        if (file.eof()) {
-//            std::cout << "Reached the end of file before reading " << num_fvecs << " records.\n";
-//            break;
-//        }
-//        std::vector<float> vec = readVector(file);
-//        if(index->add(1, vec.data(), nullptr)) {
-//            std::cout << "Vector " << i + 1 << ": [";
-//            for (size_t j = 0; j < vec.size(); j++) {
-//                std::cout << vec[j] << (j < vec.size() - 1 ? ", " : "");
-//            }
-//            std::cout << "]\n";
-//        } else {
-//            std::cout << "FAIL!!" << std::endl;
-//        }
-//        index->save("../benchmarks/testing.index");
-//
-//        // Process the vector here
-//    }
-//    file.close();
+    std::string filename = "../benchmarks/data/deep10M.fvecs";
+    int num_fvecs = 10000;
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) {
+        std::cerr << "Cannot open file\n";
+        return 1;
+    }
+    for (int i = 0; i < num_fvecs; ++i) {
+        if (file.eof()) {
+            std::cout << "Reached the end of file before reading " << num_fvecs << " records.\n";
+            break;
+        }
+        std::vector<float> vec = read_vector(file);
+        if(flat_index->add(1, vec.data(), nullptr) && faiss_flat_index->add(1, vec.data(), nullptr)) {
+            std::cout << "Vector " << i + 1 << ": [";
+            for (size_t j = 0; j < vec.size(); j++) {
+                std::cout << vec[j] << (j < vec.size() - 1 ? ", " : "");
+            }
+            std::cout << "]\n";
+        } else {
+            std::cout << "FAIL!!" << std::endl;
+        }
+        flat_index->save("../benchmarks/flat_index_test.index");
+        faiss_flat_index->save("../benchmarks/faiss_flat_index_test.index");
+        // Process the vector here
+    }
+    file.close();
 
-
+    delete flat_index;
+    delete faiss_flat_index;
     return 0;
 }
