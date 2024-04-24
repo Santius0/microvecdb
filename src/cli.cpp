@@ -55,10 +55,10 @@ int main(int argc, char* argv[]) {
     else if(version)
         std::cout << VERSION << std::endl;
     else if(*open_cmd) {
-        mvdb::DB db(dbname, dbpath, dims, index_type, vec_model);
+        mvdb::DB_ db(dbname, dbpath, dims, index_type, vec_model);
         db.save();
     } else if (*add_cmd) {
-        mvdb::DB db(dbname, dbpath, dims, index_type, vec_model);
+        mvdb::DB_ db(dbname, dbpath, dims, index_type, vec_model);
         mvdb::idx_t* keys = db.add_vector(vector.size(), vector.data());
         if (keys) {
             std::cout << "Vector added. Keys: ";
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
             std::cerr << "Failed to add vector." << std::endl;
         }
     } else if (*search_cmd) {
-        mvdb::DB db(dbname, dbpath, dims, index_type, vec_model);
+        mvdb::DB_ db(dbname, dbpath, dims, index_type, vec_model);
         auto *ids = new mvdb::idx_t[k];
         auto *distances = new mvdb::value_t[k];
         db.search_with_vector(query_vector.size(), query_vector.data(), k, ids, distances);

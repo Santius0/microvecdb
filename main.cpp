@@ -1,158 +1,63 @@
-//#include <microvecdb.hpp>
-//#include <zmq.hpp>
-//#include <string>
-//#include <iostream>
-//#include <thread>
-//#include <db.h>
+#include <iostream>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <iostream>
+#include <vector>
+#include <Eigen/Dense>
+#include <limits>
+#include <cmath>
+#include <iomanip>
+#include <chrono>
+#include <thread>
+#include <fstream>
 
 
+#include "filesystem.h"
+#include "flat_index.h"
+#include "faiss_flat_index.h"
+#include "distances.h"
+#include "db.h"
 
-// device #1: ./microvecdb_main tcp://192.168.1.11:5555
-// device #1: ./microvecdb_main tcp://192.168.1.10:5555
+constexpr size_t DIMENSIONS = 3;
+constexpr size_t VECTORS_COUNT = 5;
 
-//#include "constants.h"
-//#include "faiss_flat_index.h"
-//int main(int argc, char* argv[]) {
-//    auto* db = new mvdb::DB("../demo/deep10M_test_db", "deep10M_test_db", 96);
-//    std::cout << "deep10 dims = " << db->index()->dims() << std::endl;
-////    float vec[5 * 2] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 33};
-////    if(db->add_vector(2, vec))
-////        std::cout << "added successfully" << std::endl;
-//    size_t n = 5;
-//    uint64_t* keys = new uint64_t[n];
-//    float* vecs = db->get(n, keys);
-//    std::cout << "n = " << n << "\nn x dims = " << n * db->index()->dims() << std::endl;
-//    for(int i = 0; i < n * db->index()->dims(); i++){
-//        if(i % db->index()->dims() == 0)
-//            std::cout << i/db->index()->dims() << ". ";
-//        std::cout << vecs[i] << (((i+1) % db->index()->dims()) == 0 ? "\n" : " ");
-//    }
-//    std::cout << db->index()->ntotal() << std::endl;
-//    delete db;
-//    delete[] keys;
-//    delete[] vecs;
-//    std::string server_address = "tcp://localhost:5555";
-//    if (argc > 1) server_address = argv[1];
-//
-//    std::thread server(server_thread);
-//    std::thread client(client_thread, server_address);
-//
-//    client.join();
-//    server.detach();
+using Vector = std::array<double, DIMENSIONS>;
 
-//    mvdb::VectorDB *vdb = new mvdb::VectorDB("./test_db", "test_db");
-//    vdb->add_data("An agile fox jumps swiftly over the sleeping dog");
-//    vdb->add_data("In the forest, a brown bear climbs over a fallen log");
-//    const mvdb::SearchResult sr = vdb->search("The fast brown fox jumps over the lazy hound in the forest", 11, true);
-//    std::cout << "Search Results -\n" << sr << std::endl;
-//    std::cout << vdb;
-//    delete vdb;
-//    mvdb::Vector* v = new mvdb::Vector(300, 1, nullptr, nullptr, nullptr);
-//    mvdb::DBObject* db = new mvdb::Index();
-//    db->ff();
-//    delete v;
-//    auto* micro_vec_db = new mvdb::VectorDB("./test_mvdb", "test_mvdb");
-//    micro_vec_db->create_collection("collection1", 300, "../models/cc.en.300.bin");
-//    const mvdb::VectorCollection* collection = micro_vec_db->collection("collection1");
-//
-//     collection->add_data("An agile fox jumps swiftly over the sleeping dog");
-//     collection->add_data("A nimble fox quickly leaps over the resting dog");
-//     collection->add_data("An agile fox jumps over the sleeping canine");
-//     collection->add_data("The fast brown fox jumps over the lazy hound");
-//     collection->add_data("Rapidly jumping over a dog, the brown fox is swift");
-//     collection->add_data("Sprinting swiftly, the red fox overcomes the resting dog");
-//     collection->add_data("The quick blue fox hops over the lazy dog");
-//     collection->add_data("Under a bright moon, a fox jumps over a quiet dog");
-//     collection->add_data("In the forest, a brown bear climbs over a fallen log");
-//     collection->add_data("Sunshine brightens the quiet forest as the deer prance away");
-//     collection->add_data("hello");
+constexpr Vector vectors[VECTORS_COUNT] = {
+        {1, 2, 3},
+        {4, 5, 6},
+        {7, 8, 9},
+        {10, 11, 12},
+        {13, 14, 15}
+};
 
-//    const mvdb::SearchResult sr = collection->search("The fast brown fox jumps over the lazy hound in the forest", 11, true);
-//    std::cout << "Search Results -\n" << sr << std::endl;
-//    delete micro_vec_db;
-//    return 0;
-//}
+constexpr double square(double value) {
+    return value * value;
+}
 
-//#include <db.h>
-//#include <iostream>
-//#include <future>
-//
-//int main() {
-//    auto* db = new mvdb::DB("./test_db", "test_db", 3);
-//    // Add data to the index
-//    std::vector<mvdb::value_t> data = {
-//            4.0f, 5.0f, 6.0f, // Vector 1
-//            1.0f, 2.0f, 3.0f, // Vector 2
-//            7.0f, 8.0f, 9.0f,  // Vector 3
-//    };
-//    std::vector<mvdb::idx_t> ids(data.size() / db->index()->dims()); // IDs for the added vectors
-//
-//    if (!db->add_vector(data.size()/db->index()->dims(), data.data())) {
-//        std::cerr << "Failed to add data to the index." << std::endl;
-//        return 1;
-//    }
-////    std::cout << "Data added successfully." << std::endl;
-////    mvdb::idx_t n = 0;
-////    mvdb::value_t* curr_data = db->get(n, nullptr);
-////    std::cout << "ntotal: " << db->index()->ntotal() << std::endl;
-////    for(mvdb::idx_t i = 0; i < db->index()->ntotal(); i++)
-////        std::cout << curr_data[i] << (i % db->index()->dims() == 0 &&  i > 0 ? "\n" : " ");
-////    std::cout << std::endl;
-//    db->save();
-//    delete db;
-//    return 0;
-//}
+constexpr double euclideanDistance(const Vector& v1, const Vector& v2) {
+    double sum = 0.0;
+    for (size_t i = 0; i < DIMENSIONS; ++i) {
+        sum += square(v1[i] - v2[i]);
+    }
+    return std::sqrt(sum);
+}
 
+constexpr auto computeDistanceTable() {
+    std::array<std::array<double, VECTORS_COUNT>, VECTORS_COUNT> distanceTable{};
+    for (size_t i = 0; i < VECTORS_COUNT; ++i) {
+        for (size_t j = 0; j < VECTORS_COUNT; ++j) {
+            if (i != j) {
+                distanceTable[i][j] = euclideanDistance(vectors[i], vectors[j]);
+            } else {
+                distanceTable[i][j] = 0.0; // Distance to itself is 0.
+            }
+        }
+    }
+    return distanceTable;
+}
 
-
-
-
-
-
-//#include <iostream>
-//#include <array>
-//#include <cmath>
-//#include <cstddef>
-//
-//constexpr size_t DIMENSIONS = 3;
-//constexpr size_t VECTORS_COUNT = 5;
-//
-//using Vector = std::array<double, DIMENSIONS>;
-//
-//constexpr Vector vectors[VECTORS_COUNT] = {
-//        {1, 2, 3},
-//        {4, 5, 6},
-//        {7, 8, 9},
-//        {10, 11, 12},
-//        {13, 14, 15}
-//};
-//
-//constexpr double square(double value) {
-//    return value * value;
-//}
-//
-//constexpr double euclideanDistance(const Vector& v1, const Vector& v2) {
-//    double sum = 0.0;
-//    for (size_t i = 0; i < DIMENSIONS; ++i) {
-//        sum += square(v1[i] - v2[i]);
-//    }
-//    return std::sqrt(sum);
-//}
-//
-//constexpr auto computeDistanceTable() {
-//    std::array<std::array<double, VECTORS_COUNT>, VECTORS_COUNT> distanceTable{};
-//    for (size_t i = 0; i < VECTORS_COUNT; ++i) {
-//        for (size_t j = 0; j < VECTORS_COUNT; ++j) {
-//            if (i != j) {
-//                distanceTable[i][j] = euclideanDistance(vectors[i], vectors[j]);
-//            } else {
-//                distanceTable[i][j] = 0.0; // Distance to itself is 0.
-//            }
-//        }
-//    }
-//    return distanceTable;
-//}
-//
 //constexpr auto distanceTable = computeDistanceTable();
 //
 //int main() {
@@ -162,15 +67,6 @@
 //    return 0;
 //}
 
-
-#include <iostream>
-#include <vector>
-#include <Eigen/Dense>
-#include <limits>
-#include <cmath>
-#include <iomanip>
-#include <chrono>
-#include <thread>
 
 // Helper function to calculate the Euclidean distance between a vector and a centroid
 float calculateDistance(const Eigen::VectorXf& vec, const Eigen::VectorXf& centroid) {
@@ -406,10 +302,6 @@ int calculateIndexForQuantizedVector(const std::vector<int>& quantizedVector, in
 //    return 0;
 //}
 
-#include "flat_index.h"
-#include "faiss_flat_index.h"
-#include "distances.h"
-#include <fstream>
 
 // reads a single vector from the .fvecs file
 std::vector<float> read_vector(std::ifstream& file) {
@@ -424,42 +316,19 @@ std::vector<float> read_vector(std::ifstream& file) {
     return vec;
 }
 
+
+
 int main() {
-//    // Example vectors
-//    float vec[] = {1.0f, 2.0f, 3.0f, 4.0f}; // 2 vectors of dimension 2
-//    size_t n = 2, d = 2;
-//    float vec_comp[] = {5.0f, 6.0f, 7.0f, 8.0f}; // 2 vectors of dimension 2
-//    size_t vec_comp_n = 2;
-//
-//    auto start = std::chrono::steady_clock::now();
-//
-//    float* distances = mvdb::l2_distance_optimised(vec, n, d, vec_comp, vec_comp_n);
-//
-//    auto end = std::chrono::steady_clock::now();
-//    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-//    std::cout << "Time taken BLAS: " << elapsed.count() << " microseconds" << std::endl;
 
-    // Print distances
-//    std::cout << "L2 Distances:" << std::endl;
-//    for (size_t i = 0; i < n * vec_comp_n; ++i) {
-//        std::cout << std::fixed << std::setprecision(2) << distances[i] << " ";
-//        if ((i + 1) % vec_comp_n == 0) std::cout << std::endl;
-//    }
-    // Clean up
-//    delete[] distances;
-//
-//    start = std::chrono::steady_clock::now();
-//
-//    distances = mvdb::l2_distance_naive(vec, n, d, vec_comp, vec_comp_n);
-//
-//    end = std::chrono::steady_clock::now();
-//    elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-//    std::cout << "Time taken Naive: " << elapsed.count() << " microseconds" << std::endl;
-//    delete[] distances;
+    auto * db = new mvdb::DB_();
+    std::string db_path = "../benchmarks/test_db.db";
+    if(fs::exists(db_path))
+        db->create(db_path, 96);
+    else
+        db->open(db_path);
 
-    // reading multiple fvecs file
-    auto *flat_index = new mvdb::FlatIndex(96, "../benchmarks/flat_index_test.index");
-    auto *faiss_flat_index = new mvdb::FaissFlatIndex(96, "../benchmarks/faiss_flat_index_test.index");
+//    reading multiple fvecs file
+//    auto *faiss_flat_index = new mvdb::FaissFlatIndex(96, "../benchmarks/faiss_flat_index_test.index");
 //    mvdb::value_t *vecs = index->get_all();
 //    mvdb::idx_t dims = index->dims();
 //    for(int i = 0; i < index->ntotal(); ++i) {
@@ -470,35 +339,34 @@ int main() {
 //        std::cout << "]\n";
 //    }
 
-    std::string filename = "../benchmarks/data/deep10M.fvecs";
-    int num_fvecs = 10000;
-    std::ifstream file(filename, std::ios::binary);
-    if (!file) {
-        std::cerr << "Cannot open file\n";
-        return 1;
-    }
-    for (int i = 0; i < num_fvecs; ++i) {
-        if (file.eof()) {
-            std::cout << "Reached the end of file before reading " << num_fvecs << " records.\n";
-            break;
-        }
-        std::vector<float> vec = read_vector(file);
-        if(flat_index->add(1, vec.data(), nullptr) && faiss_flat_index->add(1, vec.data(), nullptr)) {
-            std::cout << "Vector " << i + 1 << ": [";
-            for (size_t j = 0; j < vec.size(); j++) {
-                std::cout << vec[j] << (j < vec.size() - 1 ? ", " : "");
-            }
-            std::cout << "]\n";
-        } else {
-            std::cout << "FAIL!!" << std::endl;
-        }
-        flat_index->save("../benchmarks/flat_index_test.index");
-        faiss_flat_index->save("../benchmarks/faiss_flat_index_test.index");
-        // Process the vector here
-    }
-    file.close();
-
-    delete flat_index;
-    delete faiss_flat_index;
+//    std::string filename = "../benchmarks/data/deep10M.fvecs";
+//    int num_fvecs = 10000;
+//    std::ifstream file(filename, std::ios::binary);
+//    if (!file) {
+//        std::cerr << "Cannot open file\n";
+//        return 1;
+//    }
+//    for (int i = 0; i < num_fvecs; ++i) {
+//        if (file.eof()) {
+//            std::cout << "Reached the end of file before reading " << num_fvecs << " records.\n";
+//            break;
+//        }
+//        std::vector<float> vec = read_vector(file);
+//        if(flat_index->add(1, vec.data(), nullptr) && faiss_flat_index->add(1, vec.data(), nullptr)) {
+//            std::cout << "Vector " << i + 1 << ": [";
+//            for (size_t j = 0; j < vec.size(); j++) {
+//                std::cout << vec[j] << (j < vec.size() - 1 ? ", " : "");
+//            }
+//            std::cout << "]\n";
+//        } else {
+//            std::cout << "FAIL!!" << std::endl;
+//        }
+//        flat_index->save("../benchmarks/flat_index_test.index");
+//        faiss_flat_index->save("../benchmarks/faiss_flat_index_test.index");
+//        // Process the vector here
+//    }
+//    file.close();
+//
+//    delete faiss_flat_index;
     return 0;
 }

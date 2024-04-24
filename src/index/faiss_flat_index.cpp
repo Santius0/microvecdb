@@ -20,13 +20,11 @@ namespace mvdb {
         return os << "*(" << *obj << ")";
     }
 
-    // this should always save the index type along with all other data
     void FaissFlatIndex::serialize(std::ostream& out) const {
         serialize_numeric<unsigned char>(out, type());
         serialize_numeric<idx_t>(out, dims_);
     }
 
-    // this should only be run when you have already read the index type and know you're creating this specific index type
     void FaissFlatIndex::deserialize(std::istream& in) {
         auto type = deserialize_numeric<unsigned char>(in);
         if (type != FAISS_FLAT) throw std::runtime_error("Unexpected index type: " + std::to_string(type));
@@ -75,9 +73,11 @@ namespace mvdb {
     }
 
     void FaissFlatIndex::save(const std::string& path) const {
-        std::ofstream out_file(path, std::ios::binary | std::ios::out);
-        serialize(out_file);
-        out_file.close();
+        FILE* out_file = fopen(path.c_str(), "wb");
+//                std::ios::binary | std::ios::out);
+        serialize(reinterpret_cast<std::ostream &>(out_file));
+        faiss::write_index(faiss_index_.get(), out_file);
+        fclose(out_file);
         faiss::write_index(faiss_index_.get(), (path + "_faiss").c_str());
     }
 

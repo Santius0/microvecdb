@@ -1,6 +1,15 @@
 import microvecdb as mvdb
 import numpy as np
 
+# def open(path: str, *args, **kwargs):
+#     return mvdb.DB_open(path)
+#
+# def create(path: str, *args, **kwargs):
+#     return mvdb.DB_create(db_path, dims)
+#
+# def search(q: np.ndarray, *args, **kwargs):
+#     return
+
 
 class DB:
     def __init__(self, db_name: str, db_path: str, dims: int):

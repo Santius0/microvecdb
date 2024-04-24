@@ -44,27 +44,27 @@
          return is_open_;
      }
 
-     bool Storage::put(const size_t& n, const std::string* keys, char* values, size_t* value_sizes) const {
+     bool Storage::put(const size_t& n, const uint64_t* keys, char* values, size_t* value_sizes) const {
          if(n == 1){
              rocksdb::Slice value(reinterpret_cast<char*>(values[0]), value_sizes[0]);
-             const rocksdb::Status status = db_->Put(rocksdb::WriteOptions(), keys[0], value);
+             const rocksdb::Status status = db_->Put(rocksdb::WriteOptions(), std::to_string(keys[0]), value);
              return status.ok();
          }
          rocksdb::WriteBatch batch;
          size_t bytes_processed = 0;
          for (size_t i = 0; i < n; i++){
              rocksdb::Slice value(reinterpret_cast<char*>(values[bytes_processed]), value_sizes[i]);
-             batch.Put(keys[i], value);
+             batch.Put(std::to_string(keys[i]), value);
              bytes_processed += value_sizes[i];
          }
          const rocksdb::Status status = db_->Write(rocksdb::WriteOptions(), &batch);
          return status.ok();
      }
 
-     std::string* Storage::putAutoKey(const size_t& n, char* values, size_t* value_sizes) const {
-         auto* keys = new std::string[n];
+     uint64_t* Storage::putAutoKey(const size_t& n, char* values, size_t* value_sizes) const {
+         auto* keys = new uint64_t[n];
          for (size_t i = 0; i < n; i++)
-             keys[i] = std::to_string(static_cast<int64_t>(db_->GetLatestSequenceNumber()) + i);
+             keys[i] = db_->GetLatestSequenceNumber() + i;
          if(Storage::put(n, keys, values, value_sizes)) return keys;
          return nullptr;
      }
@@ -95,8 +95,8 @@
          return status.ToString();
      }
 
-     bool Storage::remove(const std::string& key) const {
-         const rocksdb::Status status = db_->Delete(rocksdb::WriteOptions(), key);
+     bool Storage::remove(const uint64_t& key) const {
+         const rocksdb::Status status = db_->Delete(rocksdb::WriteOptions(), std::to_string(key));
          return status.ok();
      }
 }

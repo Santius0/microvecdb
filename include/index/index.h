@@ -32,7 +32,7 @@ namespace mvdb {
     //       however, in an effort to keep things simple, these function will be reimplemented across the board
     //       and this class will remain a fully abstract class. Functioning as an interface.
     class Index : public Serializable {
-        friend class DB;
+        friend class DB_;
     protected:
         idx_t dims_ = 0;
         idx_t ntotal_ = 0;

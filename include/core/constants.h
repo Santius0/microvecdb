@@ -10,7 +10,7 @@
 namespace mvdb {
 
     // VectorDB
-    #define META_FILE_EXTENSION ".metadata"
+    #define META_FILE_EXTENSION "metadata"
     #define META_FILE_EXTENSION_LEN strlen(META_FILE_EXTENSION)
 
     // Vector collection
@@ -18,13 +18,13 @@ namespace mvdb {
     #define COLLECTION_META_EXT_LEN strlen(COLLECTION_META_EXT)
 
     // Index store contants
-    #define INDEX_EXT ".index"
+    #define INDEX_EXT "index"
     #define INDEX_EXT_LEN strlen(INDEX_EXT)
     #define INDEX_META_EXT ".index.meta"
     #define INDEX_META_EXT_LEN strlen(INDEX_META_EXT)
 
     // Data store contsants
-    #define KV_STORE_EXT ".data"
+    #define KV_STORE_EXT "data"
     #define KV_STORE_EXT_LEN strlen(KV_STORE_EXT)
     #define MAX_KEY_CHARS 21
     #define MAX_KEY_SIZE_BYTES (sizeof(char) * MAX_KEY_CHARS) // (2^64 - 1) is a number with 20 digits

@@ -15,7 +15,7 @@ namespace mvdb {
         std::string data_dir_path_{};
         rocksdb::Options options_{};
         bool is_open_ = false;
-        friend class DB;
+        friend class DB_;
         friend std::ostream& operator<<(std::ostream& os, const Storage& obj);
         friend std::ostream& operator<<(std::ostream& os, const Storage* obj);
     protected:
@@ -32,9 +32,9 @@ namespace mvdb {
 
         // Function to add data with a key-value pair
         // Returns true on success, false on failure
-        [[nodiscard]] bool put(const size_t& n, const std::string* keys, char* values, size_t* value_sizes) const;
+        [[nodiscard]] bool put(const size_t& n, const uint64_t* keys, char* values, size_t* value_sizes) const;
 
-        [[nodiscard]] std::string* putAutoKey(const size_t& n, char* values, size_t* value_sizes) const;
+        [[nodiscard]] uint64_t* putAutoKey(const size_t& n, char* values, size_t* value_sizes) const;
 
 //        // Function to batch add data with key-value pairs
 //        // Returns true on success, false on failure
@@ -48,7 +48,7 @@ namespace mvdb {
 
         // Function to remove data using a key
         // Returns true on success, false if the key does not exist
-        [[nodiscard]] bool remove(const std::string& key) const;
+        [[nodiscard]] bool remove(const uint64_t& key) const;
 
         [[nodiscard]] bool is_open() const;
     };

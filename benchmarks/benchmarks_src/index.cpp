@@ -6,7 +6,7 @@
 
 
 static void BM_flat_index(benchmark::State& state) {
-    const int num_queries = 1, dims = 96, k = 10;
+    const int num_queries = 4, dims = 96, k = 5;
     auto *index = new mvdb::FlatIndex(96, "../../benchmarks/flat_index_test.index");
     const std::string query_file = "../../benchmarks/data/deep1B_queries.fvecs";
     auto *queries = new mvdb::value_t[num_queries * dims];
@@ -18,9 +18,9 @@ static void BM_flat_index(benchmark::State& state) {
         index->search(num_queries, queries, ids, distances, k, mvdb::L2_DISTANCE);
     }
 
-    std::cout << "FlatIndex:" << std::endl;
-    for(int i = 0; i < k; i++)
-        std::cout << "id: " << ids[i] << " => distance: " << distances[i] << std::endl;
+//    std::cout << "FlatIndex:" << std::endl;
+//    for(int i = 0; i < k; i++)
+//        std::cout << "id: " << ids[i] << " => distance: " << distances[i] << std::endl;
 
     delete index;
     delete[] queries;
@@ -29,7 +29,7 @@ static void BM_flat_index(benchmark::State& state) {
 }
 
 static void BM_faiss_flat_index(benchmark::State& state) {
-    const int num_queries = 1, dims = 96, k = 10;
+    const int num_queries = 4, dims = 96, k = 5;
     auto *index = new mvdb::FaissFlatIndex(96, "../../benchmarks/faiss_flat_index_test.index");
     const std::string query_file = "../../benchmarks/data/deep1B_queries.fvecs";
     auto *queries = new mvdb::value_t[num_queries * dims];
@@ -41,9 +41,9 @@ static void BM_faiss_flat_index(benchmark::State& state) {
         index->search(num_queries, queries, ids, distances, k, mvdb::L2_DISTANCE);
     }
 
-    std::cout << "FaissFlatIndex:" << std::endl;
-    for(int i = 0; i < k; i++)
-        std::cout << "id: " << ids[i] << " => distance: " << distances[i] << std::endl;
+//    std::cout << "FaissFlatIndex:" << std::endl;
+//    for(int i = 0; i < k; i++)
+//        std::cout << "id: " << ids[i] << " => distance: " << distances[i] << std::endl;
 
     delete index;
     delete[] queries;

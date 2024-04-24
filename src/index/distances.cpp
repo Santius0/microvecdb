@@ -58,7 +58,7 @@ namespace mvdb {
     }
 
 
-    float l2_distance_optimised_single(const float* vec1, const float* vec2, const size_t& d) {
+    float l2_distance_optimised_single(const float* __restrict vec1, const float* __restrict vec2, const size_t& d) {
         float sum = 0.0f;
 
         #if defined(__CUDA__)

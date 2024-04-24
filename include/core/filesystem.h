@@ -13,6 +13,12 @@
 
 namespace fs {
 
+    #ifdef _WIN32
+        constexpr char preferred_separator = '\\'; // Windows uses backslash as the directory separator
+    #else
+        constexpr char preferred_separator = '/'; // Unix-like systems use forward slash
+    #endif
+
     inline bool exists(const char* path) {
         #ifdef _WIN32
                 DWORD dwAttrib = GetFileAttributes(path);
@@ -66,6 +72,20 @@ namespace fs {
 
     inline bool remove(const std::string& path) {
         return remove(path.c_str());
+    }
+
+
+    inline bool create_directory(const char* path){
+        #ifdef _WIN32
+            return CreateDirectory(path, NULL) != 0;
+        #else
+            mode_t mode = 0755; // Permissions set to read+write+execute for owner, read+execute for group and others
+            return mkdir(path, mode) == 0;
+        #endif
+    }
+
+    inline bool create_directory(const std::string& path){
+        return create_directory(path.c_str());
     }
 
 }
