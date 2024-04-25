@@ -1,17 +1,19 @@
 #include "operators.h"
-#include "db.h"
 #include <fstream>
 
 namespace mvdb {
 
-    void insert_(DB_* db, const idx_t& n, const idx_t& d, const value_t* v, const char* bin, const operators::InsertOperatorDataType& input_data_type, size_t* sizes, const std::string* fp) {
+    template <typename T>
+    void insert_(DB_<T>* db, const idx_t& n, const idx_t& d, const T* v, const char* bin,
+                 const operators::InsertOperatorDataType& input_data_type,
+                 size_t* sizes, const std::string* fp) {
         db->status()->set_timestamp();
         db->status()->set_operation_id(operators::OperatorType::INSERT);
         if(input_data_type == operators::InsertOperatorDataType::VECTOR) {
             if(!db->index()) return;
             auto* index_ids = new idx_t[n];
             uint64_t* storage_ids = db->storage()->putAutoKey(n, const_cast<char *>(bin), sizes);
-            if(storage_ids && db->index()->add(n, const_cast<value_t*>(v), index_ids)) {
+            if(storage_ids && db->index()->add(n, const_cast<T*>(v), index_ids)) {
                 db->status()->set_success(true);
                 db->status()->set_message("vectors inserted");
             } else if(storage_ids) {
@@ -25,11 +27,10 @@ namespace mvdb {
             return;
         }
         else if(input_data_type == operators::InsertOperatorDataType::BINARY) {
-            auto * temp = new value_t[n * d];
-            operators::embed_(bin, n, sizes, "insert feature extractor here", const_cast<value_t *>(v), d);
-            db->status()->set_success(true); // need to figure out a way to determine if embed was successful, just assuming it is right now
+            auto * temp = new T[n * d];
+            operators::embed_(bin, n, sizes, "insert feature extractor here", const_cast<T*>(v), d);
+            db->status()->set_success(v != nullptr);
             db->status()->set_message("embed");
-            operators::insert_(db, n, d, v, bin, operators::InsertOperatorDataType::VECTOR, sizes, fp);
             delete[] temp;
             return;
         }
@@ -55,13 +56,12 @@ namespace mvdb {
             }
             db->status()->set_success(true);
             db->status()->set_message("file data read");
-            operators::insert_(db, n, d, v, buffer.data(), operators::InsertOperatorDataType::BINARY, sizes, fp);
             return;
         }
     }
 
-     void embed_(const char* bytes, const idx_t& n, const size_t* sizes, std::string feature_extractor, value_t* v, const idx_t& d){
-
+    template <typename T>
+    void embed_(const char* bytes, const idx_t& n, const size_t* sizes, std::string feature_extractor, T* v, const idx_t& d){
+        std::cout << "Feature Extractor = " << feature_extractor << std::endl;
     }
-
 }

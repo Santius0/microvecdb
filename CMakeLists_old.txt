@@ -64,8 +64,8 @@ function(include_sub_directories_recursively root_dir)
     endif()
 endfunction()
 
-include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include)        # all targets should have access to these
-link_directories(lib faiss/lib DiskANN/build/src)                         # all targets should be able to link against the contents of the lib directory
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include)   # all targets should have access to these
+link_directories(lib)                                                     # all targets should be able to link against the contents of the lib directory
 
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/DiskANN/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
@@ -82,19 +82,19 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(spdlog)
 
 # Configuring targets >>>> ----------------------------------------------------------
-## microvecdb_core:
-#add_library(microvecdb_core SHARED
-#        src/db.cpp
-#        src/core/utils.cpp
-#        src/operators/operators.cpp
-#)
-#target_link_libraries(microvecdb_core PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C
-##        zmq
-#        pthread
-##        spdlog::spdlog
-##        Eigen3::Eigen
-#)
-#set_target_properties(microvecdb_core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+# microvecdb_core:
+add_library(microvecdb_core SHARED
+        src/db.cpp
+        src/core/utils.cpp
+        src/operators/operators.cpp
+)
+target_link_libraries(microvecdb_core PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C
+#        zmq
+        pthread
+#        spdlog::spdlog
+#        Eigen3::Eigen
+)
+set_target_properties(microvecdb_core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 # Find MKL libraries
 #set(MKL_LIBRARY_DIR /opt/intel/oneapi/mkl/latest/lib/intel64)
@@ -103,73 +103,53 @@ FetchContent_MakeAvailable(spdlog)
 #find_library(MKL_SEQUENTIAL libmkl_sequential.so PATHS ${MKL_LIBRARY_DIR} NO_DEFAULT_PATH)
 
 
-## microvecdb_index:
-#add_library(microvecdb_index SHARED
-#        src/index/distances.cpp
-#        src/index/knn.cpp
-#        src/index/flat_index.cpp
-#        src/index/faiss_flat_index.cpp
-#)
-#
-#target_include_directories(microvecdb_index PUBLIC include/index "${MKL_LIBRARY_DIR}")
-#target_link_directories(microvecdb_index PUBLIC faiss/lib DiskANN/build/src)
-#target_link_libraries(microvecdb_index PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C
-##        ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
-#        pthread m dl
-##        openblas
-#        microvecdb_core
-#        faiss faiss_c
-##        diskann diskann_s
-#)
-#set_target_properties(microvecdb_index PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-
-
-## microvecdb_storage:
-#add_library(microvecdb_storage SHARED
-#        src/storage/storage.cpp
-#)
-#target_include_directories(microvecdb_storage PUBLIC include/storage)
-#target_link_libraries(microvecdb_storage PUBLIC microvecdb_core rocksdb)
-#set_target_properties(microvecdb_storage PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-
-
-# microvecdb_vectorizer
-#file(GLOB_RECURSE FASTTEXT_SOURCES CONFIGURE_DEPENDS "fasttext/src/*.cc")
-#list(REMOVE_ITEM FASTTEXT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/fasttext/src/main.cc") # gathering all the fasttext src files and removing main.cc
-#add_library(microvecdb_vectorizer SHARED
-#        src/vectorizer/vectorizer.cpp
-#        ${FASTTEXT_SOURCES}
-#)
-#target_include_directories(microvecdb_vectorizer PUBLIC include/vectorizer)
-#target_link_libraries(microvecdb_vectorizer PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C microvecdb_core)
-#set_target_properties(microvecdb_vectorizer PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-
-set(CPP_SOURCES
-#        core
-        src/mvdb.cpp
-        src/db.cpp
-        src/core/utils.cpp
-        src/operators/operators.cpp
-#        index
+# microvecdb_index:
+add_library(microvecdb_index SHARED
         src/index/distances.cpp
         src/index/knn.cpp
         src/index/flat_index.cpp
         src/index/faiss_flat_index.cpp
-#        storage
-        src/storage/storage.cpp
 )
+
+target_include_directories(microvecdb_index PUBLIC include/index "${MKL_LIBRARY_DIR}")
+target_link_directories(microvecdb_index PUBLIC faiss/lib DiskANN/build/src)
+target_link_libraries(microvecdb_index PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C
+#        ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
+        pthread m dl
+#        openblas
+        microvecdb_core
+        faiss faiss_c
+#        diskann diskann_s
+)
+set_target_properties(microvecdb_index PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+
+
+# microvecdb_storage:
+add_library(microvecdb_storage SHARED
+        src/storage/storage.cpp
+        include/storage/storage.h
+)
+target_include_directories(microvecdb_storage PUBLIC include/storage)
+target_link_libraries(microvecdb_storage PUBLIC microvecdb_core rocksdb)
+set_target_properties(microvecdb_storage PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+
+
+# microvecdb_vectorizer
+file(GLOB_RECURSE FASTTEXT_SOURCES CONFIGURE_DEPENDS "fasttext/src/*.cc")
+list(REMOVE_ITEM FASTTEXT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/fasttext/src/main.cc") # gathering all the fasttext src files and removing main.cc
+add_library(microvecdb_vectorizer SHARED
+        src/vectorizer/vectorizer.cpp
+        ${FASTTEXT_SOURCES}
+)
+target_include_directories(microvecdb_vectorizer PUBLIC include/vectorizer)
+target_link_libraries(microvecdb_vectorizer PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C microvecdb_core)
+set_target_properties(microvecdb_vectorizer PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 
 # microvecdb:
-add_library(microvecdb SHARED ${CPP_SOURCES})
-#target_include_directories(microvecdb PUBLIC "${MKL_LIBRARY_DIR}")
-target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C
-#        index
-#        ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
-        pthread m dl faiss faiss_c diskann diskann_s
-#        storage
-        rocksdb
-)
+add_library(microvecdb SHARED src/db.cpp)
+target_include_directories(microvecdb PUBLIC include)
+target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C microvecdb_core microvecdb_index microvecdb_storage microvecdb_vectorizer)
 set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 
@@ -273,4 +253,4 @@ file(MAKE_DIRECTORY "${LIBRARY_OUTPUT_DIRECTORY}")
 
 #enable_testing()
 #add_subdirectory(tests)
-add_subdirectory(benchmarks)
+#add_subdirectory(benchmarks)

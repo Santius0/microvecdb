@@ -3,6 +3,7 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/DiskANN" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/ImageBind" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/googlebenchmark-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/spdlog-src" vcs="Git" />

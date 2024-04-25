@@ -11,12 +11,12 @@
          return os << "*(" << *obj << ")";
      }
 
-     void Storage::serialize(std::ostream& out) const {
+     void Storage::serialize_(std::ostream& out) const {
          serialize_string(out, data_dir_path_);
          serialize_numeric<bool>(out, options_.create_if_missing);
      }
 
-     void Storage::deserialize(std::istream& in) {
+     void Storage::deserialize_(std::istream& in) {
          data_dir_path_ = deserialize_string(in);
          options_.create_if_missing = deserialize_numeric<bool>(in);
      }

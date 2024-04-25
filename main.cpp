@@ -320,12 +320,12 @@ std::vector<float> read_vector(std::ifstream& file) {
 
 int main() {
 
-    auto * db = new mvdb::DB_();
-    std::string db_path = "../benchmarks/test_db.db";
-    if(fs::exists(db_path))
-        db->create(db_path, 96);
-    else
-        db->open(db_path);
+//    auto * db = new mvdb::DB_();
+//    std::string db_path = "../benchmarks/test_db.db";
+//    if(fs::exists(db_path))
+//        db->create(db_path, 96);
+//    else
+//        db->open(db_path);
 
 //    reading multiple fvecs file
 //    auto *faiss_flat_index = new mvdb::FaissFlatIndex(96, "../benchmarks/faiss_flat_index_test.index");

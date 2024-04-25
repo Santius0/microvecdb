@@ -9,11 +9,10 @@
 namespace mvdb {
 
     class Serializable {
-    protected:
-        virtual void serialize(std::ostream &out) const = 0;
-        virtual void deserialize(std::istream &in) = 0;
     public:
         virtual ~Serializable() = default;
+        virtual void serialize_(std::ostream &out) const = 0;
+        virtual void deserialize_(std::istream &in) = 0;
     };
 
     inline void serialize_string(std::ostream& out, const std::string& str) {

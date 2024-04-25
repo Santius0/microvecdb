@@ -1,47 +1,45 @@
 #ifndef MICROVECDB_OPERATORS_H
 #define MICROVECDB_OPERATORS_H
 
+#include "db.h"
 #include "constants.h"
 #include "index.h"
 #include <string>
 
 
-namespace mvdb {
+namespace mvdb::operators {
 
-    class DB_;
+    enum OperatorType : unsigned char {
+        INSERT = 0,
+        RETRIEVE = 1,
+        REMOVE = 2,
+        UPDATE = 3,
+        EMBED = 4,
+        PROJECT = 5,
+        IDX_SCAN = 6,
+        TABLE_SCAN = 7
+    };
 
-    namespace operators {
+    enum InsertOperatorDataType : unsigned char {
+        VECTOR = 0,
+        BINARY = 1,
+        FILE = 2
+    };
 
-        enum OperatorType : unsigned char {
-            INSERT = 0,
-            RETRIEVE = 1,
-            REMOVE = 2,
-            UPDATE = 3,
-            EMBED = 4,
-            PROJECT = 5,
-            IDX_SCAN = 6,
-            TABLE_SCAN = 7
-        };
-
-        enum InsertOperatorDataType : unsigned char {
-            VECTOR = 0,
-            BINARY = 1,
-            FILE = 2
-        };
-
-        /** Inserts records into the database. Allows insertion from raw vectors, raw binary data, or a file path.
-        // Parameters:
-        // - db: Pointer to the database instance.
-        // - data: Pointer to the raw data (vectors or binary).
-        // - n: Number of records.
-        // - d: Dimension of each vector (not used if data is binary).
-        // - data_type: Type of the data ('vector', 'binary', 'file').
-        // - fp: Path to the file if data_type is 'file'.
-        // - sizes: Array of sizes corresponding to each piece of binary data if data_type is 'BINARY'
-        **/
-        void insert_(DB_ *db, const idx_t &n, const idx_t &d, const value_t *v = nullptr, const char *bin = nullptr,
-                     const InsertOperatorDataType &input_data_type = VECTOR,
-                     size_t *sizes = nullptr, const std::string *fp = nullptr);
+    /** Inserts records into the database. Allows insertion from raw vectors, raw binary data, or a file path.
+       // Parameters:
+       // - db: Pointer to the database instance.
+       // - data: Pointer to the raw data (vectors or binary).
+       // - n: Number of records.
+       // - d: Dimension of each vector (not used if data is binary).
+       // - data_type: Type of the data ('vector', 'binary', 'file').
+       // - fp: Path to the file if data_type is 'file'.
+       // - sizes: Array of sizes corresponding to each piece of binary data if data_type is 'BINARY'
+    **/
+    template <typename T = float>
+    void insert_(DB_<T>* db, const idx_t &n, const idx_t &d, const T* v = nullptr, const char* bin = nullptr,
+                 const InsertOperatorDataType &input_data_type = VECTOR,
+                 size_t *sizes = nullptr, const std::string *fp = nullptr);
 
 
         /** Retrieves records from the database based on provided IDs.
@@ -50,7 +48,8 @@ namespace mvdb {
         // - ids: Array of record IDs to retrieve.
         // - n: Number of records to retrieve.
         **/
-        void _retrieve(DB_ *db, const idx_t *ids, const idx_t &n);
+        template <typename T = float>
+        void _retrieve(DB_<T>* db, const idx_t *ids, const idx_t &n);
 
 
         /** Removes records from the database.
@@ -59,7 +58,8 @@ namespace mvdb {
         // - ids: IDs of the records to remove.
         // - n: Number of records to remove.
         **/
-        void _remove(DB_ *db, const idx_t &ids, const idx_t &n);
+        template <typename T = float>
+        void _remove(DB_<T>* db, const idx_t &ids, const idx_t &n);
 
 
         /** Updates records in the database. Supports raw vectors, raw binary data, or a file path for updates.
@@ -73,7 +73,8 @@ namespace mvdb {
         // - sizes: Size of the binary data, used if data_type is 'binary'.
         // - fp: Path to the file if data_type is 'file'.
         **/
-        void _update(DB_ *db, const idx_t &ids, const void *data, const idx_t &n,
+        template <typename T = float>
+        void _update(DB_<T>* db, const idx_t &ids, const void *data, const idx_t &n,
                      const InsertOperatorDataType &input_data_type = VECTOR, const char *bytes = nullptr,
                      const idx_t *sizes = nullptr, const std::string &filePath = "");
 
@@ -89,9 +90,9 @@ namespace mvdb {
          * @param v Output array where the resulting d-dimensional vectors are stored.
          * @param d Reference to the dimensionality of the vectors; may be modified by the feature extractor.
          */
-        void embed_(const char *bytes, const idx_t &n, const size_t *sizes, std::string feature_extractor, value_t *v,
+        template <typename T = float>
+        void embed_(const char *bytes, const idx_t &n, const size_t *sizes, std::string feature_extractor, T *v,
                     const idx_t &d);
-
 
 
 //    void _project();
@@ -105,7 +106,8 @@ namespace mvdb {
          * @param c Multiplicative factor for the range within which to search for similar vectors.
          * @param k Number of top results to return.
          */
-        void _idx_scan(Index *idx, const value_t *q, const idx_t &n, const uint8_t &c, const uint8_t &k);
+        template <typename T = float>
+        void _idx_scan(index::Index<T>* idx, const T *q, const idx_t &n, const uint8_t &c, const uint8_t &k);
 
         /**
          * Searches the entire database for all results within a specified range.
@@ -113,9 +115,9 @@ namespace mvdb {
          * @param db Pointer to the database instance.
          * @param r Range parameter specifying how far from a given point results can be considered relevant.
          */
-        void _range_scan(DB_ *db, const double &r);
+        template <typename T = float>
+        void _range_scan(DB_<T> *db, const double &r);
 
-    }
-}
+} // mvdb::opertors
 
 #endif //MICROVECDB_OPERATORS_H

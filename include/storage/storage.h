@@ -15,13 +15,12 @@ namespace mvdb {
         std::string data_dir_path_{};
         rocksdb::Options options_{};
         bool is_open_ = false;
-        friend class DB_;
+//        friend class DB_<T>;
         friend std::ostream& operator<<(std::ostream& os, const Storage& obj);
         friend std::ostream& operator<<(std::ostream& os, const Storage* obj);
-    protected:
-        void serialize(std::ostream &out) const override;
-        void deserialize(std::istream &in) override;
     public:
+        void serialize_(std::ostream &out) const override;
+        void deserialize_(std::istream &in) override;
         explicit Storage(std::string  data_dir_path, const bool& create_if_missing = true, const bool& open = false);
         ~Storage() override = default;
         Storage(const Storage&) = delete;

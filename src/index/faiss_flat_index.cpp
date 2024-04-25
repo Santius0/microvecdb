@@ -5,33 +5,39 @@
 #include <iostream>
 #include <fstream>
 
-namespace mvdb {
+namespace mvdb::index {
 
-    IndexType FaissFlatIndex::type() const {
+    template <typename T>
+    IndexType FaissFlatIndex<T>::type() const {
         return FAISS_FLAT;
     }
 
-    std::ostream& operator<<(std::ostream& os, const FaissFlatIndex& obj){
+    template <typename T>
+    std::ostream& operator<<(std::ostream& os, const FaissFlatIndex<T>& obj){
         return os   << "dims_: " << obj.dims_ << std::endl
                     << "index_type_: " << obj.type() << std::endl;
     }
 
-    std::ostream& operator<<(std::ostream& os, const FaissFlatIndex* obj){
+    template <typename T>
+    std::ostream& operator<<(std::ostream& os, const FaissFlatIndex<T>* obj){
         return os << "*(" << *obj << ")";
     }
 
-    void FaissFlatIndex::serialize(std::ostream& out) const {
+    template <typename T>
+    void FaissFlatIndex<T>::serialize_(std::ostream& out) const {
         serialize_numeric<unsigned char>(out, type());
-        serialize_numeric<idx_t>(out, dims_);
+        serialize_numeric<idx_t>(out, this->dims_);
     }
 
-    void FaissFlatIndex::deserialize(std::istream& in) {
+    template <typename T>
+    void FaissFlatIndex<T>::deserialize_(std::istream& in) {
         auto type = deserialize_numeric<unsigned char>(in);
         if (type != FAISS_FLAT) throw std::runtime_error("Unexpected index type: " + std::to_string(type));
-        dims_ = deserialize_numeric<idx_t>(in);
+        this->dims_ = deserialize_numeric<idx_t>(in);
     }
 
-    FaissFlatIndex::FaissFlatIndex(const idx_t& dims, const std::string& path): Index(dims, path) {
+    template <typename T>
+    FaissFlatIndex<T>::FaissFlatIndex(const idx_t& dims, const std::string& path): Index<T>(dims, path) {
         faiss_index_ = std::make_unique<faiss::IndexFlatL2>(this->dims_);
         if(!path.empty() && fs::exists(path) && !fs::is_directory(path)) {
             std::string faiss_path = path + "_faiss";
@@ -43,7 +49,8 @@ namespace mvdb {
         }
     }
 
-    bool FaissFlatIndex::add(const idx_t& n, value_t* data, idx_t* ids) {
+    template <typename T>
+    bool FaissFlatIndex<T>::add(const idx_t& n, T* data, idx_t* ids) {
         if(n <= 0) return false;
         if(data == nullptr) return false;
         try {
@@ -59,8 +66,9 @@ namespace mvdb {
         return true;
     }
 
+    template <typename T>
 //    bool FaissFlatIndex::remove(const size_t& n, const faiss::IDSelector& ids) const {
-    bool FaissFlatIndex::remove(const idx_t& n, const idx_t* ids) {
+    bool FaissFlatIndex<T>::remove(const idx_t& n, const idx_t* ids) {
         throw not_implemented("FaissFlatIndex<T, D>::remove(const idx_t& n, idx_t* ids) const not implemented");
 //        try {
 //            faiss_index_->remove_ids(ids);
@@ -72,31 +80,36 @@ namespace mvdb {
 //        }
     }
 
-    void FaissFlatIndex::save(const std::string& path) const {
+    template <typename T>
+    void FaissFlatIndex<T>::save(const std::string& path) const {
         FILE* out_file = fopen(path.c_str(), "wb");
 //                std::ios::binary | std::ios::out);
-        serialize(reinterpret_cast<std::ostream &>(out_file));
+        serialize_(reinterpret_cast<std::ostream &>(out_file));
         faiss::write_index(faiss_index_.get(), out_file);
         fclose(out_file);
         faiss::write_index(faiss_index_.get(), (path + "_faiss").c_str());
     }
 
-    void FaissFlatIndex::load(const std::string& path) {
+    template <typename T>
+    void FaissFlatIndex<T>::load(const std::string& path) {
         std::ifstream in_file(path, std::ios::binary | std::ios::in);
-        deserialize(in_file);
+        deserialize_(in_file);
         in_file.close();
         faiss_index_.reset(faiss::read_index((path + "_faiss").c_str()));
     }
 
-    void FaissFlatIndex::search(const idx_t& nq, value_t* query, idx_t* ids, value_t* distances, const idx_t& k, const DISTANCE_METRIC& distance_metric) const{
+    template <typename T>
+    void FaissFlatIndex<T>::search(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k, const DISTANCE_METRIC& distance_metric) const{
         faiss_index_->search(static_cast<long>(nq), static_cast<float*>(query), k, static_cast<float*>(distances), reinterpret_cast<faiss::idx_t *>(ids));
     }
 
-    faiss::Index* FaissFlatIndex::faiss_index(){
+    template <typename T>
+    faiss::Index* FaissFlatIndex<T>::faiss_index(){
         return faiss_index_.get();
     }
 
-    value_t* FaissFlatIndex::get(idx_t& n, idx_t* keys) const {
+    template <typename T>
+    T* FaissFlatIndex<T>::get(idx_t& n, idx_t* keys) const {
         if (faiss_index_->is_trained) {
             if(keys != nullptr){
                 for(size_t i = 0; i < n; i++) {
@@ -113,7 +126,8 @@ namespace mvdb {
         }
     }
 
-    value_t* FaissFlatIndex::get_all() const {
+    template <typename T>
+    T* FaissFlatIndex<T>::get_all() const {
         idx_t n = faiss_index_->ntotal;
         auto *keys = new idx_t[n];
         auto* reconstructed_vec = new float[n * this->dims_];
@@ -124,16 +138,21 @@ namespace mvdb {
         return reconstructed_vec;
     }
 
-    idx_t FaissFlatIndex::dims() const {
-        return dims_;
+    template <typename T>
+    idx_t FaissFlatIndex<T>::dims() const {
+        return this->dims_;
     }
 
-    idx_t FaissFlatIndex::ntotal() const {
-        return ntotal_;
+    template <typename T>
+    idx_t FaissFlatIndex<T>::ntotal() const {
+        return this->ntotal_;
     }
 
-    value_t* FaissFlatIndex::index() const {
+    template <typename T>
+    T* FaissFlatIndex<T>::index() const {
         return get_all();
     }
+
+    template class FaissFlatIndex<float>;
 
 } // namespace mvdb

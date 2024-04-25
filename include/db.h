@@ -16,6 +16,7 @@
 
 namespace mvdb {
 
+    template <typename T = float>
     class DB_ final : Serializable {
 
         class Status {
@@ -97,29 +98,25 @@ namespace mvdb {
         std::string _path, _index_path, _storage_path;
         idx_t _dims = 0;
         std::unique_ptr<Storage> _storage;
-        std::unique_ptr<Index> _index;
+        std::unique_ptr<index::Index<T>> _index;
         idx_t* _add_ids = nullptr;                           // ptr to most recent keys array returned for cleanup if necessary
         idx_t* _search_ids = nullptr;                        // ptr to most recent keys array returned for cleanup if necessary
-        value_t* _search_distances = nullptr;                // ptr to most recent keys array returned for cleanup if necessary
-        std::unordered_map<idx_t, idx_t> _memory_map;         // maps a vector's id in the vector index to a key in the storage layer
-        friend std::ostream& operator<<(std::ostream& os, const DB_& obj);
-        friend std::ostream& operator<<(std::ostream& os, const DB_* obj);
+        T* _search_distances = nullptr;                      // ptr to most recent keys array returned for cleanup if necessary
+        std::unordered_map<idx_t, idx_t> _memory_map;        // maps a vector's id in the vector index to a key in the storage layer
+        friend std::ostream& operator<<(std::ostream& os, const DB_<T>& obj);
+        friend std::ostream& operator<<(std::ostream& os, const DB_<T>* obj);
         void _save(const std::string& save_path = "");
-    protected:
-        void serialize(std::ostream &out) const override;
-        void deserialize(std::istream &in) override;
     public:
+        void serialize_(std::ostream &out) const override;
+        void deserialize_(std::istream &in) override;
         DB_() = default;
         ~DB_() override;
         Status* status() const;
         bool open(const std::string& path);
         bool create(const std::string& path, const idx_t& dims);
         Storage* storage();
-        Index* index();
-        [[nodiscard]] idx_t* add_vector(const idx_t& nv, value_t* v);       // add nv vectors to the index
-//        [[nodiscard]] bool add_data(const idx_t& nv, char* data, idx_t* data_sizes, const DataFormat* data_formats);      // take nv pieces of data, generate a vector for each, add vectors to the index, store raw data in kv_store
-        void search_with_vector(const idx_t& nq, value_t* query, const long& k, idx_t* ids, value_t* distances); // carry out a search using only nq vectors as input
-        value_t* get(idx_t& n, idx_t* keys) const;
+        index::Index<T>* index();
+//        T* get(idx_t& n, idx_t* keys) const;
     };
 
 }
