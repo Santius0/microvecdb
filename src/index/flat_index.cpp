@@ -46,24 +46,29 @@ namespace mvdb::index {
     }
 
     template <typename T>
-    FlatIndex<T>::FlatIndex(const idx_t& dims, const std::string& path): Index<T>(dims, path) {
-        index_ = std::make_shared<std::vector<T>>();
-        if(!path.empty() && fs::exists(path) && !fs::is_directory(path)) load(path);
-        else index_->reserve(100);
+    void FlatIndex<T>::build(const mvdb::idx_t &dims, const std::string &path) {
+        this->dims_ = dims;
+        this->index_ = std::make_shared<std::vector<T>>();
+        this->save_(path);
+        this->index_->reserve(100 * dims);
     }
 
     template <typename T>
-    void FlatIndex<T>::save(const std::string& path) const {
+    void FlatIndex<T>::save_(const std::string& path) const {
         std::ofstream out_file(path, std::ios::binary | std::ios::out);
         serialize_(out_file);
         out_file.close();
     }
 
     template <typename T>
-    void FlatIndex<T>::load(const std::string& path) {
+    void FlatIndex<T>::open(const std::string& path) {
+        if(path.empty() || !fs::exists(path) || fs::is_directory(path))
+            throw std::runtime_error("index path, '" + path + "' is either empty or invalid");
+        if(!this->index_) this->index_ = std::make_shared<std::vector<T>>();
         std::ifstream in_file(path, std::ios::binary | std::ios::in);
         deserialize_(in_file);
         in_file.close();
+        this->index_->reserve(100 * this->dims_);
     }
 
     template <typename T>

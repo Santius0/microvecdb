@@ -13,16 +13,18 @@ namespace mvdb::index {
         std::shared_ptr<faiss::Index> faiss_index_;    // The actual FAISS index
         friend std::ostream& operator<<(std::ostream& os, const FaissFlatIndex<T>& obj);
         friend std::ostream& operator<<(std::ostream& os, const FaissFlatIndex<T>* obj);
+    protected:
+        void save_(const std::string& path) const override;
     public:
         void serialize_(std::ostream &out) const override;
         void deserialize_(std::istream &in) override;
-        explicit FaissFlatIndex(const idx_t& dims, const std::string& path = "");
+        FaissFlatIndex() = default;
         ~FaissFlatIndex() override = default;
         FaissFlatIndex(const FaissFlatIndex&) = delete;
         FaissFlatIndex& operator=(const FaissFlatIndex&) = delete;
         [[nodiscard]] IndexType type() const override;
-        void save(const std::string& path) const override;
-        void load(const std::string& path) override;
+        void build(const idx_t& dims, const std::string& path) override;
+        void open(const std::string& path) override;
         [[nodiscard]] bool add(const idx_t& n, T* data, idx_t* ids) override;
         [[nodiscard]] bool remove(const idx_t& n, const idx_t* ids) override;
         void search(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k, const DISTANCE_METRIC& distance_metric) const override;

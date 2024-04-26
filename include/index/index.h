@@ -48,19 +48,20 @@ namespace mvdb::index {
     protected:
         idx_t dims_ = 0;
         idx_t ntotal_ = 0;
+        virtual void save_(const std::string& path) const = 0;               // save current index state and data to location specified via index_path_
     public:
         void serialize_(std::ostream &out) const override = 0;
         void deserialize_(std::istream &in) override = 0;
-        explicit Index(const idx_t &dims, const std::string& path = "") : dims_(dims) {}
+        Index() = default;
         ~Index() override = default;
         Index(const Index&) = delete;
         Index& operator=(const Index&) = delete;
         [[nodiscard]] virtual IndexType type() const = 0;
-        virtual void save(const std::string& path) const = 0;               // save current index state and data to location specified via index_path_
-        virtual void load(const std::string& path) = 0;                     // load current index state and data from location specified via index_path_
-        virtual bool add(const idx_t& n, T* data, idx_t* ids) = 0;    // add n to elements to index
+        virtual void build(const idx_t &dims, const std::string& path);
+        virtual void open(const std::string& path) = 0;                     // open current index state and data from location specified via index_path_
+        virtual bool add(const idx_t& n, T* data, idx_t* ids) = 0;          // add n to elements to index
         virtual bool remove(const idx_t& n, const idx_t* ids) = 0;          // remove n elements from index
-        virtual void search(const idx_t& nq, T* query,                // perform searches for nq queries in parallel
+        virtual void search(const idx_t& nq, T* query,                      // perform searches for nq queries in parallel
                             idx_t* ids, T* distances,
                             const idx_t& k,
                             const DISTANCE_METRIC& distance_metric) const = 0;

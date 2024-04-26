@@ -37,16 +37,17 @@ namespace mvdb::index {
     }
 
     template <typename T>
-    FaissFlatIndex<T>::FaissFlatIndex(const idx_t& dims, const std::string& path): Index<T>(dims, path) {
+    void FaissFlatIndex<T>::build(const mvdb::idx_t &dims, const std::string &path) {
+        this->dims_ = dims;
         faiss_index_ = std::make_unique<faiss::IndexFlatL2>(this->dims_);
-        if(!path.empty() && fs::exists(path) && !fs::is_directory(path)) {
-            std::string faiss_path = path + "_faiss";
-            if(!faiss_path.empty() && fs::exists(faiss_path) && !fs::is_directory(faiss_path)) {
-                load(path);
-            } else {
-                throw std::runtime_error("'" + faiss_path + "' does not exist");
-            }
-        }
+
+        if(path.empty())
+            throw std::runtime_error("index path cannot be empty");
+
+        if(fs::exists(path))
+            throw std::runtime_error("'" + path + "' is invalid. make sure no file or dir exists at that location");
+
+        this->save_(path);
     }
 
     template <typename T>
@@ -81,21 +82,24 @@ namespace mvdb::index {
     }
 
     template <typename T>
-    void FaissFlatIndex<T>::save(const std::string& path) const {
+    void FaissFlatIndex<T>::save_(const std::string& path) const {
         FILE* out_file = fopen(path.c_str(), "wb");
 //                std::ios::binary | std::ios::out);
         serialize_(reinterpret_cast<std::ostream &>(out_file));
         faiss::write_index(faiss_index_.get(), out_file);
         fclose(out_file);
-        faiss::write_index(faiss_index_.get(), (path + "_faiss").c_str());
+        faiss::write_index(faiss_index_.get(), path.c_str());
     }
 
     template <typename T>
-    void FaissFlatIndex<T>::load(const std::string& path) {
+    void FaissFlatIndex<T>::open(const std::string& path) {
+        if(path.empty() || !fs::exists(path) || fs::is_directory(path))
+            throw std::runtime_error("index path, '" + path + "' is either empty or invalid");
         std::ifstream in_file(path, std::ios::binary | std::ios::in);
         deserialize_(in_file);
         in_file.close();
-        faiss_index_.reset(faiss::read_index((path + "_faiss").c_str()));
+        if(!faiss_index_) faiss_index_ = std::make_unique<faiss::IndexFlatL2>(this->dims_);
+        faiss_index_.reset(faiss::read_index(path.c_str()));
     }
 
     template <typename T>

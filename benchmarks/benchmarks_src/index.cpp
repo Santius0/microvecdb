@@ -7,7 +7,8 @@
 
 static void BM_flat_index(benchmark::State& state) {
     const int num_queries = 4, dims = 96, k = 5;
-    auto *index = new mvdb::index::FlatIndex<float>(96, "../../benchmarks/flat_index_test.index");
+    auto *index = new mvdb::index::FlatIndex<float>();
+    index->open("../../benchmarks/flat_index_test.index");
     const std::string query_file = "../../benchmarks/data/deep1B_queries.fvecs";
     auto *queries = new mvdb::value_t[num_queries * dims];
     auto *ids = new mvdb::idx_t[num_queries * k];
@@ -30,7 +31,8 @@ static void BM_flat_index(benchmark::State& state) {
 
 static void BM_faiss_flat_index(benchmark::State& state) {
     const int num_queries = 4, dims = 96, k = 5;
-    auto *index = new mvdb::index::FaissFlatIndex<float>(96, "../../benchmarks/faiss_flat_index_test.index");
+    auto *index = new mvdb::index::FaissFlatIndex<float>();
+    index->open("../../benchmarks/faiss_flat_index_test.index");
     const std::string query_file = "../../benchmarks/data/deep1B_queries.fvecs";
     auto *queries = new mvdb::value_t[num_queries * dims];
     auto *ids = new mvdb::idx_t[num_queries * k];
