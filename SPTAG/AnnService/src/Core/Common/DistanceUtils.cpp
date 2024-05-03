@@ -399,6 +399,53 @@ float DistanceUtils::ComputeL2Distance_AVX512(const std::int8_t* pX, const std::
     return diff;
 }
 
+float DistanceUtils::ComputeL2Distance_NEON(const std::int8_t* pX, const std::int8_t* pY, DimensionType length) {  // + => 03/05/24
+    #if defined(__arm__) || defined(__aarch64__)
+    const std::int8_t* pEnd16 = pX + (length & ~15); // Process blocks of 16
+    const std::int8_t* pEnd1 = pX + length;
+
+    float32x4_t diffVec = vdupq_n_f32(0.0f); // Accumulator vector for differences
+
+    // Process in blocks of 16
+    while (pX < pEnd16) {
+        int8x16_t xVec = vld1q_s8(pX); // Load 16 elements from pX
+        int8x16_t yVec = vld1q_s8(pY); // Load 16 elements from pY
+
+        // Calculate the difference and convert to 16-bit to prevent overflow
+        int16x8_t xLow = vmovl_s8(vget_low_s8(xVec));
+        int16x8_t yLow = vmovl_s8(vget_low_s8(yVec));
+        int16x8_t xHigh = vmovl_s8(vget_high_s8(xVec));
+        int16x8_t yHigh = vmovl_s8(vget_high_s8(yVec));
+
+        // Calculate the square of the differences and accumulate
+        int32x4_t diffLowLow = vmull_s16(vget_low_s16(xLow), vget_low_s16(xLow));
+        int32x4_t diffHighLow = vmull_s16(vget_high_s16(xLow), vget_high_s16(xLow));
+        int32x4_t diffLowHigh = vmull_s16(vget_low_s16(xHigh), vget_low_s16(xHigh));
+        int32x4_t diffHighHigh = vmull_s16(vget_high_s16(xHigh), vget_high_s16(xHigh));
+
+        diffVec = vaddq_f32(diffVec, vcvtq_f32_s32(diffLowLow));
+        diffVec = vaddq_f32(diffVec, vcvtq_f32_s32(diffHighLow));
+        diffVec = vaddq_f32(diffVec, vcvtq_f32_s32(diffLowHigh));
+        diffVec = vaddq_f32(diffVec, vcvtq_f32_s32(diffHighHigh));
+
+        pX += 16;
+        pY += 16;
+    }
+
+    // Final reduction to a single float
+    float diff = vaddvq_f32(diffVec); // Sum all elements of vector to a single scalar
+
+    // Process remaining elements one by one
+    while (pX < pEnd1) {
+        float c1 = static_cast<float>(*pX++) - static_cast<float>(*pY++);
+        diff += c1 * c1;
+    }
+
+    return diff;
+    #endif
+    return -1.0f;
+}  // + => 03/05/24
+
 float DistanceUtils::ComputeL2Distance_SSE(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length)
 {
     const std::uint8_t* pEnd32 = pX + ((length >> 5) << 5);
@@ -495,6 +542,52 @@ float DistanceUtils::ComputeL2Distance_AVX512(const std::uint8_t* pX, const std:
     }
     return diff;
 }
+
+float DistanceUtils::ComputeL2Distance_NEON(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length) {  // + => 03/05/24
+    #if defined(__arm__) || defined(__aarch64__)
+    const std::uint8_t* pEnd16 = pX + (length & ~15); // Process blocks of 16
+    const std::uint8_t* pEnd1 = pX + length;
+
+    float32x4_t diffVec = vdupq_n_f32(0.0); // Accumulator vector for differences
+
+    // Process in blocks of 16
+    while (pX < pEnd16) {
+        uint8x16_t xVec = vld1q_u8(pX); // Load 16 elements from pX
+        uint8x16_t yVec = vld1q_u8(pY); // Load 16 elements from pY
+
+        uint16x8_t xLow = vmovl_u8(vget_low_u8(xVec)); // Extend lower 8 elements to 16 bits
+        uint16x8_t yLow = vmovl_u8(vget_low_u8(yVec));
+
+        uint16x8_t xHigh = vmovl_u8(vget_high_u8(xVec)); // Extend higher 8 elements to 16 bits
+        uint16x8_t yHigh = vmovl_u8(vget_high_u8(yVec));
+
+        int32x4_t diffLowLow = vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(vabdq_u16(xLow, yLow))));
+        int32x4_t diffHighLow = vreinterpretq_s32_u32(vmovl_u16(vget_high_u16(vabdq_u16(xLow, yLow))));
+        int32x4_t diffLowHigh = vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(vabdq_u16(xHigh, yHigh))));
+        int32x4_t diffHighHigh = vreinterpretq_s32_u32(vmovl_u16(vget_high_u16(vabdq_u16(xHigh, yHigh))));
+
+        diffVec = vaddq_f32(diffVec, vcvtq_f32_s32(diffLowLow));
+        diffVec = vaddq_f32(diffVec, vcvtq_f32_s32(diffHighLow));
+        diffVec = vaddq_f32(diffVec, vcvtq_f32_s32(diffLowHigh));
+        diffVec = vaddq_f32(diffVec, vcvtq_f32_s32(diffHighHigh));
+
+        pX += 16;
+        pY += 16;
+    }
+
+    // Final reduction to single float
+    float diff = vaddvq_f32(diffVec); // Sum all elements of vector to single scalar
+
+    // Process remaining elements one by one
+    while (pX < pEnd1) {
+        float c1 = (float)(*pX++) - (float)(*pY++);
+        diff += c1 * c1;
+    }
+
+    return diff;
+    #endif
+    return -1.0f; // if somehow we end up using this function and while not on an ARM device just return all distances as -1
+}  // + => 03/05/24
 
 float DistanceUtils::ComputeL2Distance_SSE(const std::int16_t* pX, const std::int16_t* pY, DimensionType length)
 {
@@ -596,6 +689,46 @@ float DistanceUtils::ComputeL2Distance_AVX512(const std::int16_t* pX, const std:
     return diff;
 }
 
+float DistanceUtils::ComputeL2Distance_NEON(const std::int16_t* pX, const std::int16_t* pY, DimensionType length) {  // + => 03/05/24
+    #if defined(__arm__) || defined(__aarch64__)
+    const std::int16_t* pEnd8 = pX + (length & ~7); // Align to process blocks of 8
+    const std::int16_t* pEnd1 = pX + length;
+
+    float32x4_t diffVec = vdupq_n_f32(0.0f); // Accumulator vector for differences
+
+    // Process blocks of 8
+    while (pX < pEnd8) {
+        int16x8_t xVec = vld1q_s16(pX); // Load 8 int16 elements from pX
+        int16x8_t yVec = vld1q_s16(pY); // Load 8 int16 elements from pY
+
+        int16x8_t diff = vsubq_s16(xVec, yVec); // Compute the difference of the vectors
+
+        // Convert differences to 32-bit integers before squaring to prevent overflow
+        int32x4_t diff_lo = vmovl_s16(vget_low_s16(diff));
+        int32x4_t diff_hi = vmovl_s16(vget_high_s16(diff));
+
+        // Square the differences and accumulate
+        diffVec = vmlaq_s32(diffVec, diff_lo, diff_lo);
+        diffVec = vmlaq_s32(diffVec, diff_hi, diff_hi);
+
+        pX += 8;
+        pY += 8;
+    }
+
+    // Reduce the vector sum into a single float
+    float diff = vaddvq_f32(vcvtq_f32_s32(diffVec));
+
+    // Handle any remaining elements
+    while (pX < pEnd1) {
+        float c1 = (float)(*pX++) - (float)(*pY++);
+        diff += c1 * c1;
+    }
+
+    return diff;
+    #endif
+    return -1.0f;
+}  // + => 03/05/24
+
 float DistanceUtils::ComputeL2Distance_SSE(const float* pX, const float* pY, DimensionType length)
 {
     const float* pEnd16 = pX + ((length >> 4) << 4);
@@ -680,6 +813,39 @@ float DistanceUtils::ComputeL2Distance_AVX512(const float* pX, const float* pY, 
     }
     return diff;
 }
+
+float DistanceUtils::ComputeL2Distance_NEON(const float* pX, const float* pY, DimensionType length) {  // + => 03/05/24
+    #if defined(__arm__) || defined(__aarch64__)
+    const float* pEnd4 = pX + (length & ~3); // Align to process blocks of 4
+    const float* pEnd1 = pX + length;
+
+    float32x4_t diffVec = vdupq_n_f32(0.0f); // Accumulator vector for squared differences
+
+    // Process blocks of 4
+    while (pX < pEnd4) {
+        float32x4_t xVec = vld1q_f32(pX); // Load 4 float elements from pX
+        float32x4_t yVec = vld1q_f32(pY); // Load 4 float elements from pY
+
+        float32x4_t diff = vsubq_f32(xVec, yVec); // Compute the difference of the vectors
+        diffVec = vmlaq_f32(diffVec, diff, diff); // Square the differences and accumulate
+
+        pX += 4;
+        pY += 4;
+    }
+
+    // Reduce the vector sum into a single float
+    float diff = vaddvq_f32(diffVec);
+
+    // Handle any remaining elements
+    while (pX < pEnd1) {
+        float c1 = (*pX++) - (*pY++);
+        diff += c1 * c1;
+    }
+
+    return diff;
+    #endif
+    return -1.0f;
+}  // + => 03/05/24
 
 float DistanceUtils::ComputeCosineDistance_SSE(const std::int8_t* pX, const std::int8_t* pY, DimensionType length)
 {
@@ -775,6 +941,53 @@ float DistanceUtils::ComputeCosineDistance_AVX512(const std::int8_t* pX, const s
     return 16129 - diff;
 }
 
+float DistanceUtils::ComputeCosineDistance_NEON(const std::int8_t* pX, const std::int8_t* pY, DimensionType length) {  // + => 03/05/24
+    #if defined(__arm__) || defined(__aarch64__)
+    const std::int8_t* pEnd16 = pX + (length & ~15); // Process blocks of 16
+    const std::int8_t* pEnd1 = pX + length;
+
+    int32x4_t accVec = vdupq_n_s32(0); // Accumulator for the dot products
+
+    // Process in blocks of 16
+    while (pX < pEnd16) {
+        int8x16_t xVec = vld1q_s8(pX); // Load 16 elements from pX
+        int8x16_t yVec = vld1q_s8(pY); // Load 16 elements from pY
+
+        // Extend the 8-bit integers to 16-bit integers to prevent overflow during multiplication
+        int16x8_t xVec_low = vmovl_s8(vget_low_s8(xVec));
+        int16x8_t yVec_low = vmovl_s8(vget_low_s8(yVec));
+        int16x8_t xVec_high = vmovl_s8(vget_high_s8(xVec));
+        int16x8_t yVec_high = vmovl_s8(vget_high_s8(yVec));
+
+        // Perform multiplication
+        int32x4_t prod_low = vmull_s16(vget_low_s16(xVec_low), vget_low_s16(yVec_low));
+        int32x4_t prod_high = vmull_s16(vget_high_s16(xVec_low), vget_high_s16(yVec_low));
+        accVec = vaddq_s32(accVec, prod_low);
+        accVec = vaddq_s32(accVec, prod_high);
+
+        prod_low = vmull_s16(vget_low_s16(xVec_high), vget_low_s16(yVec_high));
+        prod_high = vmull_s16(vget_high_s16(xVec_high), vget_high_s16(yVec_high));
+        accVec = vaddq_s32(accVec, prod_low);
+        accVec = vaddq_s32(accVec, prod_high);
+
+        pX += 16;
+        pY += 16;
+    }
+
+    // Reduce the accumulated vector to a single integer
+    int32_t dot_product = vaddvq_s32(accVec);
+
+    // Handle any remaining elements
+    while (pX < pEnd1) {
+        dot_product += (*pX++) * (*pY++);
+    }
+
+    // Subtract the accumulated dot product from a constant, similar to the AVX version
+    return 16129 - dot_product;
+    #endif
+    return -1.0f;
+}  // + => 03/05/24
+
 float DistanceUtils::ComputeCosineDistance_SSE(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length)
 {
     const std::uint8_t* pEnd32 = pX + ((length >> 5) << 5);
@@ -868,6 +1081,53 @@ float DistanceUtils::ComputeCosineDistance_AVX512(const std::uint8_t* pX, const 
     while (pX < pEnd1) diff += ((float)(*pX++) * (float)(*pY++));
     return 65025 - diff;
 }
+
+float DistanceUtils::ComputeCosineDistance_NEON(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length) {  // + => 03/05/24
+    #if defined(__arm__) || defined(__aarch64__)
+    const std::uint8_t* pEnd16 = pX + (length & ~15); // Process blocks of 16
+    const std::uint8_t* pEnd1 = pX + length;
+
+    uint32x4_t accVec = vdupq_n_u32(0); // Accumulator for the dot products
+
+    // Process in blocks of 16
+    while (pX < pEnd16) {
+        uint8x16_t xVec = vld1q_u8(pX); // Load 16 elements from pX
+        uint8x16_t yVec = vld1q_u8(pY); // Load 16 elements from pY
+
+        // Convert the 8-bit integers to 16-bit to prevent overflow during multiplication
+        uint16x8_t xVec_low = vmovl_u8(vget_low_u8(xVec));
+        uint16x8_t yVec_low = vmovl_u8(vget_low_u8(yVec));
+        uint16x8_t xVec_high = vmovl_u8(vget_high_u8(xVec));
+        uint16x8_t yVec_high = vmovl_u8(vget_high_u8(yVec));
+
+        // Perform multiplication
+        uint32x4_t prod_low = vmull_u16(vget_low_u16(xVec_low), vget_low_u16(yVec_low));
+        uint32x4_t prod_high = vmull_u16(vget_high_u16(xVec_low), vget_high_u16(yVec_low));
+        accVec = vaddq_u32(accVec, prod_low);
+        accVec = vaddq_u32(accVec, prod_high);
+
+        prod_low = vmull_u16(vget_low_u16(xVec_high), vget_low_u16(yVec_high));
+        prod_high = vmull_u16(vget_high_u16(xVec_high), vget_high_u16(yVec_high));
+        accVec = vaddq_u32(accVec, prod_low);
+        accVec = vaddq_u32(accVec, prod_high);
+
+        pX += 16;
+        pY += 16;
+    }
+
+    // Reduce the accumulated vector to a single integer
+    uint32_t dot_product = vaddvq_u32(accVec);
+
+    // Handle any remaining elements
+    while (pX < pEnd1) {
+        dot_product += (*pX++) * (*pY++);
+    }
+
+    // Subtract the accumulated dot product from a constant
+    return 65025 - dot_product;
+    #endif
+    return -1.0f;
+}  // + => 03/05/24
 
 float DistanceUtils::ComputeCosineDistance_SSE(const std::int16_t* pX, const std::int16_t* pY, DimensionType length)
 {
@@ -966,6 +1226,45 @@ float DistanceUtils::ComputeCosineDistance_AVX512(const std::int16_t* pX, const 
     return  1073676289 - diff;
 }
 
+float DistanceUtils::ComputeCosineDistance_NEON(const std::int16_t* pX, const std::int16_t* pY, DimensionType length) {  // + => 03/05/24
+    #if defined(__arm__) || defined(__aarch64__)
+    const std::int16_t* pEnd16 = pX + (length & ~15); // Process blocks of 16
+    const std::int16_t* pEnd1 = pX + length;
+
+    int32x4_t accVec = vdupq_n_s32(0); // Accumulator for the dot products
+
+    // Process in blocks of 16
+    while (pX < pEnd16) {
+        int16x8_t xVec1 = vld1q_s16(pX); // Load 8 int16 elements from pX
+        int16x8_t yVec1 = vld1q_s16(pY); // Load 8 int16 elements from pY
+        pX += 8;
+        pY += 8;
+        int16x8_t xVec2 = vld1q_s16(pX); // Load the next 8 int16 elements from pX
+        int16x8_t yVec2 = vld1q_s16(pY); // Load the next 8 int16 elements from pY
+        pX += 8;
+        pY += 8;
+
+        // Perform multiplication and accumulate
+        accVec = vmlal_s16(accVec, vget_low_s16(xVec1), vget_low_s16(yVec1));
+        accVec = vmlal_s16(accVec, vget_high_s16(xVec1), vget_high_s16(yVec1));
+        accVec = vmlal_s16(accVec, vget_low_s16(xVec2), vget_low_s16(yVec2));
+        accVec = vmlal_s16(accVec, vget_high_s16(xVec2), vget_high_s16(yVec2));
+    }
+
+    // Reduce the accumulated vector to a single integer
+    int32_t dot_product = vaddvq_s32(accVec);
+
+    // Handle any remaining elements
+    while (pX < pEnd1) {
+        dot_product += (*pX++) * (*pY++);
+    }
+
+    // Subtract the accumulated dot product from a constant, analogous to the AVX version
+    return 1073676289 - dot_product;
+    #endif
+    return -1.0f;
+}  // + => 03/05/24
+
 float DistanceUtils::ComputeCosineDistance_SSE(const float* pX, const float* pY, DimensionType length)
 {
     const float* pEnd16 = pX + ((length >> 4) << 4);
@@ -1044,3 +1343,35 @@ float DistanceUtils::ComputeCosineDistance_AVX512(const float* pX, const float* 
     while (pX < pEnd1) diff += (*pX++) * (*pY++);
     return 1 - diff;
 }
+
+float DistanceUtils::ComputeCosineDistance_NEON(const float* pX, const float* pY, DimensionType length) {  // + => 03/05/24
+    #if defined(__arm__) || defined(__aarch64__)
+    const float* pEnd4 = pX + (length & ~3); // Align to process blocks of 4
+    const float* pEnd1 = pX + length;
+
+    float32x4_t accVec = vdupq_n_f32(0.0f); // Accumulator for the dot products
+
+    // Process in blocks of 4
+    while (pX < pEnd4) {
+        float32x4_t xVec = vld1q_f32(pX); // Load 4 float elements from pX
+        float32x4_t yVec = vld1q_f32(pY); // Load 4 float elements from pY
+
+        accVec = vmlaq_f32(accVec, xVec, yVec); // Multiply and accumulate
+
+        pX += 4;
+        pY += 4;
+    }
+
+    // Reduce the accumulated vector to a single float
+    float dot_product = vaddvq_f32(accVec);
+
+    // Handle any remaining elements
+    while (pX < pEnd1) {
+        dot_product += (*pX++) * (*pY++);
+    }
+
+    // Subtract the accumulated dot product from 1
+    return 1 - dot_product;
+    #endif
+    return -1.0f;
+}  // + => 03/05/24

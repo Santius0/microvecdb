@@ -45,18 +45,22 @@ namespace SPTAG
             static float ComputeL2Distance_SSE(const std::int8_t* pX, const std::int8_t* pY, DimensionType length);
             static float ComputeL2Distance_AVX(const std::int8_t* pX, const std::int8_t* pY, DimensionType length);
             static float ComputeL2Distance_AVX512(const std::int8_t* pX, const std::int8_t* pY, DimensionType length);
+            static float ComputeL2Distance_NEON(const std::int8_t* pX, const std::int8_t* pY, DimensionType length); // + => 03/05/24
 
             static float ComputeL2Distance_SSE(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length);
             static float ComputeL2Distance_AVX(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length);
             static float ComputeL2Distance_AVX512(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length);
+            static float ComputeL2Distance_NEON(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length); // + => 03/05/24
 
             static float ComputeL2Distance_SSE(const std::int16_t* pX, const std::int16_t* pY, DimensionType length);
             static float ComputeL2Distance_AVX(const std::int16_t* pX, const std::int16_t* pY, DimensionType length);
             static float ComputeL2Distance_AVX512(const std::int16_t* pX, const std::int16_t* pY, DimensionType length);
+            static float ComputeL2Distance_NEON(const std::int16_t* pX, const std::int16_t* pY, DimensionType length); // + => 03/05/24
 
             static float ComputeL2Distance_SSE(const float* pX, const float* pY, DimensionType length);
             static float ComputeL2Distance_AVX(const float* pX, const float* pY, DimensionType length);
             static float ComputeL2Distance_AVX512(const float* pX, const float* pY, DimensionType length);
+            static float ComputeL2Distance_NEON(const float* pX, const float* pY, DimensionType length); // + => 03/05/24
 
             template <typename T>
             static float ComputeCosineDistance(const T* pX, const T* pY, DimensionType length)
@@ -81,18 +85,22 @@ namespace SPTAG
             static float ComputeCosineDistance_SSE(const std::int8_t* pX, const std::int8_t* pY, DimensionType length);
             static float ComputeCosineDistance_AVX(const std::int8_t* pX, const std::int8_t* pY, DimensionType length);
             static float ComputeCosineDistance_AVX512(const std::int8_t* pX, const std::int8_t* pY, DimensionType length);
+            static float ComputeCosineDistance_NEON(const std::int8_t* pX, const std::int8_t* pY, DimensionType length); // + => 03/05/24
 
             static float ComputeCosineDistance_SSE(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length);
             static float ComputeCosineDistance_AVX(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length);
             static float ComputeCosineDistance_AVX512(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length);
+            static float ComputeCosineDistance_NEON(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length); // + => 03/05/24
 
             static float ComputeCosineDistance_SSE(const std::int16_t* pX, const std::int16_t* pY, DimensionType length);
             static float ComputeCosineDistance_AVX(const std::int16_t* pX, const std::int16_t* pY, DimensionType length);
             static float ComputeCosineDistance_AVX512(const std::int16_t* pX, const std::int16_t* pY, DimensionType length);
+            static float ComputeCosineDistance_NEON(const std::int16_t* pX, const std::int16_t* pY, DimensionType length); // + => 03/05/24
 
             static float ComputeCosineDistance_SSE(const float* pX, const float* pY, DimensionType length);
             static float ComputeCosineDistance_AVX(const float* pX, const float* pY, DimensionType length);
             static float ComputeCosineDistance_AVX512(const float* pX, const float* pY, DimensionType length);
+            static float ComputeCosineDistance_NEON(const float* pX, const float* pY, DimensionType length); // + => 03/05/24
 
 
             template<typename T>
@@ -135,6 +143,10 @@ namespace SPTAG
                 {
                     return &(DistanceUtils::ComputeCosineDistance_SSE);
                 }
+                else if (InstructionSet::NEON())
+                {
+                    return &(DistanceUtils::ComputeCosineDistance_NEON);
+                }
                 else {
                     return &(DistanceUtils::ComputeCosineDistance);
                 }
@@ -151,6 +163,10 @@ namespace SPTAG
                 else if (InstructionSet::SSE2() || (isSize4 && InstructionSet::SSE()))
                 {
                     return &(DistanceUtils::ComputeL2Distance_SSE);
+                }
+                else if (InstructionSet::NEON())
+                {
+                    return &(DistanceUtils::ComputeL2Distance_NEON);
                 }
                 else {
                     return &(DistanceUtils::ComputeL2Distance);

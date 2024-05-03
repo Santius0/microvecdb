@@ -7,19 +7,21 @@
 #include <array>
 
 #ifndef GPU
-
-#ifndef _MSC_VER
-#include <cpuid.h>
-#include <xmmintrin.h>
-#include <immintrin.h>
-
-void cpuid(int info[4], int InfoType);
-
-#else
-#include <intrin.h>
-#define cpuid(info, x)    __cpuidex(info, x, 0)
-#endif
-
+    #ifndef _MSC_VER
+        #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) // 03/05/24 - Sergio
+            #include <cpuid.h>
+            #include <xmmintrin.h>
+            #include <immintrin.h>
+        #elif defined(__arm__) || defined(__aarch64__) // 03/05/24 - Sergio
+            #include <arm_neon.h>
+            #include <sys/auxv.h>
+            #include <asm/hwcap.h>
+        #endif
+        void cpuid(int info[4], int InfoType);
+    #else
+        #include <intrin.h>
+        #define cpuid(info, x)    __cpuidex(info, x, 0)
+    #endif
 #endif
 
 namespace SPTAG {
@@ -37,13 +39,14 @@ namespace SPTAG {
             static bool SSE2(void);
             static bool AVX2(void);
             static bool AVX512(void);
+            static bool NEON(void); // + => 03/05/24
             static void PrintInstructionSet(void);
 
         private:
             static const InstructionSet_Internal CPU_Rep;
 
-            class InstructionSet_Internal
-            {
+            class InstructionSet_Internal {
+
             public:
                 InstructionSet_Internal();
                 bool HW_SSE;
@@ -51,6 +54,7 @@ namespace SPTAG {
                 bool HW_AVX;
                 bool HW_AVX2;
                 bool HW_AVX512;
+                bool HW_NEON; // + => 03/05/24
             };
         };
     }

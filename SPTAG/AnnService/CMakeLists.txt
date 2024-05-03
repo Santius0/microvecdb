@@ -34,8 +34,22 @@ add_library (DistanceUtils STATIC
     )
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
-    target_compile_options(DistanceUtils PRIVATE -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -fPIC)
+    #available arm flags: -march=armv8-a -mfloat-abi=hard -mfpu=neon -mfpu=crypto-neon-fp-armv8
+
+    # Check for ARMv7-A specifics
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "armv7-a")
+        target_compile_options(DistanceUtils PRIVATE -mfpu=neon -mfloat-abi=softfp -fPIC)
+
+        # Check for ARMv8-A (AArch64) specifics
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+        target_compile_options(DistanceUtils PRIVATE -march=armv8-a -fPIC)  # NEON is enabled by default in ARMv8
+
+        # Default to x86 architecture-specific flags
+    else()
+        target_compile_options(DistanceUtils PRIVATE -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -fPIC)
+    endif()
 endif()
+
 
 add_library (SPTAGLib SHARED ${SRC_FILES} ${HDR_FILES})
 target_link_libraries (SPTAGLib DistanceUtils libzstd_shared ${NUMA_LIBRARY})
