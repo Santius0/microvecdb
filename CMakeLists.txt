@@ -12,7 +12,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
 
 include(FetchContent)
 
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+#find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 #find_program(READELF_EXECUTABLE readelf)
 #if(NOT READELF_EXECUTABLE)
@@ -65,21 +65,23 @@ function(include_sub_directories_recursively root_dir)
 endfunction()
 
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include)        # all targets should have access to these
-link_directories(lib faiss/lib DiskANN/build/src)                         # all targets should be able to link against the contents of the lib directory
+link_directories(lib faiss/lib
+#        DiskANN/build/src
+)                         # all targets should be able to link against the contents of the lib directory
 
-include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/DiskANN/include)
+#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/DiskANN/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/numpy/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
 
 # <<<< Configuring sources headers and link directories ----------------------------------------------------------
 
-FetchContent_Declare(
-        spdlog
-        GIT_REPOSITORY https://github.com/gabime/spdlog.git
-        GIT_TAG v1.13.0
-)
-FetchContent_MakeAvailable(spdlog)
+#FetchContent_Declare(
+#        spdlog
+#        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+#        GIT_TAG v1.13.0
+#)
+#FetchContent_MakeAvailable(spdlog)
 
 # Configuring targets >>>> ----------------------------------------------------------
 ## microvecdb_core:
@@ -164,10 +166,9 @@ set(CPP_SOURCES
 add_library(microvecdb SHARED ${CPP_SOURCES})
 #target_include_directories(microvecdb PUBLIC "${MKL_LIBRARY_DIR}")
 target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C
-#        index
 #        ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
-        pthread m dl faiss faiss_c diskann diskann_s
-#        storage
+        pthread m dl faiss faiss_c
+#        diskann diskann_s
         rocksdb
 )
 set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
@@ -209,7 +210,11 @@ set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIREC
 
 # main:
 add_executable(microvecdb_main main.cpp)
-target_link_libraries(microvecdb_main PUBLIC microvecdb zmq pthread Eigen3::Eigen)
+target_link_libraries(microvecdb_main PUBLIC microvecdb
+#        zmq
+        pthread
+#        Eigen3::Eigen
+)
 
 #################################################
 # Check if we are cross-compiling for Jetson
