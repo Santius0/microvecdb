@@ -15,7 +15,7 @@
 #include <arm_neon.h> // NEON intrinsics
 #endif
 
-#include <cblas.h> // BLAS
+//#include <cblas.h> // BLAS
 
 namespace mvdb {
 
@@ -65,7 +65,7 @@ namespace mvdb {
      * @param vec_comp_n Number of vectors in the second set.
      * @return Dynamically allocated array of distances, size n * vec_comp_n.
     */
-    float *l2_distance_blas(const float *vec, size_t n, size_t d, const float *vec_comp, size_t vec_comp_n);
+//    float *l2_distance_blas(const float *vec, size_t n, size_t d, const float *vec_comp, size_t vec_comp_n);
 
 } // namespace mvdb
 

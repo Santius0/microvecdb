@@ -34,28 +34,28 @@ namespace mvdb {
     }
 
 
-    float l2_distance_blas_single(const float *vec1, const float *vec2, const size_t& d) {
-        // Compute the dot product of vec[i] with itself
-        float ai_dot = cblas_sdot(static_cast<int>(d), &vec1[0], 1, &vec1[0], 1);
-        // Compute the dot product of vec_comp[j] with itself
-        float bj_dot = cblas_sdot(static_cast<int>(d), &vec2[0], 1, &vec2[0], 1);
-        // Compute the dot product of vec[i] and vec_comp[j]
-        float ab_dot = cblas_sdot(static_cast<int>(d), &vec1[0], 1, &vec2[0], 1);
-        // Calculate the squared L2 distance using the dot products
-        float sum = ai_dot - 2 * ab_dot + bj_dot;
-        return std::sqrt(sum);
-    }
+//    float l2_distance_blas_single(const float *vec1, const float *vec2, const size_t& d) {
+//        // Compute the dot product of vec[i] with itself
+//        float ai_dot = cblas_sdot(static_cast<int>(d), &vec1[0], 1, &vec1[0], 1);
+//        // Compute the dot product of vec_comp[j] with itself
+//        float bj_dot = cblas_sdot(static_cast<int>(d), &vec2[0], 1, &vec2[0], 1);
+//        // Compute the dot product of vec[i] and vec_comp[j]
+//        float ab_dot = cblas_sdot(static_cast<int>(d), &vec1[0], 1, &vec2[0], 1);
+//        // Calculate the squared L2 distance using the dot products
+//        float sum = ai_dot - 2 * ab_dot + bj_dot;
+//        return std::sqrt(sum);
+//    }
 
-    float* l2_distance_blas(const float* vec, size_t n, size_t d, const float* vec_comp, size_t vec_comp_n) {
-        auto* distances = new float[n * vec_comp_n];
-        #pragma omp parallel for collapse(2)
-        for (size_t i = 0; i < n; ++i) {
-            for (size_t j = 0; j < vec_comp_n; ++j) {
-                distances[i * vec_comp_n + j] = l2_distance_blas_single(vec + i * d, vec_comp + j * d, d);
-            }
-        }
-        return distances;
-    }
+//    float* l2_distance_blas(const float* vec, size_t n, size_t d, const float* vec_comp, size_t vec_comp_n) {
+//        auto* distances = new float[n * vec_comp_n];
+//        #pragma omp parallel for collapse(2)
+//        for (size_t i = 0; i < n; ++i) {
+//            for (size_t j = 0; j < vec_comp_n; ++j) {
+//                distances[i * vec_comp_n + j] = l2_distance_blas_single(vec + i * d, vec_comp + j * d, d);
+//            }
+//        }
+//        return distances;
+//    }
 
 
     float l2_distance_optimised_single(const float* __restrict vec1, const float* __restrict vec2, const size_t& d) {
