@@ -42,13 +42,13 @@ namespace SPTAG
                 
                 std::lock_guard<std::mutex> lock(m_dataUpdateLock[node]);
 
-                _mm_prefetch((const char*)nodes, _MM_HINT_T0);
-                _mm_prefetch((const char*)(nodeVec), _MM_HINT_T0);
-                _mm_prefetch((const char*)(insertVec), _MM_HINT_T0);
+                portable_prefetch(nodes);
+                portable_prefetch(nodeVec);
+                portable_prefetch(insertVec);
                 for (DimensionType i = 0; i < m_iNeighborhoodSize; i++) {
                     auto futureNode = nodes[i];
                     if (futureNode < 0) break;
-                    _mm_prefetch((const char*)(index->GetSample(futureNode)), _MM_HINT_T0);
+                    portable_prefetch((index->GetSample(futureNode)));
                 }
 
                 SizeType tmpNode;

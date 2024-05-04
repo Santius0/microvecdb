@@ -2,8 +2,40 @@
 # Licensed under the MIT License.
 
 cmake_minimum_required (VERSION 3.12)
-
+set(CMAKE_CXX_STANDARD 17)
 project (SPTAGLib)
+
+#set(CMAKE_SYSTEM_NAME Linux)
+#set(CMAKE_SYSTEM_PROCESSOR arm)
+#
+#set(CMAKE_C_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/linario/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc")
+#set(CMAKE_CXX_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/linario/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++")
+#
+#set(CMAKE_SYSROOT "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/jetson-nano-sysroot")
+#message(STATUS "sysroot=${CMAKE_SYSROOT}")
+#set(CMAKE_STAGING_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/jetson-nano-sysroot")
+#set(CMAKE_FIND_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/jetson-nano-sysroot")
+#
+#include_directories(${CMAKE_SYSROOT}/usr/include)
+#link_directories(${CMAKE_SYSROOT}/usr/lib)
+#
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --sysroot=${CMAKE_SYSROOT}")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --sysroot=${CMAKE_SYSROOT}")
+#message(STATUS "Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
+#message(STATUS "Compiler Version: ${CXX_COMPILER_VERSION}")
+#
+#set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM BOTH)
+#set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+#set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+#set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+
+
+# Disable warnings
+#if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+#    add_compile_options(-w) # Turn off all warnings for GCC/Clang
+#elseif(MSVC)
+#    add_compile_options(/W0) # Turn off all warnings for MSVC
+#endif()
 
 function(CXX_COMPILER_DUMPVERSION _OUTPUT_VERSION)
   exec_program(${CMAKE_CXX_COMPILER}
@@ -23,7 +55,7 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     if (CXX_COMPILER_VERSION VERSION_LESS 5.0)
         message(FATAL_ERROR "GCC version must be at least 5.0!")
     endif()
-    set (CMAKE_CXX_FLAGS "-Wall -Wunreachable-code -Wno-reorder -Wno-delete-non-virtual-dtor -Wno-sign-compare -Wno-unknown-pragmas -Wcast-align -lm -lrt -std=c++14 -fopenmp")
+    set (CMAKE_CXX_FLAGS "-Wall -Wunreachable-code -Wno-reorder -Wno-delete-non-virtual-dtor -Wno-sign-compare -Wno-unknown-pragmas -Wcast-align -lm -lrt -std=c++17 -fopenmp")
     set (CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native")
     set (CMAKE_CXX_FLAGS_DEBUG   "-g -DDEBUG")
 
@@ -99,6 +131,14 @@ if (OpenMP_FOUND)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
     message (STATUS "Found openmp.")
+    message(STATUS "OpenMP was found!")
+    message(STATUS "OpenMP C Flags: ${OpenMP_C_FLAGS}")
+    message(STATUS "OpenMP CXX Flags: ${OpenMP_CXX_FLAGS}")
+    message(STATUS "OpenMP Libraries: ${OpenMP_CXX_LIBRARIES}")
+    get_target_property(OPENMP_INCLUDE_DIRS OpenMP::OpenMP_CXX INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(OPENMP_LIBRARY_DIRS OpenMP::OpenMP_CXX INTERFACE_LINK_LIBRARIES)
+    message(STATUS "OpenMP Include Dirs: ${OPENMP_INCLUDE_DIRS}")
+    message(STATUS "OpenMP Library Dirs: ${OPENMP_LIBRARY_DIRS}")
 else()
     message (FATAL_ERROR "Could no find openmp!")
 endif()
@@ -122,5 +162,5 @@ add_subdirectory (ThirdParty/zstd/build/cmake)
 
 add_subdirectory (AnnService)
 #add_subdirectory (Test)
-add_subdirectory (GPUSupport)
+#add_subdirectory (GPUSupport)
 #add_subdirectory (Wrappers)

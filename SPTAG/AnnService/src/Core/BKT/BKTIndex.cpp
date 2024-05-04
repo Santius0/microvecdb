@@ -142,128 +142,6 @@ namespace SPTAG
         }
         
 #pragma region K-NN search
-/*
-
-#define Search(CheckDeleted, CheckDuplicated, CheckFilter) \
-                std::shared_lock<std::shared_timed_mutex> lock(*(m_pTrees.m_lock)); \
-        m_pTrees.InitSearchTrees(m_pSamples, m_fComputeDistance, p_query, p_space); \
-        m_pTrees.SearchTrees(m_pSamples, m_fComputeDistance, p_query, p_space, m_iNumberOfInitialDynamicPivots); \
-        const DimensionType checkPos = m_pGraph.m_iNeighborhoodSize - 1; \
-        while (!p_space.m_NGQueue.empty()) { \
-            NodeDistPair gnode = p_space.m_NGQueue.pop(); \
-            SizeType tmpNode = gnode.node; \
-            const SizeType *node = m_pGraph[tmpNode]; \
-            _mm_prefetch((const char *)node, _MM_HINT_T0); \
-            for (DimensionType i = 0; i <= checkPos; i++) { \
-                _mm_prefetch((const char *)(m_pSamples)[node[i]], _MM_HINT_T0); \
-            } \
-            if (gnode.distance <= p_query.worstDist()) { \
-                SizeType checkNode = node[checkPos]; \
-                if (checkNode < -1) { \
-                    const COMMON::BKTNode& tnode = m_pTrees[-2 - checkNode]; \
-                    SizeType i = -tnode.childStart; \
-                    do { \
-                        CheckDeleted \
-                        { \
-                            CheckFilter \
-                            { \
-                                CheckDuplicated \
-                                break; \
-                            } \
-                        } \
-                        tmpNode = m_pTrees[i].centerid; \
-                    } while (i++ < tnode.childEnd); \
-               } else { \
-                   CheckDeleted \
-                   { \
-                       CheckFilter \
-                       { \
-                           p_query.AddPoint(tmpNode, gnode.distance); \
-                       } \
-                   } \
-               } \
-            } else { \
-                CheckDeleted \
-                { \
-                    if (gnode.distance > p_space.m_Results.worst() || p_space.m_iNumberOfCheckedLeaves > p_space.m_iMaxCheck) { \
-                        p_query.SortResult(); return; \
-                    } \
-                } \
-            } \
-            for (DimensionType i = 0; i <= checkPos; i++) { \
-                SizeType nn_index = node[i]; \
-                if (nn_index < 0) break; \
-                if (p_space.CheckAndSet(nn_index)) continue; \
-                float distance2leaf = m_fComputeDistance(p_query.GetQuantizedTarget(), (m_pSamples)[nn_index], GetFeatureDim()); \
-                p_space.m_iNumberOfCheckedLeaves++; \
-                if (p_space.m_Results.insert(distance2leaf)) { \
-                    p_space.m_NGQueue.insert(NodeDistPair(nn_index, distance2leaf)); \
-                } \
-            } \
-            if (p_space.m_NGQueue.Top().distance > p_space.m_SPTQueue.Top().distance) { \
-                m_pTrees.SearchTrees(m_pSamples, m_fComputeDistance, p_query, p_space, m_iNumberOfOtherDynamicPivots + p_space.m_iNumberOfCheckedLeaves); \
-            } \
-        } \
-        p_query.SortResult(); \
-*/
-
-/*
-#define SearchIterative(CheckDeleted, p_isFirst, batch) \
-        if (p_isFirst) { \
-            m_pTrees.InitSearchTrees(m_pSamples, m_fComputeDistance, p_query, p_space); \
-            m_pTrees.SearchTrees(m_pSamples, m_fComputeDistance, p_query, p_space, m_iNumberOfInitialDynamicPivots); \
-        } \
-        const DimensionType checkPos = m_pGraph.m_iNeighborhoodSize - 1; \
-        while (!p_space.m_NGQueue.empty()) { \
-            NodeDistPair gnode = p_space.m_NGQueue.pop(); \
-            SizeType tmpNode = gnode.node; \
-            const SizeType *node = m_pGraph[tmpNode]; \
-            _mm_prefetch((const char *)node, _MM_HINT_T0); \
-            for (DimensionType i = 0; i <= checkPos; i++) { \
-                _mm_prefetch((const char *)(m_pSamples)[node[i]], _MM_HINT_T0); \
-            } \
-            CheckDeleted \
-                { \
-                    p_query.AddPoint(tmpNode, gnode.distance); \
-                    count++; \
-                    if (gnode.distance > p_space.m_Results.worst() || p_space.m_iNumberOfCheckedLeaves > p_space.m_iMaxCheck) { \
-                        p_space.m_relaxedMono = true; \
-                    } \
-                } \
-            SizeType checkNode = node[checkPos]; \
-            if (checkNode < -1) { \
-                const COMMON::BKTNode& tnode = m_pTrees[-2 - checkNode]; \
-                SizeType i = -tnode.childStart; \
-                while (i < tnode.childEnd) { \
-                    tmpNode = m_pTrees[i].centerid; \
-                    CheckDeleted \
-                    { \
-                        float distance2leaf = m_fComputeDistance(p_query.GetQuantizedTarget(), (m_pSamples)[tmpNode], GetFeatureDim()); \
-                        if (!p_space.CheckAndSet(tmpNode)) { \
-                            p_space.m_NGQueue.insert(NodeDistPair(tmpNode, distance2leaf)); \
-                        } \
-                    } \
-                    i++; \
-                }\
-            } \
-                for (DimensionType i = 0; i <= checkPos; i++) { \
-                    SizeType nn_index = node[i]; \
-                    if (nn_index < 0) break; \
-                    if (p_space.CheckAndSet(nn_index)) continue; \
-					float distance2leaf = m_fComputeDistance(p_query.GetQuantizedTarget(), (m_pSamples)[nn_index], GetFeatureDim()); \
-					p_space.m_iNumberOfCheckedLeaves++; \
-					p_space.m_NGQueue.insert(NodeDistPair(nn_index, distance2leaf)); \
-					p_space.m_Results.insert(distance2leaf); \
-                } \
-            if (p_space.m_NGQueue.Top().distance > p_space.m_SPTQueue.Top().distance) { \
-                m_pTrees.SearchTrees(m_pSamples, m_fComputeDistance, p_query, p_space, m_iNumberOfOtherDynamicPivots + p_space.m_iNumberOfCheckedLeaves); \
-            } \
-            if (count >= batch) {\
-                break; \
-            } \
-        } \
-        p_query.SortResult(); \
-*/
 
         template<typename T>
         template <bool(*notDeleted)(const COMMON::Labelset&, SizeType), 
@@ -280,17 +158,17 @@ namespace SPTAG
                 NodeDistPair gnode = p_space.m_NGQueue.pop();
                 SizeType tmpNode = gnode.node;
                 const SizeType* node = m_pGraph[tmpNode];
-                _mm_prefetch((const char*)node, _MM_HINT_T0);
+                portable_prefetch(node);
                 for (DimensionType i = 0; i <= checkPos; i++) {
                     auto futureNode = node[i];
                     if (futureNode < 0) break;
-                    _mm_prefetch((const char*)(m_pSamples)[futureNode], _MM_HINT_T0);
+                    portable_prefetch(m_pSamples[futureNode]);
                 }
 
-                if (gnode.distance <= p_query.worstDist()) 
+                if (gnode.distance <= p_query.worstDist())
                 {
                     SizeType checkNode = node[checkPos];
-                    if (checkNode < -1) 
+                    if (checkNode < -1)
                     {
                         const COMMON::BKTNode& tnode = m_pTrees[-2 - checkNode];
                         SizeType i = -tnode.childStart;
@@ -319,18 +197,18 @@ namespace SPTAG
                         }
                     }
                 }
-                else 
+                else
                 {
                     if (notDeleted(m_deletedID, tmpNode))
                     {
-                        if (gnode.distance > p_space.m_Results.worst() || p_space.m_iNumberOfCheckedLeaves > p_space.m_iMaxCheck) 
+                        if (gnode.distance > p_space.m_Results.worst() || p_space.m_iNumberOfCheckedLeaves > p_space.m_iMaxCheck)
                         {
                                 p_query.SortResult();
                                 return;
                         }
                     }
                 }
-                for (DimensionType i = 0; i <= checkPos; i++) 
+                for (DimensionType i = 0; i <= checkPos; i++)
                 {
                     SizeType nn_index = node[i];
                     if (nn_index < 0) break;
@@ -354,32 +232,32 @@ namespace SPTAG
         template<typename T>
         template <bool(*notDeleted)(const COMMON::Labelset&, SizeType),
             bool(*isDup)(COMMON::QueryResultSet<T>&, SizeType, float)>
-            int Index<T>::SearchIterative(COMMON::QueryResultSet<T>& p_query, 
+            int Index<T>::SearchIterative(COMMON::QueryResultSet<T>& p_query,
                 COMMON::WorkSpace& p_space, bool p_isFirst, int batch) const
         {
             std::shared_lock<std::shared_timed_mutex> lock(*(m_pTrees.m_lock));
             if (p_isFirst) {
                 m_pTrees.InitSearchTrees(m_pSamples, m_fComputeDistance, p_query, p_space);
-                m_pTrees.SearchTrees(m_pSamples, m_fComputeDistance, p_query, 
+                m_pTrees.SearchTrees(m_pSamples, m_fComputeDistance, p_query,
                     p_space, m_iNumberOfInitialDynamicPivots);
-            } 
+            }
             int count = 0;
             const DimensionType checkPos = m_pGraph.m_iNeighborhoodSize - 1;
             while (!p_space.m_NGQueue.empty()) {
                 NodeDistPair gnode = p_space.m_NGQueue.pop();
                 SizeType tmpNode = gnode.node;
                 const SizeType* node = m_pGraph[tmpNode];
-                _mm_prefetch((const char*)node, _MM_HINT_T0);
+                portable_prefetch(node);
                 for (DimensionType i = 0; i <= checkPos; i++) {
                     auto futureNode = node[i];
                     if (futureNode < 0) break;
-                    _mm_prefetch((const char*)(m_pSamples)[futureNode], _MM_HINT_T0);
+                    portable_prefetch((m_pSamples)[futureNode]);
                 }
                 if (notDeleted(m_deletedID, tmpNode))
                 {
                     p_query.AddPoint(tmpNode, gnode.distance);
                     count++;
-                    if (gnode.distance > p_space.m_Results.worst() || 
+                    if (gnode.distance > p_space.m_Results.worst() ||
                         p_space.m_iNumberOfCheckedLeaves > p_space.m_iMaxCheck) {
                         p_space.m_relaxedMono = true;
                     }
@@ -440,7 +318,7 @@ namespace SPTAG
             }
 
             template <typename T>
-            bool CheckDup(COMMON::QueryResultSet<T>& query, SizeType node, float score) 
+            bool CheckDup(COMMON::QueryResultSet<T>& query, SizeType node, float score)
             {
                 return !query.AddPoint(node, score);
             }
@@ -508,7 +386,7 @@ namespace SPTAG
         }
 
         template <typename T>
-        int Index<T>::SearchIndexIterative(COMMON::QueryResultSet<T>& p_query, COMMON::WorkSpace& p_space, bool p_isFirst, 
+        int Index<T>::SearchIndexIterative(COMMON::QueryResultSet<T>& p_query, COMMON::WorkSpace& p_space, bool p_isFirst,
             int batch, bool p_searchDeleted, bool p_searchDuplicated) const
         {
             int count = 0;
@@ -542,11 +420,11 @@ namespace SPTAG
         template <typename T>
         bool Index<T>::SearchIndexIterativeFromNeareast(QueryResult& p_query, COMMON::WorkSpace* p_space, bool p_isFirst, bool p_searchDeleted) const
         {
-            if (p_isFirst) 
+            if (p_isFirst)
             {
 		        p_space->ResetResult(m_iMaxCheck, p_query.GetResultNum());
                 SearchIndex(*((COMMON::QueryResultSet<T>*) & p_query), *p_space, p_searchDeleted, true);
-                // make sure other node can be traversed after topk found 
+                // make sure other node can be traversed after topk found
 		        p_space->nodeCheckStatus.clear();
                 for (int i = 0; i < p_query.GetResultNum(); ++i)
                 {
@@ -556,11 +434,11 @@ namespace SPTAG
                     p_space->nodeCheckStatus.CheckAndSet(result);
                     const DimensionType checkPos = m_pGraph.m_iNeighborhoodSize - 1;
                     const SizeType* node = m_pGraph[result];
-                    _mm_prefetch((const char*)node, _MM_HINT_T0);
+                    portable_prefetch(node);
                     for (DimensionType i = 0; i <= checkPos; i++) {
                         auto futureNode = node[i];
                         if (futureNode < 0) break;
-                        _mm_prefetch((const char*)(m_pSamples)[futureNode], _MM_HINT_T0);
+                        portable_prefetch((m_pSamples)[futureNode]);
                     }
                     for (DimensionType i = 0; i <= checkPos; i++) {
                         SizeType nn_index = node[i];

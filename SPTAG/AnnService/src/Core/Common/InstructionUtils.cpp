@@ -2,9 +2,11 @@
 #include "inc/Core/Common.h"
 
 #ifndef _MSC_VER
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) // 03/05/24 - Sergio
 void cpuid(int info[4], int InfoType) {
     __cpuid_count(InfoType, 0, info[0], info[1], info[2], info[3]);
 }
+#endif
 #endif
 
 namespace SPTAG {

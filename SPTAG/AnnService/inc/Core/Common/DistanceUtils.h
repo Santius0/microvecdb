@@ -42,27 +42,31 @@ namespace SPTAG
                 return diff;
             }
 
+            #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
             static float ComputeL2Distance_SSE(const std::int8_t* pX, const std::int8_t* pY, DimensionType length);
             static float ComputeL2Distance_AVX(const std::int8_t* pX, const std::int8_t* pY, DimensionType length);
             static float ComputeL2Distance_AVX512(const std::int8_t* pX, const std::int8_t* pY, DimensionType length);
-            static float ComputeL2Distance_NEON(const std::int8_t* pX, const std::int8_t* pY, DimensionType length); // + => 03/05/24
 
             static float ComputeL2Distance_SSE(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length);
             static float ComputeL2Distance_AVX(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length);
             static float ComputeL2Distance_AVX512(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length);
-            static float ComputeL2Distance_NEON(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length); // + => 03/05/24
 
             static float ComputeL2Distance_SSE(const std::int16_t* pX, const std::int16_t* pY, DimensionType length);
             static float ComputeL2Distance_AVX(const std::int16_t* pX, const std::int16_t* pY, DimensionType length);
             static float ComputeL2Distance_AVX512(const std::int16_t* pX, const std::int16_t* pY, DimensionType length);
-            static float ComputeL2Distance_NEON(const std::int16_t* pX, const std::int16_t* pY, DimensionType length); // + => 03/05/24
 
             static float ComputeL2Distance_SSE(const float* pX, const float* pY, DimensionType length);
             static float ComputeL2Distance_AVX(const float* pX, const float* pY, DimensionType length);
             static float ComputeL2Distance_AVX512(const float* pX, const float* pY, DimensionType length);
-            static float ComputeL2Distance_NEON(const float* pX, const float* pY, DimensionType length); // + => 03/05/24
 
-            template <typename T>
+            #elif defined(__arm__) || defined(__aarch64__)
+            static float ComputeL2Distance_NEON(const std::int8_t* pX, const std::int8_t* pY, DimensionType length); // + => 03/05/24
+            static float ComputeL2Distance_NEON(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length); // + => 03/05/24
+            static float ComputeL2Distance_NEON(const std::int16_t* pX, const std::int16_t* pY, DimensionType length); // + => 03/05/24
+            static float ComputeL2Distance_NEON(const float* pX, const float* pY, DimensionType length); // + => 03/05/24
+            #endif
+
+template <typename T>
             static float ComputeCosineDistance(const T* pX, const T* pY, DimensionType length)
             {
                 const T* pEnd4 = pX + ((length >> 2) << 2);
@@ -82,25 +86,29 @@ namespace SPTAG
                 return base * base - diff;
             }
 
+            #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
             static float ComputeCosineDistance_SSE(const std::int8_t* pX, const std::int8_t* pY, DimensionType length);
             static float ComputeCosineDistance_AVX(const std::int8_t* pX, const std::int8_t* pY, DimensionType length);
             static float ComputeCosineDistance_AVX512(const std::int8_t* pX, const std::int8_t* pY, DimensionType length);
-            static float ComputeCosineDistance_NEON(const std::int8_t* pX, const std::int8_t* pY, DimensionType length); // + => 03/05/24
 
             static float ComputeCosineDistance_SSE(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length);
             static float ComputeCosineDistance_AVX(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length);
             static float ComputeCosineDistance_AVX512(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length);
-            static float ComputeCosineDistance_NEON(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length); // + => 03/05/24
 
             static float ComputeCosineDistance_SSE(const std::int16_t* pX, const std::int16_t* pY, DimensionType length);
             static float ComputeCosineDistance_AVX(const std::int16_t* pX, const std::int16_t* pY, DimensionType length);
             static float ComputeCosineDistance_AVX512(const std::int16_t* pX, const std::int16_t* pY, DimensionType length);
-            static float ComputeCosineDistance_NEON(const std::int16_t* pX, const std::int16_t* pY, DimensionType length); // + => 03/05/24
 
             static float ComputeCosineDistance_SSE(const float* pX, const float* pY, DimensionType length);
             static float ComputeCosineDistance_AVX(const float* pX, const float* pY, DimensionType length);
             static float ComputeCosineDistance_AVX512(const float* pX, const float* pY, DimensionType length);
+
+            #elif defined(__arm__) || defined(__aarch64__)
+            static float ComputeCosineDistance_NEON(const std::int8_t* pX, const std::int8_t* pY, DimensionType length); // + => 03/05/24
+            static float ComputeCosineDistance_NEON(const std::uint8_t* pX, const std::uint8_t* pY, DimensionType length); // + => 03/05/24
+            static float ComputeCosineDistance_NEON(const std::int16_t* pX, const std::int16_t* pY, DimensionType length); // + => 03/05/24
             static float ComputeCosineDistance_NEON(const float* pX, const float* pY, DimensionType length); // + => 03/05/24
+            #endif
 
 
             template<typename T>
@@ -131,6 +139,7 @@ namespace SPTAG
             {
             case SPTAG::DistCalcMethod::InnerProduct:
             case SPTAG::DistCalcMethod::Cosine:
+                #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
                 if (InstructionSet::AVX512())
                 {
                     return &(DistanceUtils::ComputeCosineDistance_AVX512);
@@ -143,15 +152,18 @@ namespace SPTAG
                 {
                     return &(DistanceUtils::ComputeCosineDistance_SSE);
                 }
-                else if (InstructionSet::NEON())
+                #elif defined(__arm__) || defined(__aarch64__)
+                if (InstructionSet::NEON())
                 {
                     return &(DistanceUtils::ComputeCosineDistance_NEON);
                 }
+                #endif
                 else {
                     return &(DistanceUtils::ComputeCosineDistance);
                 }
 
             case SPTAG::DistCalcMethod::L2:
+                #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
                 if (InstructionSet::AVX512())
                 {
                     return &(DistanceUtils::ComputeL2Distance_AVX512);
@@ -164,10 +176,12 @@ namespace SPTAG
                 {
                     return &(DistanceUtils::ComputeL2Distance_SSE);
                 }
-                else if (InstructionSet::NEON())
+                #elif defined(__arm__) || defined(__aarch64__)
+                if (InstructionSet::NEON())
                 {
                     return &(DistanceUtils::ComputeL2Distance_NEON);
                 }
+                #endif
                 else {
                     return &(DistanceUtils::ComputeL2Distance);
                 }

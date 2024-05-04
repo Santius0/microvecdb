@@ -708,7 +708,7 @@ break;
                         p_curr->Top().distance = 1e9;
                        
                         for (SizeType begin = node.childStart; begin < node.childEnd; begin++) {
-                            _mm_prefetch((const char*)(data[m_pTreeRoots[begin].centerid]), _MM_HINT_T0);
+                            portable_prefetch((data[m_pTreeRoots[begin].centerid]));
                         }
                         
                         for (SizeType begin = node.childStart; begin < node.childEnd; begin++) {
@@ -732,7 +732,7 @@ break;
                                 }
                                 else {
                                     for (SizeType begin = tnode.childStart; begin < tnode.childEnd; begin++) {
-                                        _mm_prefetch((const char*)(data[m_pTreeRoots[begin].centerid]), _MM_HINT_T0);
+                                        portable_prefetch((data[m_pTreeRoots[begin].centerid]));
                                     }
                                     if (!p_space.CheckAndSet(tnode.centerid)) {
                                         p_space.m_NGQueue.insert(NodeDistPair(tnode.centerid, tmp.distance));
@@ -758,7 +758,7 @@ break;
                     }
                     else {
                         for (SizeType begin = node.childStart; begin < node.childEnd; begin++) {
-                            _mm_prefetch((const char*)(data[m_pTreeRoots[begin].centerid]), _MM_HINT_T0);
+                            portable_prefetch((data[m_pTreeRoots[begin].centerid]));
                         }
                         for (SizeType begin = node.childStart; begin < node.childEnd; begin++) {
                             SizeType index = m_pTreeRoots[begin].centerid;
@@ -785,7 +785,7 @@ break;
                     }
                     else {
                         for (SizeType begin = tnode.childStart; begin < tnode.childEnd; begin++) {
-                            _mm_prefetch((const char*)(data[m_pTreeRoots[begin].centerid]), _MM_HINT_T0);
+                            portable_prefetch((data[m_pTreeRoots[begin].centerid]));
                         }
                         if (!p_space.CheckAndSet(tnode.centerid)) {
                             p_space.m_NGQueue.insert(NodeDistPair(tnode.centerid, bcell.distance));

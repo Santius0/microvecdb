@@ -8,11 +8,11 @@
 
 #ifndef GPU
     #ifndef _MSC_VER
-        #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) // 03/05/24 - Sergio
+        #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) // 03/05/24
             #include <cpuid.h>
             #include <xmmintrin.h>
             #include <immintrin.h>
-        #elif defined(__arm__) || defined(__aarch64__) // 03/05/24 - Sergio
+        #elif defined(__arm__) || defined(__aarch64__) // 03/05/24
             #include <arm_neon.h>
             #include <sys/auxv.h>
             #include <asm/hwcap.h>

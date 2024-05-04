@@ -14,6 +14,16 @@ set(CMAKE_CXX_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/linario/gcc-linaro-7.3.1-201
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE) # neon is included by default in the armv8-a architecture
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE)
 
+set(CMAKE_FIND_ROOT_PATH ${CMAKE_SYSROOT})
+
+# Adjust default behavior of the FIND_XXX commands to look for libraries and headers in the target environment
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+
+find_package(OpenMP REQUIRED)
+
 #find_package(benchmark REQUIRED)
 
 function(include_sub_directories_recursively root_dir)
@@ -41,7 +51,7 @@ include_sub_directories_recursively(${CMAKE_CURRENT_SOURCE_DIR}/../include)
 add_library(microvecdb ${CMAKE_CURRENT_SOURCE_DIR}/../src/index/distances.cpp)
 
 #target_include_directories(microvecdb PRIVATE ${eigen_SOURCE_DIR})
-target_link_libraries(microvecdb PUBLIC pthread openblas)
+target_link_libraries(microvecdb PUBLIC pthread openblas OpenMP::OpenMP_CXX OpenMP::OpenMP_C)
 
 #add_executable(distance_metrics_benchmarks ${CMAKE_CURRENT_SOURCE_DIR}/../benchmarks/index/distance_metrics_benchmarks.cpp)
 #target_link_libraries(distance_metrics_benchmarks microvecdb benchmark::benchmark)

@@ -24,7 +24,8 @@
 #include "inc/Helper/DiskIO.h"
 
 #ifndef _MSC_VER
-#include <stdio.h>
+
+#include <cstdio>
 #include <unistd.h>
 #include <dirent.h>
 #include <cstring>
@@ -34,9 +35,35 @@
 
 #if defined(__INTEL_COMPILER)
 #include <malloc.h>
+#elif defined(__arm__) || defined(__aarch64__)
+#include <arm_neon.h>
+// do nothing - this is just here to make sure we don't include mm_malloc.h on ARM.
+// this means compilation on ARM must be with C++17 or higher
 #else
 #include <mm_malloc.h>
 #endif
+
+// portable prefetch function so I can use this on ARM
+
+#if defined(__SSE__) || defined(__SSE2__) // Check if SSE/SSE2 is available
+#include <xmmintrin.h> // Include for _mm_prefetch
+static inline void portable_prefetch(const void* ptr) {
+    _mm_prefetch(static_cast<const char*>(ptr), _MM_HINT_T0);
+}
+#elif defined(__ARM_ARCH) // Check if compiling for ARM architecture
+static inline void portable_prefetch(const void* ptr) {
+#if __ARM_ARCH >= 8 // ARMv8 has PRFM instruction
+    __asm__ __volatile__("prfm pldl1keep, %0" :: "Q"(*(static_cast<const volatile char*>(ptr))));
+#else // For older ARM versions, use builtin_prefetch
+    __builtin_prefetch(ptr, 0, 3);
+#endif
+}
+#else // Fallback for other architectures
+static inline void portable_prefetch(const void* ptr) {
+    __builtin_prefetch(ptr, 0, 3);
+}
+#endif
+
 
 #define FolderSep '/'
 

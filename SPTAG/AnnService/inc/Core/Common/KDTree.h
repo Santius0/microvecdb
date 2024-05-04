@@ -239,8 +239,8 @@ break;
                     if (index >= p_data.R()) return;
 #ifdef PREFETCH
                     const T* data = p_data[index];
-                    _mm_prefetch((const char*)data, _MM_HINT_T0);
-                    _mm_prefetch((const char*)(data + 64), _MM_HINT_T0);
+                    portable_prefetch(data);
+                    portable_prefetch(data + 64);
 #endif
                     if (p_space.CheckAndSet(index)) return;
 

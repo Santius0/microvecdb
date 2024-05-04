@@ -140,45 +140,7 @@ namespace SPTAG
         }
 
 #pragma region K-NN search
-        /*
-#define Search(CheckDeleted) \
-        std::shared_lock<std::shared_timed_mutex> lock(*(m_pTrees.m_lock)); \
-        m_pTrees.InitSearchTrees<T,Q>(m_pSamples, m_fComputeDistance, p_query, p_space); \
-        m_pTrees.SearchTrees<T,Q>(m_pSamples, m_fComputeDistance, p_query, p_space, m_iNumberOfInitialDynamicPivots); \
-        while (!p_space.m_NGQueue.empty()) { \
-            NodeDistPair gnode = p_space.m_NGQueue.pop(); \
-            const SizeType *node = m_pGraph[gnode.node]; \
-            _mm_prefetch((const char *)node, _MM_HINT_T0); \
-            for (DimensionType i = 0; i < m_pGraph.m_iNeighborhoodSize; i++) \
-                _mm_prefetch((const char *)(m_pSamples)[node[i]], _MM_HINT_T0); \
-            CheckDeleted { \
-                if (!p_query.AddPoint(gnode.node, gnode.distance) && p_space.m_iNumberOfCheckedLeaves > p_space.m_iMaxCheck) { \
-                    p_query.SortResult(); return; \
-                } \
-            } \
-            float upperBound = max(p_query.worstDist(), gnode.distance); \
-            bool bLocalOpt = true; \
-            for (DimensionType i = 0; i < m_pGraph.m_iNeighborhoodSize; i++) { \
-                SizeType nn_index = node[i]; \
-                if (nn_index < 0) break; \
-                if (p_space.CheckAndSet(nn_index)) continue; \
-                float distance2leaf = m_fComputeDistance(p_query.GetQuantizedTarget(), (m_pSamples)[nn_index], GetFeatureDim()); \
-                if (distance2leaf <= upperBound) bLocalOpt = false; \
-                p_space.m_iNumberOfCheckedLeaves++; \
-                p_space.m_NGQueue.insert(NodeDistPair(nn_index, distance2leaf)); \
-            } \
-            if (bLocalOpt) p_space.m_iNumOfContinuousNoBetterPropagation++; \
-            else p_space.m_iNumOfContinuousNoBetterPropagation = 0; \
-            if (p_space.m_iNumOfContinuousNoBetterPropagation > m_iThresholdOfNumberOfContinuousNoBetterPropagation) { \
-                if (p_space.m_iNumberOfTreeCheckedLeaves <= p_space.m_iNumberOfCheckedLeaves / 10) { \
-                    m_pTrees.SearchTrees<T,Q>(m_pSamples, m_fComputeDistance, p_query, p_space, m_iNumberOfOtherDynamicPivots + p_space.m_iNumberOfCheckedLeaves); \
-                } else if (gnode.distance > p_query.worstDist()) { \
-                    break; \
-                } \
-            } \
-        } \
-        p_query.SortResult(); \
-*/
+
         template<typename T>
         template<typename Q, bool(*notDeleted)(const COMMON::Labelset&, SizeType)>
         void Index<T>::Search(COMMON::QueryResultSet<T>& p_query, COMMON::WorkSpace& p_space) const
@@ -190,12 +152,12 @@ namespace SPTAG
             {
                 NodeDistPair gnode = p_space.m_NGQueue.pop();
                 const SizeType* node = m_pGraph[gnode.node];
-                _mm_prefetch((const char*)node, _MM_HINT_T0);
+                portable_prefetch(node);
                 for (DimensionType i = 0; i < m_pGraph.m_iNeighborhoodSize; i++)
                 {
                     auto futureNode = node[i];
                     if (futureNode < 0) break;
-                    _mm_prefetch((const char*)(m_pSamples)[futureNode], _MM_HINT_T0);
+                    portable_prefetch((m_pSamples)[futureNode]);
                 }
                     
                 if (notDeleted(m_deletedID, gnode.node))
