@@ -1,5 +1,5 @@
-#include "kmeans.h"
-#include "distances.h"
+#include "unused/kmeans.h"
+#include "unused/distances.h"
 
 #include <iostream>
 #include <limits>

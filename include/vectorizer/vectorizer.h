@@ -9,21 +9,6 @@
 
 namespace mvdb {
 
-//    class VectorizerMetadata : public Serializable{
-//        std::string model;
-//        uint64_t dimensions{};
-//    protected:
-//        void serialize(std::ostream& out) const override;
-//        void deserialize(std::istream& in) override;
-//        friend class Vectorizer;
-//        friend class VectorCollectionMetadata;
-//        friend class Metadata;
-//    public:
-//        VectorizerMetadata() = default;
-//        explicit VectorizerMetadata(std::string  model, const uint64_t& dimensions);
-//        ~VectorizerMetadata() override = default;
-//    };
-
     enum class VectorizerModelType {
         FASTTEXT = 0
     };

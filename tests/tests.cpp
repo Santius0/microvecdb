@@ -2,7 +2,7 @@
 #include <random>
 
 #include <index.h>
-#include <quantization.h>
+#include "unused/quantization.h"
 //#include <faiss_flat_index.h>
 
 //

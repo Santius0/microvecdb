@@ -1,5 +1,5 @@
 #include "utils.h"
-#include "flat_index.h"
+#include "unused/flat_index.h"
 #include "faiss_flat_index.h"
 
 #include <benchmark/benchmark.h>

@@ -1,4 +1,4 @@
-#include "diskann_index.h"
+#include "unused/diskann_index.h"
 #include "filesystem.h"
 
 namespace mvdb::index {

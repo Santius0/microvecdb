@@ -10,7 +10,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
 
-include(FetchContent)
+#include(FetchContent)
 
 #find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
@@ -148,14 +148,14 @@ include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
 
 set(CPP_SOURCES
 #        core
-        src/mvdb.cpp
-        src/db.cpp
+        src/core/mvdb.cpp
+        src/core/db.cpp
         src/core/utils.cpp
         src/operators/operators.cpp
 #        index
-        src/index/distances.cpp
-        src/index/knn.cpp
-        src/index/flat_index.cpp
+        src/unused/distances.cpp
+        src/unused/knn.cpp
+        src/unused/flat_index.cpp
         src/index/faiss_flat_index.cpp
 #        storage
         src/storage/storage.cpp

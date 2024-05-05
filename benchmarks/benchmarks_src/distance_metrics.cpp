@@ -1,4 +1,4 @@
-#include "distances.h"
+#include "unused/distances.h"
 #include "utils.h"
 
 #include <benchmark/benchmark.h>
@@ -33,7 +33,7 @@ static void BM_L2_distance_blas(benchmark::State& state) {
     mvdb::read_vectors(query_file, num_queries, dims, queries);
     float *distances = nullptr;
     for (auto _ : state)
-        distances = mvdb::l2_distance_blas(vecs, num_vecs, dims, queries, num_queries);
+//        distances = mvdb::l2_distance_blas(vecs, num_vecs, dims, queries, num_queries);
 //    std::cout << "L2 OpenBLAS: ";
 //    for(int i = 0; i < 10; i++)
 //        std::cout << distances[i] << " ";

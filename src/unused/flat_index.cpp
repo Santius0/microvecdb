@@ -1,6 +1,6 @@
-#include "flat_index.h"
-#include "knn.h"
-#include "distances.h"
+#include "unused/flat_index.h"
+#include "unused/knn.h"
+#include "unused/distances.h"
 #include "filesystem.h"
 #include "constants.h"
 
