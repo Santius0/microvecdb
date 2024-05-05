@@ -1,4 +1,4 @@
-#include "unused/distances.h"
+#include "distances.h"
 
 #if defined(__CUDA__)
     #include <cuda_runtime.h>

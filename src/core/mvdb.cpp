@@ -2,6 +2,17 @@
 
 namespace mvdb {
 
+    template<typename T>
+    void MVDB<T>::create() {
+        db_ = std::make_unique<DB_<T>>();
+        db_->create();
+    }
+
+    template<typename T>
+    void MVDB<T>::open() {
+
+    }
+
     template <typename T>
     bool MVDB<T>::insert(const idx_t &n, const idx_t &d, const T *v, const char *bin,
                       const operators::InsertOperatorDataType &input_data_type,

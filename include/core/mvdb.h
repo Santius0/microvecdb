@@ -6,16 +6,16 @@
 
 namespace mvdb {
 
-    template <typename T>
+    template <typename T = float>
     class MVDB {
         std::unique_ptr<DB_<T>> db_;
     public:
-        MVDB() = default;
+        MVDB();
         ~MVDB() = default;
 
         // system commands
-//        void create();
-//        void open();
+        void create();
+        void open();
 //        void analyse();
 //        void optimise();
 
@@ -30,6 +30,10 @@ namespace mvdb {
 //        void topk(const idx_t& k, const float& c = 100.0f);
 //        void range();
 //        void embed();
+
+        inline DB_<T> * get_db_() const {
+            return db_.get();
+        }
     };
 }
 

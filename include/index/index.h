@@ -4,6 +4,7 @@
 #include "constants.h"
 #include "distances.h"
 #include "serializable.h"
+#include "args.h"
 #include <string>
 #include <memory>
 #include <ostream>
@@ -22,7 +23,8 @@ namespace mvdb::index {
     enum IndexType : unsigned char {
         DISKANN = 0,
         FAISS_FLAT = 1,
-        FLAT = 2
+        FLAT = 2,
+        SPANN
     };
 
     inline std::ostream& operator<<(std::ostream& os, const IndexType& obj) {
@@ -30,6 +32,7 @@ namespace mvdb::index {
             case IndexType::DISKANN:        return os << "DISKANN";
             case IndexType::FAISS_FLAT:     return os << "FAISS_FLAT";
             case IndexType::FLAT:           return os << "FLAT";
+            case IndexType::SPANN:           return os << "SPANN";
             default:                        return os << "invalid index type";
         }
     }
@@ -57,7 +60,7 @@ namespace mvdb::index {
         Index(const Index&) = delete;
         Index& operator=(const Index&) = delete;
         [[nodiscard]] virtual IndexType type() const = 0;
-        virtual void build(const idx_t &dims, const std::string& path);
+        virtual void build(const idx_t &dims, const std::string& path, const NamedArgs& args) = 0;
         virtual void open(const std::string& path) = 0;                     // open current index state and data from location specified via index_path_
         virtual bool add(const idx_t& n, T* data, idx_t* ids) = 0;          // add n to elements to index
         virtual bool remove(const idx_t& n, const idx_t* ids) = 0;          // remove n elements from index
