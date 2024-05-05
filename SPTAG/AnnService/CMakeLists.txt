@@ -2,83 +2,106 @@
 # Licensed under the MIT License.
 
 set(AnnService ${PROJECT_SOURCE_DIR}/AnnService)
-set(Zstd ${PROJECT_SOURCE_DIR}/ThirdParty/zstd)
 
 include_directories(${AnnService})
-include_directories(${Zstd}/lib)
+
+# if an arm device, use precompiled libs other use libs compiled from source
+#if(CROSS_COMPILE)
+#    message(STATUS "Using prebuilt aarch64 zstd")
+#    include_directories(${Zstd}/lib)
+#    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/zstd_aarch64/usr/include)
+#    link_directories(${CMAKE_CURRENT_SOURCE_DIR}/zstd_aarch64/usr/lib)
+#    set(ZSTD_LIB_SHARED "zstd")
+#    set(ZSTD_LIB_STATIC "zstd")
+#else ()
+    set(Zstd ${PROJECT_SOURCE_DIR}/ThirdParty/zstd)
+    include_directories(${Zstd}/lib)
+    set(ZSTD_LIB_SHARED "libzstd_shared")
+    set(ZSTD_LIB_STATIC "libzstd_static")
+#endif ()
+
+message(STATUS "ZSTD_LIB_SHARED: ${ZSTD_LIB_SHARED}")
+message(STATUS "ZSTD_LIB_STATIC: ${ZSTD_LIB_STATIC}")
 
 file(GLOB_RECURSE HDR_FILES ${AnnService}/inc/Core/*.h  ${AnnService}/inc/Helper/*.h)
 file(GLOB_RECURSE SRC_FILES ${AnnService}/src/Core/*.cpp ${AnnService}/src/Helper/*.cpp)
 
 list(REMOVE_ITEM HDR_FILES
-    ${AnnService}/inc/Core/Common/DistanceUtils.h
-    ${AnnService}/inc/Core/Common/SIMDUtils.h 
-    ${AnnService}/inc/Core/Common/InstructionUtils.h
-    ${AnnService}/inc/Core/Common/CommonUtils.h
-    )
+        ${AnnService}/inc/Core/Common/DistanceUtils.h
+        ${AnnService}/inc/Core/Common/SIMDUtils.h
+        ${AnnService}/inc/Core/Common/InstructionUtils.h
+        ${AnnService}/inc/Core/Common/CommonUtils.h
+)
 
 list(REMOVE_ITEM SRC_FILES
-    ${AnnService}/src/Core/Common/DistanceUtils.cpp
-    ${AnnService}/src/Core/Common/SIMDUtils.cpp
-    ${AnnService}/src/Core/Common/InstructionUtils.cpp
-    )
+        ${AnnService}/src/Core/Common/DistanceUtils.cpp
+        ${AnnService}/src/Core/Common/SIMDUtils.cpp
+        ${AnnService}/src/Core/Common/InstructionUtils.cpp
+)
 
-add_library (DistanceUtils STATIC 
-    inc/Core/Common/DistanceUtils.h
-    inc/Core/Common/SIMDUtils.h
-    inc/Core/Common/InstructionUtils.h
-    inc/Core/Common/CommonUtils.h
-    src/Core/Common/DistanceUtils.cpp
-    src/Core/Common/SIMDUtils.cpp
-    src/Core/Common/InstructionUtils.cpp
-    )
+add_library (DistanceUtils STATIC
+        inc/Core/Common/DistanceUtils.h
+        inc/Core/Common/SIMDUtils.h
+        inc/Core/Common/InstructionUtils.h
+        inc/Core/Common/CommonUtils.h
+        src/Core/Common/DistanceUtils.cpp
+        src/Core/Common/SIMDUtils.cpp
+        src/Core/Common/InstructionUtils.cpp
+)
 
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
-    #available arm flags: -march=armv8-a -mfloat-abi=hard -mfpu=neon -mfpu=crypto-neon-fp-armv8
+#if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+#    #available arm flags: -march=armv8-a -mfloat-abi=hard -mfpu=neon -mfpu=crypto-neon-fp-armv8
+#
+#    # Check for ARMv7-A specifics
+#    if(CMAKE_SYSTEM_PROCESSOR MATCHES "armv7-a")
+#        target_compile_options(DistanceUtils PRIVATE -mfpu=neon -mfloat-abi=softfp -fPIC)
+#
+#        # Check for ARMv8-A (AArch64) specifics
+#    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+#        target_compile_options(DistanceUtils PRIVATE -march=armv8-a -fPIC)  # NEON is enabled by default in ARMv8
+#
+#        # Default to x86 architecture-specific flags
+#    else()
+#        target_compile_options(DistanceUtils PRIVATE -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -fPIC)
+#    endif()
+#endif()
 
-    # Check for ARMv7-A specifics
-    if(CMAKE_SYSTEM_PROCESSOR MATCHES "armv7-a")
-        target_compile_options(DistanceUtils PRIVATE -mfpu=neon -mfloat-abi=softfp -fPIC)
-
-        # Check for ARMv8-A (AArch64) specifics
-    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
-        target_compile_options(DistanceUtils PRIVATE -march=armv8-a -fPIC)  # NEON is enabled by default in ARMv8
-
-        # Default to x86 architecture-specific flags
-    else()
-        target_compile_options(DistanceUtils PRIVATE -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -fPIC)
-    endif()
+if(CROSS_COMPILE)
+    target_compile_options(DistanceUtils PRIVATE -march=armv8-a -fPIC)  # NEON is enabled by default in ARMv8
+else()
+    target_compile_options(DistanceUtils PRIVATE -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -fPIC)
 endif()
 
 
+
 add_library (SPTAGLib SHARED ${SRC_FILES} ${HDR_FILES})
-target_link_libraries (SPTAGLib DistanceUtils libzstd_shared ${NUMA_LIBRARY})
+target_link_libraries (SPTAGLib DistanceUtils ${ZSTD_LIB_SHARED} ${NUMA_LIBRARY})
 add_library (SPTAGLibStatic STATIC ${SRC_FILES} ${HDR_FILES})
-target_link_libraries (SPTAGLibStatic DistanceUtils libzstd_static ${NUMA_LIBRARY_STATIC})
+target_link_libraries (SPTAGLibStatic DistanceUtils ${ZSTD_LIB_STATIC} ${NUMA_LIBRARY_STATIC})
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     target_compile_options(SPTAGLibStatic PRIVATE -fPIC)
 endif()
 
 install(TARGETS SPTAGLib SPTAGLibStatic
-  RUNTIME DESTINATION bin
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib)
+        RUNTIME DESTINATION bin
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib)
 
 if (NOT LIBRARYONLY)
-#    file(GLOB SERVER_HDR_FILES ${AnnService}/inc/Server/*.h ${AnnService}/inc/Socket/*.h)
-#    file(GLOB SERVER_FILES ${AnnService}/src/Server/*.cpp ${AnnService}/src/Socket/*.cpp)
-#    add_executable (server ${SERVER_FILES} ${SERVER_HDR_FILES})
-#    target_link_libraries(server ${Boost_LIBRARIES} SPTAGLibStatic)
+    #    file(GLOB SERVER_HDR_FILES ${AnnService}/inc/Server/*.h ${AnnService}/inc/Socket/*.h)
+    #    file(GLOB SERVER_FILES ${AnnService}/src/Server/*.cpp ${AnnService}/src/Socket/*.cpp)
+    #    add_executable (server ${SERVER_FILES} ${SERVER_HDR_FILES})
+    #    target_link_libraries(server ${Boost_LIBRARIES} SPTAGLibStatic)
 
-#    file(GLOB CLIENT_HDR_FILES ${AnnService}/inc/Client/*.h ${AnnService}/inc/Socket/*.h)
-#    file(GLOB CLIENT_FILES ${AnnService}/src/Client/*.cpp ${AnnService}/src/Socket/*.cpp)
-#    add_executable (client ${CLIENT_FILES} ${CLIENT_HDR_FILES})
-#    target_link_libraries(client ${Boost_LIBRARIES} SPTAGLibStatic)
+    #    file(GLOB CLIENT_HDR_FILES ${AnnService}/inc/Client/*.h ${AnnService}/inc/Socket/*.h)
+    #    file(GLOB CLIENT_FILES ${AnnService}/src/Client/*.cpp ${AnnService}/src/Socket/*.cpp)
+    #    add_executable (client ${CLIENT_FILES} ${CLIENT_HDR_FILES})
+    #    target_link_libraries(client ${Boost_LIBRARIES} SPTAGLibStatic)
 
-#    file(GLOB AGG_HDR_FILES ${AnnService}/inc/Aggregator/*.h ${AnnService}/inc/Socket/*.h ${AnnService}/inc/Server/QueryParser.h)
-#    file(GLOB AGG_FILES ${AnnService}/src/Aggregator/*.cpp ${AnnService}/src/Socket/*.cpp ${AnnService}/src/Server/QueryParser.cpp)
-#    add_executable (aggregator ${AGG_FILES} ${AGG_HDR_FILES})
-#    target_link_libraries(aggregator ${Boost_LIBRARIES} SPTAGLibStatic)
+    #    file(GLOB AGG_HDR_FILES ${AnnService}/inc/Aggregator/*.h ${AnnService}/inc/Socket/*.h ${AnnService}/inc/Server/QueryParser.h)
+    #    file(GLOB AGG_FILES ${AnnService}/src/Aggregator/*.cpp ${AnnService}/src/Socket/*.cpp ${AnnService}/src/Server/QueryParser.cpp)
+    #    add_executable (aggregator ${AGG_FILES} ${AGG_HDR_FILES})
+    #    target_link_libraries(aggregator ${Boost_LIBRARIES} SPTAGLibStatic)
 
     file(GLOB BUILDER_FILES ${AnnService}/src/IndexBuilder/*.cpp)
     add_executable (indexbuilder ${BUILDER_FILES})
@@ -87,16 +110,16 @@ if (NOT LIBRARYONLY)
     file(GLOB SEARCHER_FILES ${AnnService}/src/IndexSearcher/*.cpp)
     add_executable (indexsearcher ${SEARCHER_FILES})
     target_link_libraries(indexsearcher ${Boost_LIBRARIES} SPTAGLibStatic)
-    
+
     file(GLOB QUANTIZER_HDR_FILES ${AnnService}/inc/Quantizer/*.h)
     file(GLOB QUANTIZER_FILES ${AnnService}/src/Quantizer/*.cpp)
     add_executable (quantizer ${QUANTIZER_FILES} ${QUANTIZER_HDR_FILES})
     target_link_libraries(quantizer ${Boost_LIBRARIES} SPTAGLibStatic)
 
-#    install(TARGETS server client aggregator indexbuilder indexsearcher quantizer
-#      RUNTIME DESTINATION bin
-#      ARCHIVE DESTINATION lib
-#      LIBRARY DESTINATION lib)
+    #    install(TARGETS server client aggregator indexbuilder indexsearcher quantizer
+    #      RUNTIME DESTINATION bin
+    #      ARCHIVE DESTINATION lib
+    #      LIBRARY DESTINATION lib)
 endif()
 
 file(GLOB_RECURSE SSD_SERVING_HDR_FILES ${AnnService}/inc/SSDServing/*.h)
@@ -122,6 +145,6 @@ if (MPI_FOUND)
 endif()
 
 install(TARGETS ssdservingLib ssdserving
-  RUNTIME DESTINATION bin
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib)
+        RUNTIME DESTINATION bin
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib)
