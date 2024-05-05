@@ -2,7 +2,7 @@
 #define INDEX_H
 
 #include "constants.h"
-#include "unused/distances.h"
+#include "distances.h"
 #include "serializable.h"
 #include <string>
 #include <memory>

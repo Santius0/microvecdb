@@ -17,7 +17,7 @@
 
 //#include <cblas.h> // BLAS
 
-namespace mvdb {
+namespace mvdb::index {
 
     enum DISTANCE_METRIC {
         L2_DISTANCE,

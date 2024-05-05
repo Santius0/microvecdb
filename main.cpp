@@ -14,9 +14,9 @@
 
 
 #include "filesystem.h"
-#include "unused/flat_index.h"
+//#include "flat_index.h"
 #include "faiss_flat_index.h"
-#include "unused/distances.h"
+#include "distances.h"
 #include "db.h"
 
 //constexpr size_t DIMENSIONS = 3;

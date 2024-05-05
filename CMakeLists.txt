@@ -1,9 +1,20 @@
 cmake_minimum_required(VERSION 3.27)
 project(microvecdb)
 set(CMAKE_CXX_STANDARD 17)
-add_compile_options(-std=c++17)
+#add_compile_options(-std=c++17)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    message(STATUS "Build type: Release")
+    set(LIB_DIR ${PROJECT_SOURCE_DIR}/release/lib)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Build type: Debug")
+    set(LIB_DIR ${PROJECT_SOURCE_DIR}/debug/lib)
+else()
+    message(FATAL_ERROR "Unsupported build type: ${CMAKE_BUILD_TYPE}")
+endif()
 
 #find_package(CUDAToolkit REQUIRED)
+find_package(OpenMP REQUIRED)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -40,7 +51,6 @@ message(STATUS "Platform Tag: ${PLATFORM_TAG}")
 # <<<< Constructing Platform Tag  ----------------------------------------------------------
 
 # Getting Python Major & Minor Version >>>> ----------------------------------------------------------
-find_package(OpenMP REQUIRED)
 #find_package(PythonLibs REQUIRED) # deprecated. use find_package(Python3 COMPONENTS Interpreter Development REQUIRED) for cmake 3.27.x +
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 #string(REPLACE "." ";" PYTHON_VERSION_LIST ${PYTHONLIBS_VERSION_STRING}) # deprecated with new find_package method use Python3_VERSION instead
@@ -64,10 +74,16 @@ function(include_sub_directories_recursively root_dir)
     endif()
 endfunction()
 
-include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include)        # all targets should have access to these
-link_directories(lib faiss/lib
-#        DiskANN/build/src
-)                         # all targets should be able to link against the contents of the lib directory
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/core)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/index)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/operators)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/storage)
+
+link_directories(
+        ${LIB_DIR}/lib
+        ${PROJECT_SOURCE_DIR}/faiss/lib
+#        ${PROJECT_SOURCE_DIR}/DiskANN/build/src
+)
 
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/DiskANN/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
@@ -146,24 +162,16 @@ include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
 #target_link_libraries(microvecdb_vectorizer PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C microvecdb_core)
 #set_target_properties(microvecdb_vectorizer PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
-set(CPP_SOURCES
-#        core
-        src/core/mvdb.cpp
-        src/core/db.cpp
-        src/core/utils.cpp
-        src/operators/operators.cpp
-#        index
-        src/unused/distances.cpp
-        src/unused/knn.cpp
-        src/unused/flat_index.cpp
-        src/index/faiss_flat_index.cpp
-#        storage
-        src/storage/storage.cpp
+
+file(GLOB_RECURSE SRC_FILES
+        src/core/*.cpp
+        src/index/*.cpp
+        src/operators/*.cpp
+        src/storage/*.cpp
 )
 
-
 # microvecdb:
-add_library(microvecdb SHARED ${CPP_SOURCES})
+add_library(microvecdb SHARED ${SRC_FILES})
 #target_include_directories(microvecdb PUBLIC "${MKL_LIBRARY_DIR}")
 target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C
 #        ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
@@ -171,7 +179,7 @@ target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C
 #        diskann diskann_s
         rocksdb
 )
-set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
 
 
 ## microvecdb_cli:
@@ -180,6 +188,7 @@ set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOU
 #        GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
 #        GIT_TAG v2.3.1
 #)
+
 #FetchContent_MakeAvailable(cli11)
 #add_executable(microvecdb_cli src/cli.cpp)
 #target_include_directories(microvecdb_cli PUBLIC include)
@@ -200,21 +209,10 @@ target_link_directories(${PYTHON_EXTENSION_TARGET} PUBLIC lib)
 target_link_libraries(${PYTHON_EXTENSION_TARGET} ${Python3_LIBRARIES} microvecdb)
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-#set(PYTHON_PACKAGE_BUILD_SCRIPT "/python/pymicrovecdb.sh")
-#file(CHMOD +x ${PYTHON_PACKAGE_BUILD_SCRIPT})
-#add_custom_command(
-#        TARGET ${PYTHON_EXTENSION_TARGET} POST_BUILD
-#        COMMAND ${PYTHON_PACKAGE_BUILD_SCRIPT}
-#        COMMENT "Building python package"
-#)
 
 # main:
 add_executable(microvecdb_main main.cpp)
-target_link_libraries(microvecdb_main PUBLIC microvecdb
-#        zmq
-        pthread
-#        Eigen3::Eigen
-)
+target_link_libraries(microvecdb_main PUBLIC microvecdb pthread)
 
 #################################################
 # Check if we are cross-compiling for Jetson
@@ -278,4 +276,4 @@ file(MAKE_DIRECTORY "${LIBRARY_OUTPUT_DIRECTORY}")
 
 #enable_testing()
 #add_subdirectory(tests)
-add_subdirectory(benchmarks)
+#add_subdirectory(benchmarks)

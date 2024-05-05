@@ -7,13 +7,6 @@
 #include <fstream>
 #include <iostream>
 
-//#include "constants.h"
-//#include "flat_index.h"
-//#include "fasttext.h"
-//#include "exception.h"
-////#include "preprocess.h"
-//#include <stdexcept>
-
 namespace mvdb {
 
     template <typename T>
@@ -83,7 +76,6 @@ namespace mvdb {
 
     template <typename T>
     bool DB_<T>::create(const std::string& path, const idx_t& dims) {
-
         _path = path;
         _storage_path = path + fs::preferred_separator + KV_STORE_EXT;
         _index_path = path + fs::preferred_separator + INDEX_EXT;
@@ -94,8 +86,8 @@ namespace mvdb {
         } else throw::std::runtime_error("database path \"" + path + "\" already exists");
 
         _storage = std::make_unique<Storage>(_storage_path, true, false);
-        _index = std::make_unique<index::FaissFlatIndex<T>>(dims, _index_path);
-//        _index.build(/* options */);
+        _index = std::make_unique<index::FaissFlatIndex<T>>();
+        _index.build(dims, _index_path);
         return true;
     }
 

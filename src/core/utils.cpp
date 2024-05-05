@@ -50,8 +50,7 @@ namespace mvdb {
         return nextMultiple;
     }
 
-    // reads a single vector from the .fvecs file
-    std::vector<float> read_vector(std::ifstream& file) {
+    std::vector<float> read_vector(std::ifstream& file) { // reads a single vector from the .fvecs file
         std::vector<float> vec;
         int dimension;
         if (file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) { // Read the dimension of the vector
@@ -63,8 +62,7 @@ namespace mvdb {
         return vec;
     }
 
-    // reads num_vecs vectors from a fvecs file
-    void read_vectors(const std::string& filename, const int& num_vecs, const int& dims, value_t *vecs){
+    void read_vectors(const std::string& filename, const int& num_vecs, const int& dims, value_t *vecs) { // reads num_vecs vectors from a fvecs file
         std::ifstream file(filename, std::ios::binary);
         if(file){
             for (int i = 0; i < num_vecs; ++i) {
