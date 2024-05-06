@@ -1,50 +1,50 @@
 import unittest
+from unittest.mock import patch, MagicMock
 import numpy as np
-import pymicrovecdb as mvdb
-import os
-import shutil
 
-class TestDB(unittest.TestCase):
+import microvecdb as mvdb_c
+# import pymicrovecdb as mvdb
+from pymicrovecdb import MVDB, DATA_TYPE, IndexType  # Replace 'your_module' with the name of your module containing the MVDB class.
+
+class TestMVDB(unittest.TestCase):
     def setUp(self):
-        self.db_name = "test_db"
-        self.db_path = "./test_db"
-        if os.path.exists(self.db_path):
-            shutil.rmtree(self.db_path)
-        self.dims = 3
-        self.db = mvdb.DB(self.db_name, self.db_path, self.dims)
+        self.data_type = DATA_TYPE.INT32
+        self.index_type = IndexType.SPANN
+        self.dims = np.int64(128)
+        self.path = "path/to/db"
+        self.initial_data_path = "path/to/initial/data"
+        self.initial_data = np.array([1, 2, 3], dtype=np.int32)
+        self.initial_data_size = np.int64(3)
 
-    def test_add_vector(self):
-        print("test_add_vector start")
-        vector = np.array([1.0, 2.0, 3.0], dtype=np.float32)
-        result = self.db.add_vector(vector)
-        self.assertTrue(result)
-        print("test_add_vector complete")
+        # Mocking the C-extension module functions
+        self.mvdb_init_mock = patch('microvecdb.MVDB_init', return_value=MagicMock()).start()
+        self.mvdb_create_mock = patch('microvecdb.MVDB_create').start()
+        self.mvdb_open_mock = patch('microvecdb.MVDB_open').start()
+        self.mvdb_topk_mock = patch('microvecdb.MVDB_topk', return_value=[1, 2, 3]).start()
 
-    def test_search_with_vector(self):
-        print("test_search_with_vector start")
-        vector_to_add = np.array([4.0, 5.0, 6.0,
-                                  1.0, 2.0, 3.0,
-                                  7.0, 8.0, 9.0], dtype=np.float32)
-        self.db.add_vector(vector_to_add)
-
-        # Use a similar vector for the search to ensure a match
-        query_vector = np.array([2.0, 3.0, 4.0], dtype=np.float32)
-        k = 5
-        ids, distances = self.db.search_with_vector(query_vector, k)
-
-        expected_ids = np.array([1, 0, 2], dtype=np.int64)
-        expected_ids = np.append(expected_ids, [np.int64(-1) for i in range(k - len(vector_to_add)//self.dims)])
-        expected_distances = np.array([1.73205, 3.4641, 8.66025], np.float32)
-        expected_distances = np.append(expected_distances, [np.float32(-1.0) for i in range(k - len(vector_to_add)//self.dims)])
-        self.assertEqual(len(ids), k)
-        self.assertEqual(len(distances), k)
-        self.assertTrue(np.array_equal(ids, expected_ids))
-        self.assertTrue(np.allclose(distances, expected_distances, atol=1e-5))
-        print("test_search_with_vector complete")
+        self.mvdb = MVDB(self.data_type)
 
     def tearDown(self):
-        if os.path.exists(self.db_path):
-            shutil.rmtree(self.db_path)
+        patch.stopall()
+
+    def test_init(self):
+        self.mvdb_init_mock.assert_called_once_with(self.data_type)
+        self.assertEqual(self.mvdb.data_type, self.data_type)
+
+    def test_create(self):
+        self.mvdb.create(self.index_type, self.dims, self.path, self.initial_data_path, self.initial_data, self.initial_data_size)
+        self.mvdb_create_mock.assert_called_once_with(self.data_type, self.mvdb.mvdb_, self.index_type, self.dims, self.path, self.initial_data_path, self.initial_data, self.initial_data_size, None)
+
+    def test_open(self):
+        self.mvdb.open(self.path)
+        self.mvdb_open_mock.assert_called_once_with(self.data_type, self.mvdb.mvdb_, self.path)
+
+    def test_topk(self):
+        k = np.int64(10)
+        c = np.float(200.0)
+        result = self.mvdb.topk(k, c)
+        self.mvdb_topk_mock.assert_called_once_with(self.data_type, self.mvdb.mvdb_, k, c)
+        self.assertEqual(result, [1, 2, 3])
 
 @profile
 def main():

@@ -15,7 +15,7 @@ namespace mvdb {
 
     template<typename T>
     void MVDB<T>::open(const std::string& path) {
-
+        db_->open(path);
     }
 
     template <typename T>

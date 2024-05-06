@@ -20,7 +20,7 @@
 
 namespace mvdb::index {
 
-    enum IndexType : int {
+    enum IndexType : unsigned char {
         DISKANN = 0,
         FAISS_FLAT = 1,
         FLAT = 2,

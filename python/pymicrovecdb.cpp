@@ -325,9 +325,8 @@ double* extract_double_arr(PyObject* arr) {
 }
 
 static PyObject* MVDB_create(PyObject* self, PyObject* args) {
-    unsigned char data_type;
+    unsigned char data_type, index_type;
     PyObject *mvdb_capsule, *initial_data, *create_args_capsule;
-    int index_type;
     uint64_t dims, initial_data_size;
     const char *path, *initial_data_path;
 

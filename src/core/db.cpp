@@ -69,7 +69,7 @@ namespace mvdb {
     bool DB_<T>::open(const std::string &path) {
         std::ifstream file(path);
         if (!file) {
-            std::cerr << "Error opening file for writing: \"" + path + "\"\n";
+            std::cerr << "Error opening file for reading: \"" + path + "\"\n";
             return false;
         }
         _path = path;
