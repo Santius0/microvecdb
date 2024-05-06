@@ -37,7 +37,7 @@ namespace mvdb::operators {
        // - sizes: Array of sizes corresponding to each piece of binary data if data_type is 'BINARY'
     **/
     template <typename T = float>
-    void insert_(DB_<T>* db, const idx_t &n, const idx_t &d, const T* v = nullptr, const char* bin = nullptr,
+    void insert_(DB_<T>* db, const idx_t &n, const idx_t &d, const void* v = nullptr, const char* bin = nullptr,
                  const InsertOperatorDataType &input_data_type = VECTOR,
                  size_t *sizes = nullptr, const std::string *fp = nullptr);
 

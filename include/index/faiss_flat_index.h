@@ -28,7 +28,7 @@ namespace mvdb::index {
         FaissFlatIndex(const FaissFlatIndex&) = delete;
         FaissFlatIndex& operator=(const FaissFlatIndex&) = delete;
         [[nodiscard]] IndexType type() const override;
-        void build(const idx_t& dims, const std::string& path, const NamedArgs& args) override;
+        void build(const idx_t &dims, const std::string& path, const std::string& initial_data_path, const T* initial_data, const uint64_t& initial_data_size, const NamedArgs* args) override;
         void open(const std::string& path) override;
         [[nodiscard]] bool add(const idx_t& n, T* data, idx_t* ids) override;
         [[nodiscard]] bool remove(const idx_t& n, const idx_t* ids) override;
@@ -40,6 +40,17 @@ namespace mvdb::index {
         [[nodiscard]] T* index() const;
         faiss::Index* faiss_index();
     };
+
+//    extern template class FaissFlatIndex<int8_t>;
+//    extern template class FaissFlatIndex<int16_t>;
+//    extern template class FaissFlatIndex<int32_t>;
+//    extern template class FaissFlatIndex<int64_t>;
+//    extern template class FaissFlatIndex<uint8_t>;
+//    extern template class FaissFlatIndex<uint16_t>;
+//    extern template class FaissFlatIndex<uint32_t>;
+//    extern template class FaissFlatIndex<uint64_t>;
+    extern template class FaissFlatIndex<float>;
+//    extern template class FaissFlatIndex<double>;
 
 } // namespace mvdb
 

@@ -35,7 +35,7 @@ namespace mvdb {
         serialize_string(out, _storage_path);
         serialize_numeric<idx_t>(out, _dims);
 //        out.write(reinterpret_cast<const char*>(_records->data()), ntotal_ * dims_ * sizeof(value_t));
-        _index->serialize(out);
+        _index->serialize_(out);
         _storage->serialize_(out);
     }
 
@@ -47,21 +47,21 @@ namespace mvdb {
         _dims = deserialize_numeric<idx_t>(in);
 
         _storage = std::make_unique<Storage>(_storage_path, true, false);
-        _index = std::make_unique<index::FaissFlatIndex<T>>(_dims, _index_path);
+        _index = std::make_unique<index::FaissFlatIndex<T>>();
 
-        _index->deserialize(in);
+        _index->deserialize_(in);
         _storage->deserialize_(in);
     }
 
-    template <typename T>
-    DB_<T>::~DB_(){
-         delete[] _add_ids;
-         delete[] _search_ids;
-         delete[] _search_distances;
-    }
+//    template <typename T>
+//    DB_<T>::~DB_(){
+//         delete[] _add_ids;
+//         delete[] _search_ids;
+//         delete[] _search_distances;
+//    }
 
     template <typename T>
-    typename DB_<T>::Status* DB_<T>::status() const {
+    Status* DB_<T>::status() const {
         return status_.get();
     }
 
@@ -81,7 +81,7 @@ namespace mvdb {
     template<typename T>
     bool DB_<T>::create(index::IndexType index_type, const uint64_t &dims, const std::string &path,
                         const std::string &initial_data_path, const T *initial_data,
-                        const uint64_t &initial_data_size, const NamedArgs &args) {
+                        const uint64_t &initial_data_size, const NamedArgs *args) {
         _path = path;
         if(fs::exists(_path) || path.empty())
             throw::std::runtime_error("invalid path, \"" + path + "\" is blank or already exists");
@@ -105,17 +105,17 @@ namespace mvdb {
             _index = std::make_unique<index::SPANNIndex<T>>();
         else if(index_type == index::IndexType::ANNOY)
             _index = std::make_unique<index::AnnoyIndex<T>>();
-        else
-            _index = std::make_unique<index::FlatIndex<T>>();
+//        else
+//            _index = std::make_unique<index::FlatIndex<T>>();
 
-        _index.build(dims, _index_path, initial_data_path, initial_data, initial_data_size, args);
+        _index->build(dims, _index_path, initial_data_path, initial_data, initial_data_size, args);
 
         return true;
     }
 
     template <typename T>
     void DB_<T>::_save(const std::string& save_path) {
-        _index->save(_index_path);
+//        _index->save_(_index_path);
         // we don't actually save storage metadata, and the actual data part is kept up by rocksdb
         std::string path = save_path.empty() ? _path + fs::preferred_separator + META_FILE_EXTENSION  : save_path;
         std::ofstream file(path);
@@ -134,34 +134,14 @@ namespace mvdb {
         return _index.get();
     }
 
-//    template <typename T>
-//    idx_t* DB_<T>::add_vector(const idx_t& nv, T* v) {
-//        delete _add_ids;
-////        insert_(this, nv, _dims, v, nullptr, operators::InsertOperatorDataType::VECTOR, nullptr, nullptr);
-//        return _add_ids;
-////        if(!_index) return nullptr;
-////         delete[] _add_ids; // free old ids if they haven't been yet
-////         auto* ids = new idx_t[nv];
-////         bool success = _index->add(nv, v, ids);
-////         _add_ids = ids;
-////         if(success){
-////             _save();
-////             return ids;
-////         }
-////         return nullptr;
-//    }
-//
-//    template <typename T>
-//    void DB_<T>::search_with_vector(const idx_t& nq, T* query, const long& k, idx_t* ids, T* distances) {
-//         if(!_storage || !_index) return;
-//         _index->search(nq, static_cast<float*>(query), reinterpret_cast<idx_t*>(ids), distances, k, L2_DISTANCE);
-//         _search_ids = ids;
-//         _search_distances = distances;
-//    }
-
-//    template <typename T>
-//    T* DB_<T>::get(idx_t& n, idx_t* keys) const {
-//        if(!_index) return nullptr;
-//        return _index->get(n, keys);
-//    }
+    template class DB_<int8_t>;
+    template class DB_<int16_t>;
+    template class DB_<int32_t>;
+    template class DB_<int64_t>;
+    template class DB_<uint8_t>;
+    template class DB_<uint16_t>;
+    template class DB_<uint32_t>;
+    template class DB_<uint64_t>;
+    template class DB_<float>;
+    template class DB_<double>;
 }

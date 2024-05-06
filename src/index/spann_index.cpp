@@ -32,12 +32,71 @@ namespace mvdb::index {
     }
 
     template <typename T>
-    void SPANNIndex<T>::build(const idx_t& dims, const std::string& path, const NamedArgs& args) {
-        if(const auto * spann_args = dynamic_cast<const SPANNIndexNamedArgs*>(&args)){
+    void SPANNIndex<T>::build(const idx_t &dims, const std::string& path, const std::string& initial_data_path, const T* initial_data, const uint64_t& initial_data_size, const NamedArgs* args) {
+        if(args) {
+            if (const auto *spann_args = dynamic_cast<const SPANNIndexNamedArgs *>(args)) {
 
-        } else {
-            throw std::runtime_error("failed to dynamic_cast from NamedArgs to SPANNIndexNamedArgs");
+            } else {
+                throw std::runtime_error("failed to dynamic_cast from NamedArgs to SPANNIndexNamedArgs");
+            }
         }
+        std::cout << "BUILDING SPANNIndex at " << path << std::endl;
     }
 
+    template<typename T>
+    void SPANNIndex<T>::save_(const std::string &path) const {
+
+    }
+
+    template<typename T>
+    void SPANNIndex<T>::open(const std::string &path) {
+
+    }
+
+    template<typename T>
+    bool SPANNIndex<T>::add(const idx_t &n, T *data, idx_t *ids) {
+        return false;
+    }
+
+    template<typename T>
+    bool SPANNIndex<T>::remove(const idx_t &n, const idx_t *ids) {
+        return false;
+    }
+
+    template<typename T>
+    void SPANNIndex<T>::search(const idx_t &nq, T *query, idx_t *ids, T *distances, const idx_t &k,
+                               const DISTANCE_METRIC &distance_metric) const {
+
+    }
+
+    template<typename T>
+    T *SPANNIndex<T>::get(idx_t &n, idx_t *keys) const {
+        return nullptr;
+    }
+
+    template<typename T>
+    T *SPANNIndex<T>::get_all() const {
+        return nullptr;
+    }
+
+    template<typename T>
+    idx_t SPANNIndex<T>::dims() const {
+        return 0;
+    }
+
+    template<typename T>
+    idx_t SPANNIndex<T>::ntotal() const {
+        return 0;
+    }
+
+    template class SPANNIndex<int8_t>;
+    template class SPANNIndex<int16_t>;
+    template class SPANNIndex<int32_t>;
+    template class SPANNIndex<int64_t>;
+    template class SPANNIndex<uint8_t>;
+    template class SPANNIndex<uint16_t>;
+    template class SPANNIndex<uint32_t>;
+    template class SPANNIndex<uint64_t>;
+    template class SPANNIndex<float>;
+    template class SPANNIndex<double>;
 }

@@ -10,12 +10,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
 find_package(OpenMP REQUIRED)
 #include(FetchContent)
 
+set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     message(STATUS "Build type: Release")
-    set(LIB_DIR ${PROJECT_SOURCE_DIR}/release/lib)
+#    set(LIB_DIR ${PROJECT_SOURCE_DIR}/release/lib)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Build type: Debug")
-    set(LIB_DIR ${PROJECT_SOURCE_DIR}/debug/lib)
+#    set(LIB_DIR ${PROJECT_SOURCE_DIR}/debug/lib)
 else()
     message(FATAL_ERROR "Unsupported build type: ${CMAKE_BUILD_TYPE}")
 endif()
@@ -93,7 +94,8 @@ add_library(microvecdb SHARED ${SRC_FILES})
 #target_include_directories(microvecdb PUBLIC "${MKL_LIBRARY_DIR}")
 target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C
 #        ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
-        pthread m dl faiss faiss_c
+        pthread m dl
+        faiss faiss_c
 #        diskann diskann_s
         rocksdb
 )

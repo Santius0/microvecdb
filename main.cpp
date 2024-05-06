@@ -317,8 +317,14 @@ std::vector<float> read_vector(std::ifstream& file) {
 }
 
 
+#include <mvdb.h>
+#include <index.h>
 
 int main() {
+
+    auto * mvdb_ = new mvdb::MVDB<uint8_t>();
+    mvdb_->create(mvdb::index::IndexType::ANNOY, 20, "./testingtesting13", "", nullptr, 0, nullptr);
+    delete mvdb_;
 
 //    auto * db = new mvdb::DB_();
 //    std::string db_path = "../benchmarks/test_db.db";

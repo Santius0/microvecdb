@@ -24,7 +24,7 @@ namespace mvdb {
 //        void optimise();
 
         // queries
-        bool insert(const idx_t &n, const idx_t &d, const T *v = nullptr, const char *bin = nullptr,
+        bool insert(const idx_t &n, const idx_t &d, const void *v = nullptr, const char *bin = nullptr,
                     const operators::InsertOperatorDataType &input_data_type = operators::InsertOperatorDataType::VECTOR,
                     size_t *sizes = nullptr, const std::string *fp = nullptr);
 //        void get();

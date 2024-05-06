@@ -1,6 +1,6 @@
 #include <Python.h>
 #include <mvdb.h>
-#include <spann_index.h>
+//#include <spann_index.h>
 #include <iostream>
 
 
@@ -227,12 +227,12 @@ static PyObject* MVDB_init(PyObject* self, PyObject* args) {
     }
 }
 
-mvdb::NamedArgs* extract_named_args(PyObject* args_capsule) {
-    auto * args = static_cast<mvdb::NamedArgs*>(PyCapsule_GetPointer(args_capsule, NAMED_ARGS));
-    if(auto * c_args = dynamic_cast<mvdb::index::SPANNIndexNamedArgs*>(args))
-        return c_args;
-    return nullptr;
-}
+//mvdb::NamedArgs* extract_named_args(PyObject* args_capsule) {
+//    auto * args = static_cast<mvdb::NamedArgs*>(PyCapsule_GetPointer(args_capsule, NAMED_ARGS));
+//    if(auto * c_args = dynamic_cast<mvdb::index::SPANNIndexNamedArgs*>(args))
+//        return c_args;
+//    return nullptr;
+//}
 
 int8_t* extract_int8_arr(PyObject* arr) {
     auto* pyarray = (PyArrayObject*)arr;
@@ -333,11 +333,12 @@ static PyObject* MVDB_create(PyObject* self, PyObject* args) {
     if (!PyArg_ParseTuple(args, "BOBlssO!lO", &data_type, &mvdb_capsule, &index_type, &dims, &path, &initial_data_path, &PyArray_Type, &initial_data, &initial_data_size, &create_args_capsule)) return nullptr;
 
     void* extracted_data = nullptr;
-    mvdb::NamedArgs* c_args = extract_named_args(create_args_capsule);
-    if (!c_args) {
-        PyErr_SetString(PyExc_TypeError, "Failed to extract NamedArgs");
-        return nullptr;
-    }
+    mvdb::NamedArgs* c_args = nullptr; // TODO: accept custom args for indexes
+//    mvdb::NamedArgs* c_args = extract_named_args(create_args_capsule);
+//    if (!c_args) {
+//        PyErr_SetString(PyExc_TypeError, "Failed to extract NamedArgs");
+//        return nullptr;
+//    }
 
     switch (data_type) {
         case INT8: {

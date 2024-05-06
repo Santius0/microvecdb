@@ -57,11 +57,11 @@ namespace mvdb::index {
         void serialize_(std::ostream &out) const override = 0;
         void deserialize_(std::istream &in) override = 0;
         Index() = default;
-        ~Index() override = default;
+        ~Index()  override = default;
         Index(const Index&) = delete;
         Index& operator=(const Index&) = delete;
         [[nodiscard]] virtual IndexType type() const = 0;
-        virtual void build(const idx_t &dims, const std::string& path, const NamedArgs& args) = 0;
+        virtual void build(const idx_t &dims, const std::string& path, const std::string& initial_data_path, const T* initial_data, const uint64_t& initial_data_size, const NamedArgs* args) = 0;
         virtual void open(const std::string& path) = 0;                     // open current index state and data from location specified via index_path_
         virtual bool add(const idx_t& n, T* data, idx_t* ids) = 0;          // add n to elements to index
         virtual bool remove(const idx_t& n, const idx_t* ids) = 0;          // remove n elements from index
@@ -74,6 +74,17 @@ namespace mvdb::index {
         [[nodiscard]] virtual idx_t dims() const = 0;                       // returns dimensions of index
         [[nodiscard]] virtual idx_t ntotal() const  = 0;                    // returns current number of values in index
     };
+
+//    extern template class Index<int8_t>;
+//    extern template class Index<int16_t>;
+//    extern template class Index<int32_t>;
+//    extern template class Index<int64_t>;
+//    extern template class Index<uint8_t>;
+//    extern template class Index<uint16_t>;
+//    extern template class Index<uint32_t>;
+//    extern template class Index<uint64_t>;
+//    extern template class Index<float>;
+//    extern template class Index<double>;
 
 } // namespace mvdb::index
 
