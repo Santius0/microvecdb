@@ -87,7 +87,6 @@ namespace mvdb {
         remove_trailing_slashes(path);
         std::string sep = std::string(1, fs::preferred_separator);
         _path = path;
-        std::cout << "IN HERE 01\n";
         if(!fs::exists(_path) || path.empty())
             throw::std::runtime_error("invalid path, \"" + path + "\" is either blank or does not exist");
 

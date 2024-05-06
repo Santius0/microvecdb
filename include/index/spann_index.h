@@ -29,7 +29,8 @@ namespace mvdb::index {
         void open(const std::string& path) override;
         [[nodiscard]] bool add(const idx_t& n, T* data, idx_t* ids) override;
         [[nodiscard]] bool remove(const idx_t& n, const idx_t* ids) override;
-        void search(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k, const DISTANCE_METRIC& distance_metric) const override;
+        void topk(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k,
+                  const DISTANCE_METRIC& distance_metric, const float& c) const override;
         T* get(idx_t& n, idx_t* keys) const override;
         [[nodiscard]] T* get_all() const override;
         [[nodiscard]] idx_t dims() const override;

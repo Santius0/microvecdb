@@ -457,7 +457,6 @@ static PyObject* MVDB_open(PyObject* self, PyObject* args) {
     const char* path;
 
     if (!PyArg_ParseTuple(args, "BOs", &data_type, &mvdb_capsule, &path)) return nullptr;
-    std::cout << "HHHHHEEEERRRR\n";
 
     switch (data_type) {
         case INT8: {
@@ -501,11 +500,8 @@ static PyObject* MVDB_open(PyObject* self, PyObject* args) {
             break;
         }
         case FLOAT: {
-            std::cout << "H0" << std::endl;
             auto *mvdb_ = static_cast<mvdb::MVDB<float> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
-            std::cout << "H1" << std::endl;
             mvdb_->open(path);
-            std::cout << "H2" << std::endl;
             break;
         }
         case DOUBLE: {
@@ -528,61 +524,61 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
 
     if (!PyArg_ParseTuple(args, "BOld", &data_type, &mvdb_capsule, &k, &c)) return nullptr;
 
-    switch (data_type) {
-        case INT8: {
-            auto *mvdb_ = static_cast<mvdb::MVDB<int8_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
-            mvdb_->topk(k, (float)c);
-            break;
-        }
-        case INT16: {
-            auto * mvdb_ = static_cast<mvdb::MVDB<int16_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int16_t));
-            mvdb_->topk(k, (float)c);
-            break;
-        }
-        case INT32: {
-            auto *mvdb_ = static_cast<mvdb::MVDB<int32_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int32_t));
-            mvdb_->topk(k, (float)c);
-            break;
-        }
-        case INT64: {
-            auto *mvdb_ = static_cast<mvdb::MVDB<int64_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int64_t));
-            mvdb_->topk(k, (float)c);
-            break;
-        }
-        case UINT8: {
-            auto *mvdb_ = static_cast<mvdb::MVDB<uint8_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint8_t));
-            mvdb_->topk(k, (float)c);
-            break;
-        }
-        case UINT16: {
-            auto *mvdb_ = static_cast<mvdb::MVDB<uint16_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint16_t));
-            mvdb_->topk(k, (float)c);
-            break;
-        }
-        case UINT32: {
-            auto *mvdb_ = static_cast<mvdb::MVDB<uint32_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint32_t));
-            mvdb_->topk(k, (float)c);
-            break;
-        }
-        case UINT64: {
-            auto *mvdb_ = static_cast<mvdb::MVDB<uint64_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint64_t));
-            mvdb_->topk(k, (float)c);
-            break;
-        }
-        case FLOAT: {
-            auto *mvdb_ = static_cast<mvdb::MVDB<float> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
-            mvdb_->topk(k, (float)c);
-            break;
-        }
-        case DOUBLE: {
-            auto *mvdb_ = static_cast<mvdb::MVDB<double> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_double));
-            mvdb_->topk(k, (float)c);
-            break;
-        }
-        default:
-            PyErr_SetString(PyExc_ValueError, "Failed to find topk results: unsupported data type");
-            return nullptr;
-    }
+//    switch (data_type) {
+//        case INT8: {
+//            auto *mvdb_ = static_cast<mvdb::MVDB<int8_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
+//            mvdb_->topk(k, (float)c);
+//            break;
+//        }
+//        case INT16: {
+//            auto * mvdb_ = static_cast<mvdb::MVDB<int16_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int16_t));
+//            mvdb_->topk(k, (float)c);
+//            break;
+//        }
+//        case INT32: {
+//            auto *mvdb_ = static_cast<mvdb::MVDB<int32_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int32_t));
+//            mvdb_->topk(k, (float)c);
+//            break;
+//        }
+//        case INT64: {
+//            auto *mvdb_ = static_cast<mvdb::MVDB<int64_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int64_t));
+//            mvdb_->topk(k, (float)c);
+//            break;
+//        }
+//        case UINT8: {
+//            auto *mvdb_ = static_cast<mvdb::MVDB<uint8_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint8_t));
+//            mvdb_->topk(k, (float)c);
+//            break;
+//        }
+//        case UINT16: {
+//            auto *mvdb_ = static_cast<mvdb::MVDB<uint16_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint16_t));
+//            mvdb_->topk(k, (float)c);
+//            break;
+//        }
+//        case UINT32: {
+//            auto *mvdb_ = static_cast<mvdb::MVDB<uint32_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint32_t));
+//            mvdb_->topk(k, (float)c);
+//            break;
+//        }
+//        case UINT64: {
+//            auto *mvdb_ = static_cast<mvdb::MVDB<uint64_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint64_t));
+//            mvdb_->topk(k, (float)c);
+//            break;
+//        }
+//        case FLOAT: {
+//            auto *mvdb_ = static_cast<mvdb::MVDB<float> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
+//            mvdb_->topk(k, (float)c);
+//            break;
+//        }
+//        case DOUBLE: {
+//            auto *mvdb_ = static_cast<mvdb::MVDB<double> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_double));
+//            mvdb_->topk(k, (float)c);
+//            break;
+//        }
+//        default:
+//            PyErr_SetString(PyExc_ValueError, "Failed to find topk results: unsupported data type");
+//            return nullptr;
+//    }
     Py_RETURN_NONE;
 }
 

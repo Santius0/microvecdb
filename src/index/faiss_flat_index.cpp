@@ -111,8 +111,9 @@ namespace mvdb::index {
     }
 
     template <typename T>
-    void FaissFlatIndex<T>::search(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k, const DISTANCE_METRIC& distance_metric) const{
-        faiss_index_->search(static_cast<long>(nq), (float*)(query), k, (float*)(distances), reinterpret_cast<faiss::idx_t *>(ids));
+    void FaissFlatIndex<T>::topk(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k,
+                                 const DISTANCE_METRIC& distance_metric, const float& c) const{
+        faiss_index_->search(static_cast<long>(nq), (float*)(query), k, (float*)(distances), reinterpret_cast<faiss::idx_t*>(ids));
     }
 
     template <typename T>

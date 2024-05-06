@@ -16,7 +16,6 @@ namespace mvdb {
 
     template<typename T>
     void MVDB<T>::open(const std::string& path) {
-        std::cout << "MVDB::Open\n";
         db_->open(const_cast<std::string&>(path));
     }
 
@@ -50,8 +49,9 @@ namespace mvdb {
     }
 
     template <typename T>
-    void MVDB<T>::topk(const uint64_t& k, const float& c){
-
+    void MVDB<T>::topk(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k,
+                            const index::DISTANCE_METRIC& distance_metric, const float& c) {
+                db_->index()->topk(nq, query, ids, distances, k, distance_metric, c);
     }
 
     template class MVDB<int8_t>;

@@ -65,10 +65,10 @@ namespace mvdb::index {
         virtual void open(const std::string& path) = 0;                     // open current index state and data from location specified via index_path_
         virtual bool add(const idx_t& n, T* data, idx_t* ids) = 0;          // add n to elements to index
         virtual bool remove(const idx_t& n, const idx_t* ids) = 0;          // remove n elements from index
-        virtual void search(const idx_t& nq, T* query,                      // perform searches for nq queries in parallel
+        virtual void topk(const idx_t& nq, T* query,                      // perform searches for nq queries in parallel
                             idx_t* ids, T* distances,
                             const idx_t& k,
-                            const DISTANCE_METRIC& distance_metric) const = 0;
+                            const DISTANCE_METRIC& distance_metric, const float& c) const = 0;
         virtual T* get(idx_t& n, idx_t* ids) const = 0;               // reconstruct and return the n vectors specified by ids
         virtual T* get_all() const = 0;                     // reconstruct and return all vectors
         [[nodiscard]] virtual idx_t dims() const = 0;                       // returns dimensions of index

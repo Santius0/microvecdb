@@ -64,8 +64,8 @@ namespace mvdb::index {
     }
 
     template<typename T>
-    void SPANNIndex<T>::search(const idx_t &nq, T *query, idx_t *ids, T *distances, const idx_t &k,
-                               const DISTANCE_METRIC &distance_metric) const {
+    void SPANNIndex<T>::topk(const idx_t &nq, T *query, idx_t *ids, T *distances, const idx_t &k,
+                               const DISTANCE_METRIC &distance_metric, const float& c) const {
 
     }
 

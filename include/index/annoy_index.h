@@ -31,83 +31,13 @@ namespace mvdb::index {
         void open(const std::string& path) override;
         [[nodiscard]] bool add(const idx_t& n, T* data, idx_t* ids) override;
         [[nodiscard]] bool remove(const idx_t& n, const idx_t* ids) override;
-        void search(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k, const DISTANCE_METRIC& distance_metric) const override;
+        void topk(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k,
+                  const DISTANCE_METRIC& distance_metric, const float& c) const override;
         T* get(idx_t& n, idx_t* keys) const override;
         [[nodiscard]] T* get_all() const override;
         [[nodiscard]] idx_t dims() const override;
         [[nodiscard]] idx_t ntotal() const override;
     };
-
-    template<typename T>
-    void AnnoyIndex<T>::save_(const std::string &path) const {
-
-    }
-
-    template <typename T>
-    std::ostream &operator<<(std::ostream &os, const AnnoyIndex<T> &obj) {
-        return os << "";
-    }
-
-    template<typename T>
-    std::ostream &operator<<(std::ostream &os, const AnnoyIndex<T> *obj) {
-        return os << "";
-    }
-
-    template<typename T>
-    void AnnoyIndex<T>::serialize_(std::ostream &out) const {
-
-    }
-
-    template<typename T>
-    void AnnoyIndex<T>::deserialize_(std::istream &in) {
-
-    }
-
-    template<typename T>
-    IndexType AnnoyIndex<T>::type() const {
-        return IndexType::ANNOY;
-    }
-
-    template<typename T>
-    void AnnoyIndex<T>::open(const std::string &path) {
-
-    }
-
-    template<typename T>
-    bool AnnoyIndex<T>::add(const idx_t &n, T *data, idx_t *ids) {
-        return false;
-    }
-
-    template<typename T>
-    bool AnnoyIndex<T>::remove(const idx_t &n, const idx_t *ids) {
-        return false;
-    }
-
-    template<typename T>
-    void AnnoyIndex<T>::search(const idx_t &nq, T *query, idx_t *ids, T *distances, const idx_t &k,
-                               const DISTANCE_METRIC &distance_metric) const {
-
-    }
-
-    template<typename T>
-    T *AnnoyIndex<T>::get(idx_t &n, idx_t *keys) const {
-        return nullptr;
-    }
-
-    template<typename T>
-    T *AnnoyIndex<T>::get_all() const {
-        return nullptr;
-    }
-
-    template<typename T>
-    idx_t AnnoyIndex<T>::dims() const {
-        return 0;
-    }
-
-    template<typename T>
-    idx_t AnnoyIndex<T>::ntotal() const {
-        return 0;
-    }
 
     extern template class AnnoyIndex<int8_t>;
     extern template class AnnoyIndex<int16_t>;
