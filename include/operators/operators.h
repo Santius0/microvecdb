@@ -118,6 +118,57 @@ namespace mvdb::operators {
         template <typename T = float>
         void _range_scan(DB_<T> *db, const double &r);
 
+
+    extern template void insert_<int8_t>(DB_<int8_t>* db, const idx_t& n, const idx_t& d, const void* v, const char* bin,
+                                  const operators::InsertOperatorDataType& input_data_type,
+                                  size_t* sizes, const std::string* fp);
+    extern template void insert_<int16_t>(DB_<int16_t>* db, const idx_t& n, const idx_t& d, const void* v, const char* bin,
+                                   const operators::InsertOperatorDataType& input_data_type,
+                                   size_t* sizes, const std::string* fp);
+    extern template void insert_<int32_t>(DB_<int32_t>* db, const idx_t& n, const idx_t& d, const void* v, const char* bin,
+                                   const operators::InsertOperatorDataType& input_data_type,
+                                   size_t* sizes, const std::string* fp);
+    extern template void insert_<int64_t>(DB_<int64_t>* db, const idx_t& n, const idx_t& d, const void* v, const char* bin,
+                                   const operators::InsertOperatorDataType& input_data_type,
+                                   size_t* sizes, const std::string* fp);
+
+    extern template void insert_<uint8_t>(DB_<uint8_t>* db, const idx_t& n, const idx_t& d, const void* v, const char* bin,
+                                   const operators::InsertOperatorDataType& input_data_type,
+                                   size_t* sizes, const std::string* fp);
+    extern template void insert_<uint16_t>(DB_<uint16_t>* db, const idx_t& n, const idx_t& d, const void* v, const char* bin,
+                                    const operators::InsertOperatorDataType& input_data_type,
+                                    size_t* sizes, const std::string* fp);
+    extern template void insert_<uint32_t>(DB_<uint32_t>* db, const idx_t& n, const idx_t& d, const void* v, const char* bin,
+                                    const operators::InsertOperatorDataType& input_data_type,
+                                    size_t* sizes, const std::string* fp);
+    extern template void insert_<uint64_t>(DB_<uint64_t>* db, const idx_t& n, const idx_t& d, const void* v, const char* bin,
+                                    const operators::InsertOperatorDataType& input_data_type,
+                                    size_t* sizes, const std::string* fp);
+
+    extern template void insert_<float>(DB_<float>* db, const idx_t& n, const idx_t& d, const void* v, const char* bin,
+                                 const operators::InsertOperatorDataType& input_data_type,
+                                 size_t* sizes, const std::string* fp);
+    extern template void insert_<double>(DB_<double>* db, const idx_t& n, const idx_t& d, const void* v, const char* bin,
+                                  const operators::InsertOperatorDataType& input_data_type,
+                                  size_t* sizes, const std::string* fp);
+
+    // Explicit instantiations for signed integer types
+    extern template void embed_<int8_t>(const char* bytes, const idx_t& n, const size_t* sizes, std::string feature_extractor, int8_t* v, const idx_t& d);
+    extern template void embed_<int16_t>(const char* bytes, const idx_t& n, const size_t* sizes, std::string feature_extractor, int16_t* v, const idx_t& d);
+    extern template void embed_<int32_t>(const char* bytes, const idx_t& n, const size_t* sizes, std::string feature_extractor, int32_t* v, const idx_t& d);
+    extern template void embed_<int64_t>(const char* bytes, const idx_t& n, const size_t* sizes, std::string feature_extractor, int64_t* v, const idx_t& d);
+
+// Explicit instantiations for unsigned integer types
+    extern template void embed_<uint8_t>(const char* bytes, const idx_t& n, const size_t* sizes, std::string feature_extractor, uint8_t* v, const idx_t& d);
+    extern template void embed_<uint16_t>(const char* bytes, const idx_t& n, const size_t* sizes, std::string feature_extractor, uint16_t* v, const idx_t& d);
+    extern template void embed_<uint32_t>(const char* bytes, const idx_t& n, const size_t* sizes, std::string feature_extractor, uint32_t* v, const idx_t& d);
+    extern template void embed_<uint64_t>(const char* bytes, const idx_t& n, const size_t* sizes, std::string feature_extractor, uint64_t* v, const idx_t& d);
+
+// Explicit instantiations for floating-point types
+    extern template void embed_<float>(const char* bytes, const idx_t& n, const size_t* sizes, std::string feature_extractor, float* v, const idx_t& d);
+    extern template void embed_<double>(const char* bytes, const idx_t& n, const size_t* sizes, std::string feature_extractor, double* v, const idx_t& d);
+
+
 } // mvdb::opertors
 
 #endif //MICROVECDB_OPERATORS_H

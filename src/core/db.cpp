@@ -84,7 +84,7 @@ namespace mvdb {
                         const uint64_t &initial_data_size, const NamedArgs *args) {
         _path = path;
         if(fs::exists(_path) || path.empty())
-            throw::std::runtime_error("invalid path, \"" + path + "\" is blank or already exists");
+            throw::std::runtime_error("invalid path, \"" + path + "\" is either blank or already exists");
 
         _storage_path = path + fs::preferred_separator + KV_STORE_EXT;
         if(fs::exists(_storage_path))
@@ -97,7 +97,7 @@ namespace mvdb {
         if (!fs::create_directory(_path))
             throw::std::runtime_error("path, \"" + _path + "\" creation failed");
 
-        _storage = std::make_unique<Storage>(_storage_path, true, false);
+        _storage = std::make_unique<Storage>(_storage_path, true, true);
 
         if(index_type == index::IndexType::FAISS_FLAT)
             _index = std::make_unique<index::FaissFlatIndex<T>>();

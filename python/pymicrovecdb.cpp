@@ -156,6 +156,7 @@ enum DATA_TYPES : unsigned char {
 
 static void MVDB_delete_int8_t(PyObject* capsule) {
     delete static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(capsule, MVDB_NAME_int8_t));
+    std::cout << "MVDB<int8_t> instance deleted" << std::endl;
 }
 
 static void MVDB_delete_int16_t(PyObject* capsule) {
@@ -180,6 +181,7 @@ static void MVDB_delete_uint32_t(PyObject* capsule) {
 
 static void MVDB_delete_float(PyObject* capsule) {
     delete static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(capsule, MVDB_NAME_float));
+    std::cout << "MVDB<float> instance deleted" << std::endl;
 }
 
 static void MVDB_delete_double(PyObject* capsule) {
@@ -191,6 +193,7 @@ static PyObject* MVDB_init(PyObject* self, PyObject* args) {
     if(!PyArg_ParseTuple(args, "B", &data_type)) return nullptr;
     if(data_type == INT8) {
         auto* mvdb_ = new mvdb::MVDB<int8_t>();
+        std::cout << "MVDB<int8_t> instance created" << std::endl;
         return PyCapsule_New(mvdb_, MVDB_NAME_int8_t, MVDB_delete_int8_t);
     }
     else if(data_type == INT16){
@@ -215,6 +218,7 @@ static PyObject* MVDB_init(PyObject* self, PyObject* args) {
     }
     else if(data_type == FLOAT) {
         auto* mvdb_ = new mvdb::MVDB<float>();
+        std::cout << "MVDB<float> instance created" << std::endl;
         return PyCapsule_New(mvdb_, MVDB_NAME_float, MVDB_delete_float);
     }
     else if(data_type == DOUBLE) {

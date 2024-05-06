@@ -49,7 +49,8 @@ from pymicrovecdb import MVDB, DATA_TYPE, IndexType
 
 @profile
 def main():
-    db_ = MVDB(DATA_TYPE.INT8)
+    db_ = MVDB(DATA_TYPE.FLOAT)
+    db_.create(IndexType.FAISS_FLAT, 96, "./test_faiss_flat_db")
     print(db_)
     # unittest.main()
 

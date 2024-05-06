@@ -5,6 +5,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
 
+# Disable warnings
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-w) # Turn off all warnings for GCC/Clang
+elseif(MSVC)
+    add_compile_options(/W0) # Turn off all warnings for MSVC
+endif()
+
 #find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 #find_package(CUDAToolkit REQUIRED)
 find_package(OpenMP REQUIRED)

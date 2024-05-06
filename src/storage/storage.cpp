@@ -21,7 +21,7 @@
          options_.create_if_missing = deserialize_numeric<bool>(in);
      }
 
-     Storage::Storage(std::string  data_dir_path, const bool& creating_if_missing, const bool& open): data_dir_path_(std::move(data_dir_path)){
+     Storage::Storage(std::string  data_dir_path, const bool& creating_if_missing, const bool& open): data_dir_path_(std::move(data_dir_path)) {
          options_.create_if_missing = creating_if_missing;
          if(open) this->open();
      }
