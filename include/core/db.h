@@ -113,7 +113,9 @@ namespace mvdb {
         ~DB_() override;
         Status* status() const;
         bool open(const std::string& path);
-        bool create(const std::string& path, const idx_t& dims);
+        bool create(index::IndexType index_type, const uint64_t& dims, const std::string& path,
+                    const std::string& initial_data_path = "", const T* initial_data = nullptr,
+                    const uint64_t &initial_data_size = 0, const NamedArgs& args = NoArgs);
         Storage* storage();
         index::Index<T>* index();
 //        T* get(idx_t& n, idx_t* keys) const;

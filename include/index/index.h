@@ -20,11 +20,12 @@
 
 namespace mvdb::index {
 
-    enum IndexType : unsigned char {
+    enum IndexType : int {
         DISKANN = 0,
         FAISS_FLAT = 1,
         FLAT = 2,
-        SPANN
+        SPANN = 3,
+        ANNOY = 4
     };
 
     inline std::ostream& operator<<(std::ostream& os, const IndexType& obj) {

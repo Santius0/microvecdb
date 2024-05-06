@@ -2,7 +2,11 @@
 #include "storage.h"
 #include "utils.h"
 #include "filesystem.h"
+
 #include "faiss_flat_index.h"
+#include "spann_index.h"
+#include "annoy_index.h"
+#include "flat_index.h"
 
 #include <fstream>
 #include <iostream>
@@ -74,20 +78,38 @@ namespace mvdb {
         return true;
     }
 
-    template <typename T>
-    bool DB_<T>::create(const std::string& path, const idx_t& dims) {
+    template<typename T>
+    bool DB_<T>::create(index::IndexType index_type, const uint64_t &dims, const std::string &path,
+                        const std::string &initial_data_path, const T *initial_data,
+                        const uint64_t &initial_data_size, const NamedArgs &args) {
         _path = path;
-        _storage_path = path + fs::preferred_separator + KV_STORE_EXT;
-        _index_path = path + fs::preferred_separator + INDEX_EXT;
+        if(fs::exists(_path) || path.empty())
+            throw::std::runtime_error("invalid path, \"" + path + "\" is blank or already exists");
 
-        if(!fs::exists(path) && !fs::exists(_storage_path) && !fs::exists(_index_path)) {
-            if (!fs::create_directory(path))
-                return false;
-        } else throw::std::runtime_error("database path \"" + path + "\" already exists");
+        _storage_path = path + fs::preferred_separator + KV_STORE_EXT;
+        if(fs::exists(_storage_path))
+            throw::std::runtime_error("invalid path, \"" + _storage_path + "\" already exist");
+
+        _index_path = path + fs::preferred_separator + INDEX_EXT;
+        if(fs::exists(_index_path))
+            throw::std::runtime_error("invalid path, \"" + _index_path + "\" already exist");
+
+        if (!fs::create_directory(_path))
+            throw::std::runtime_error("path, \"" + _path + "\" creation failed");
 
         _storage = std::make_unique<Storage>(_storage_path, true, false);
-        _index = std::make_unique<index::FaissFlatIndex<T>>();
-        _index.build(dims, _index_path);
+
+        if(index_type == index::IndexType::FAISS_FLAT)
+            _index = std::make_unique<index::FaissFlatIndex<T>>();
+        else if(index_type == index::IndexType::SPANN)
+            _index = std::make_unique<index::SPANNIndex<T>>();
+        else if(index_type == index::IndexType::ANNOY)
+            _index = std::make_unique<index::AnnoyIndex<T>>();
+        else
+            _index = std::make_unique<index::FlatIndex<T>>();
+
+        _index.build(dims, _index_path, initial_data_path, initial_data, initial_data_size, args);
+
         return true;
     }
 

@@ -3,6 +3,7 @@
 
 #include "db.h"
 #include "operators.h"
+#include "index.h"
 
 namespace mvdb {
 
@@ -10,12 +11,15 @@ namespace mvdb {
     class MVDB {
         std::unique_ptr<DB_<T>> db_;
     public:
-        MVDB();
+        MVDB() = default;
         ~MVDB() = default;
 
         // system commands
-        void create();
-        void open();
+        void create(index::IndexType index_type, const uint64_t &dims, const std::string &path,
+                    const std::string &initial_data_path = "",
+                    const T *initial_data = nullptr, const uint64_t& initial_data_size = 0,
+                    const NamedArgs *args = nullptr);
+        void open(const std::string& path);
 //        void analyse();
 //        void optimise();
 
@@ -27,7 +31,7 @@ namespace mvdb {
 //        void update();
 //        void remove();
 //
-//        void topk(const idx_t& k, const float& c = 100.0f);
+        void topk(const uint64_t& k, const float& c = 100.0f);
 //        void range();
 //        void embed();
 
