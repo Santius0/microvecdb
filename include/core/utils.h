@@ -20,6 +20,8 @@ namespace mvdb {
 
     void read_vectors(const std::string &filename, const int &num_vecs, const int &dims, value_t *vecs);
 
+    void remove_trailing_slashes(std::string& path);
+
 }
 
 #endif // MICROVEC_DB_CORE_UTILS_H

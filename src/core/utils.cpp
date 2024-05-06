@@ -6,6 +6,7 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 namespace mvdb {
 
@@ -79,5 +80,12 @@ namespace mvdb {
         } else {
             std::cerr << "Error opening file: " << filename << std::endl;
         }
+    }
+
+    void remove_trailing_slashes(std::string& path) {
+        // Removes all trailing '/' and '\' from the end of the string
+        path.erase(std::find_if(path.rbegin(), path.rend(), [](char ch) {
+            return ch != '/' && ch != '\\';
+        }).base(), path.end());
     }
 }

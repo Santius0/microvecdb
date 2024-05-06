@@ -86,11 +86,13 @@ namespace mvdb::index {
 
     template <typename T>
     void FaissFlatIndex<T>::save_(const std::string& path) const {
-        FILE* out_file = fopen(path.c_str(), "wb");
-//                std::ios::binary | std::ios::out);
-        serialize_(reinterpret_cast<std::ostream &>(out_file));
-        faiss::write_index(faiss_index_.get(), out_file);
-        fclose(out_file);
+        std::ofstream file(path + INDEX_META_EXT, std::ios::binary | std::ios::out);;
+        if (!file) {
+            std::cerr << "Error opening file for reading: \"" + path + INDEX_META_EXT + "\"\n";
+            return;
+        }
+        serialize_(file);
+        file.close();
         faiss::write_index(faiss_index_.get(), path.c_str());
     }
 
@@ -98,7 +100,10 @@ namespace mvdb::index {
     void FaissFlatIndex<T>::open(const std::string& path) {
         if(path.empty() || !fs::exists(path) || fs::is_directory(path))
             throw std::runtime_error("index path, '" + path + "' is either empty or invalid");
-        std::ifstream in_file(path, std::ios::binary | std::ios::in);
+        std::string meta_path = path + INDEX_META_EXT;
+        if(!fs::exists(meta_path) || fs::is_directory(meta_path))
+            throw std::runtime_error("index path, '" + path + "' is invalid");
+        std::ifstream in_file(meta_path, std::ios::binary | std::ios::in);
         deserialize_(in_file);
         in_file.close();
         if(!faiss_index_) faiss_index_ = std::make_unique<faiss::IndexFlatL2>(this->dims_);

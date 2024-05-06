@@ -10,8 +10,8 @@
 namespace mvdb {
 
     // VectorDB
-    #define META_FILE_EXTENSION "metadata"
-    #define META_FILE_EXTENSION_LEN strlen(META_FILE_EXTENSION)
+    #define DB_EXT "db"
+    #define DB_EXT_LEN strlen(DB_EXT)
 
     // Vector collection
     #define COLLECTION_META_EXT ".meta"
@@ -20,7 +20,7 @@ namespace mvdb {
     // Index store contants
     #define INDEX_EXT "index"
     #define INDEX_EXT_LEN strlen(INDEX_EXT)
-    #define INDEX_META_EXT ".index.meta"
+    #define INDEX_META_EXT ".meta"
     #define INDEX_META_EXT_LEN strlen(INDEX_META_EXT)
 
     // Data store contsants

@@ -14,6 +14,21 @@
 namespace mvdb {
 
     template <typename T>
+    void DB_<T>::index_make(const index::IndexType& index_type){
+        _index_type = index_type;
+        if(index_type == index::IndexType::FAISS_FLAT)
+            _index = std::make_unique<index::FaissFlatIndex<T>>();
+        else if(index_type == index::IndexType::SPANN)
+            _index = std::make_unique<index::SPANNIndex<T>>();
+        else if(index_type == index::IndexType::ANNOY)
+            _index = std::make_unique<index::AnnoyIndex<T>>();
+        else
+            throw std::runtime_error("_index creation failed. invalid index_type, '" + std::to_string(index_type) + "'");
+//        else
+//            _index = std::make_unique<index::FlatIndex<T>>();
+    }
+
+    template <typename T>
     std::ostream& operator<<(std::ostream& os, const DB_<T>& obj) {
         return os   << "_path: " << obj._path << std::endl
                     << "_path: " << obj._index_path << std::endl
@@ -31,7 +46,9 @@ namespace mvdb {
     template <typename T>
     void DB_<T>::serialize_(std::ostream &out) const {
         serialize_string(out, _path);
+        serialize_string(out, _db_path);
         serialize_string(out, _index_path);
+        serialize_numeric<unsigned char>(out, _index_type);
         serialize_string(out, _storage_path);
         serialize_numeric<idx_t>(out, _dims);
 //        out.write(reinterpret_cast<const char*>(_records->data()), ntotal_ * dims_ * sizeof(value_t));
@@ -42,13 +59,12 @@ namespace mvdb {
     template <typename T>
     void DB_<T>::deserialize_(std::istream &in) {
         _path = deserialize_string(in);
+        _db_path = deserialize_string(in);
         _index_path = deserialize_string(in);
+        _index_type = static_cast<index::IndexType>(deserialize_numeric<unsigned char>(in));
         _storage_path = deserialize_string(in);
         _dims = deserialize_numeric<idx_t>(in);
-
-        _storage = std::make_unique<Storage>(_storage_path, true, false);
-        _index = std::make_unique<index::FaissFlatIndex<T>>();
-
+        index_make(_index_type);
         _index->deserialize_(in);
         _storage->deserialize_(in);
     }
@@ -66,50 +82,72 @@ namespace mvdb {
     }
 
     template <typename T>
-    bool DB_<T>::open(const std::string &path) {
-        std::ifstream file(path);
+    bool DB_<T>::open(std::string &path) {
+
+        remove_trailing_slashes(path);
+        std::string sep = std::string(1, fs::preferred_separator);
+        _path = path;
+        std::cout << "IN HERE 01\n";
+        if(!fs::exists(_path) || path.empty())
+            throw::std::runtime_error("invalid path, \"" + path + "\" is either blank or does not exist");
+
+        _db_path = path + sep + DB_EXT;
+        if(!fs::exists(_db_path))
+            throw::std::runtime_error("invalid path, \"" + _db_path + "\" does not exist");
+
+        _storage_path = path + sep + KV_STORE_EXT;
+        if(!fs::exists(_storage_path))
+            throw::std::runtime_error("invalid path, \"" + _storage_path + "\" does not exist");
+
+        _index_path = path + sep + INDEX_EXT;
+        if(!fs::exists(_index_path))
+            throw::std::runtime_error("invalid path, \"" + _index_path + "\" does not exist");
+
+
+        std::ifstream file(_db_path, std::ios::binary | std::ios::in);
         if (!file) {
-            std::cerr << "Error opening file for reading: \"" + path + "\"\n";
+            std::cerr << "Error opening file for reading: \"" + _db_path + "\"\n";
             return false;
         }
-        _path = path;
+        _storage = std::make_unique<Storage>(_storage_path, true, false);
         deserialize_(file);
         file.close();
+        _index->open(_index_path);
         return true;
     }
 
     template<typename T>
-    bool DB_<T>::create(index::IndexType index_type, const uint64_t &dims, const std::string &path,
+    bool DB_<T>::create(index::IndexType index_type, const uint64_t &dims, std::string &path,
                         const std::string &initial_data_path, const T *initial_data,
                         const uint64_t &initial_data_size, const NamedArgs *args) {
+        remove_trailing_slashes(path);
+        std::string sep = std::string(1, fs::preferred_separator);
+
         _path = path;
         if(fs::exists(_path) || path.empty())
             throw::std::runtime_error("invalid path, \"" + path + "\" is either blank or already exists");
 
-        _storage_path = path + fs::preferred_separator + KV_STORE_EXT;
-        if(fs::exists(_storage_path))
-            throw::std::runtime_error("invalid path, \"" + _storage_path + "\" already exist");
+        _db_path = path + sep + DB_EXT;
+        if(fs::exists(_db_path))
+            throw::std::runtime_error("invalid path, \"" + _db_path + "\" already exists");
 
-        _index_path = path + fs::preferred_separator + INDEX_EXT;
+        _storage_path = path + sep + KV_STORE_EXT;
+        if(fs::exists(_storage_path))
+            throw::std::runtime_error("invalid path, \"" + _storage_path + "\" already exists");
+
+        _index_path = path + sep + INDEX_EXT;
         if(fs::exists(_index_path))
-            throw::std::runtime_error("invalid path, \"" + _index_path + "\" already exist");
+            throw::std::runtime_error("invalid path, \"" + _index_path + "\" already exists");
 
         if (!fs::create_directory(_path))
             throw::std::runtime_error("path, \"" + _path + "\" creation failed");
 
         _storage = std::make_unique<Storage>(_storage_path, true, true);
 
-        if(index_type == index::IndexType::FAISS_FLAT)
-            _index = std::make_unique<index::FaissFlatIndex<T>>();
-        else if(index_type == index::IndexType::SPANN)
-            _index = std::make_unique<index::SPANNIndex<T>>();
-        else if(index_type == index::IndexType::ANNOY)
-            _index = std::make_unique<index::AnnoyIndex<T>>();
-//        else
-//            _index = std::make_unique<index::FlatIndex<T>>();
+        index_make(index_type);
 
         _index->build(dims, _index_path, initial_data_path, initial_data, initial_data_size, args);
-
+        _save(_db_path);
         return true;
     }
 
@@ -117,8 +155,8 @@ namespace mvdb {
     void DB_<T>::_save(const std::string& save_path) {
 //        _index->save_(_index_path);
         // we don't actually save storage metadata, and the actual data part is kept up by rocksdb
-        std::string path = save_path.empty() ? _path + fs::preferred_separator + META_FILE_EXTENSION  : save_path;
-        std::ofstream file(path);
+        std::string path = save_path.empty() ? _db_path : save_path;
+        std::ofstream file(path, std::ios::binary | std::ios::out);
         if (!file) throw std::runtime_error("Error opening file for writing: \"" + path + "\"\n");
         serialize_(file);
         file.close();

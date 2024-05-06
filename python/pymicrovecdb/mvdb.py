@@ -28,15 +28,15 @@ class MVDB:
         self.built = False
         self.index_type = None
         self.data_type = data_type
-        self.mvdb_ = mvdb_c.MVDB_init(data_type.value)
+        self.mvdb_obj = mvdb_c.MVDB_init(data_type.value)
 
     def create(self, index_type: IndexType, dims: np.int64, path: str, initial_data_path: str = "", initial_data: np.ndarray = np.ndarray([]), initial_data_size: np.int64 = 0, *args, **kwargs):
-        mvdb_c.MVDB_create(self.data_type.value, self.mvdb_, index_type.value, dims, path, initial_data_path, initial_data, initial_data_size, None)
+        mvdb_c.MVDB_create(self.data_type.value, self.mvdb_obj, index_type.value, dims, path, initial_data_path, initial_data, initial_data_size, None)
         self.index_type = index_type
         self.built = True
 
     def open(self, path: str):
-        mvdb_c.MVDB_open(self.data_type.value, self.mvdb_, path)
+        mvdb_c.MVDB_open(self.data_type.value, self.mvdb_obj, path)
 
     def topk(self, k: np.int64, c: np.float32 = 100.0):
-        return mvdb_c.MVDB_topk(self.data_type.value, self.mvdb_, k, c)
+        return mvdb_c.MVDB_topk(self.data_type.value, self.mvdb_obj, k, c)

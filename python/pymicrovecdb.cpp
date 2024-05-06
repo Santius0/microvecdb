@@ -453,10 +453,11 @@ static PyObject* MVDB_create(PyObject* self, PyObject* args) {
 
 static PyObject* MVDB_open(PyObject* self, PyObject* args) {
     uint8_t data_type;
-    PyObject *mvdb_capsule;
-    const char *path;
+    PyObject* mvdb_capsule;
+    const char* path;
 
     if (!PyArg_ParseTuple(args, "BOs", &data_type, &mvdb_capsule, &path)) return nullptr;
+    std::cout << "HHHHHEEEERRRR\n";
 
     switch (data_type) {
         case INT8: {
@@ -500,8 +501,11 @@ static PyObject* MVDB_open(PyObject* self, PyObject* args) {
             break;
         }
         case FLOAT: {
+            std::cout << "H0" << std::endl;
             auto *mvdb_ = static_cast<mvdb::MVDB<float> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
+            std::cout << "H1" << std::endl;
             mvdb_->open(path);
+            std::cout << "H2" << std::endl;
             break;
         }
         case DOUBLE: {

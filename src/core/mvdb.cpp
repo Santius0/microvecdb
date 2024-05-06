@@ -2,17 +2,22 @@
 
 namespace mvdb {
 
+    template <typename T>
+    MVDB<T>::MVDB() {
+        db_ = std::make_unique<DB_<T>>();
+    }
+
     template<typename T>
     void MVDB<T>::create(index::IndexType index_type, const uint64_t &dims, const std::string &path,
                          const std::string &initial_data_path, const T *initial_data, const uint64_t& initial_data_size,
                          const NamedArgs *args) {
-        db_ = std::make_unique<DB_<T>>();
-        db_->create(index_type, dims, path, initial_data_path, initial_data, initial_data_size, args);
+        db_->create(index_type, dims, const_cast<std::string&>(path), initial_data_path, initial_data, initial_data_size, args);
     }
 
     template<typename T>
     void MVDB<T>::open(const std::string& path) {
-        db_->open(path);
+        std::cout << "MVDB::Open\n";
+        db_->open(const_cast<std::string&>(path));
     }
 
     template <typename T>

@@ -11,7 +11,7 @@ namespace mvdb {
     class MVDB {
         std::unique_ptr<DB_<T>> db_;
     public:
-        MVDB() = default;
+        MVDB();
         ~MVDB() = default;
 
         // system commands

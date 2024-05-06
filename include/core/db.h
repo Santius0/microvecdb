@@ -92,11 +92,11 @@ namespace mvdb {
 
     template <typename T = float>
     class DB_ final : Serializable {
-
         std::unique_ptr<Status> status_ = std::make_unique<Status>();
         std::unordered_map<idx_t, uint64_t> _records;       // maps a vector's id to a storage key.
-        std::string _path, _index_path, _storage_path;
+        std::string _path, _db_path, _index_path, _storage_path;
         idx_t _dims = 0;
+        index::IndexType _index_type;
         std::unique_ptr<Storage> _storage;
         std::unique_ptr<index::Index<T>> _index;
 //        idx_t* _add_ids = nullptr;                           // ptr to most recent keys array returned for cleanup if necessary
@@ -106,14 +106,15 @@ namespace mvdb {
         friend std::ostream& operator<<(std::ostream& os, const DB_<T>& obj);
         friend std::ostream& operator<<(std::ostream& os, const DB_<T>* obj);
         void _save(const std::string& save_path = "");
+        void index_make(const index::IndexType& index_type);
     public:
         void serialize_(std::ostream &out) const override;
         void deserialize_(std::istream &in) override;
         DB_() = default;
         ~DB_() override = default;
         Status* status() const;
-        bool open(const std::string& path);
-        bool create(index::IndexType index_type, const uint64_t& dims, const std::string& path,
+        bool open(std::string& path);
+        bool create(index::IndexType index_type, const uint64_t& dims, std::string& path,
                     const std::string& initial_data_path = "", const T* initial_data = nullptr,
                     const uint64_t &initial_data_size = 0, const NamedArgs* args = nullptr);
         Storage* storage();
