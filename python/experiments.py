@@ -6,7 +6,8 @@ import platform
 import datetime
 import struct
 import time
-from memory_profiler import profile
+from memory_profiler import profile, memory_usage
+from progress.bar import Bar
 from pymicrovecdb import MVDB, DATA_TYPE, IndexType
 
 def is_wsl():
@@ -17,19 +18,19 @@ def get_cpu_info():
     cpu_info_dict = {}
     for line in cpu_info.split('\n'):
         if "Model name:" in line:
-            cpu_info_dict['CPU Model Name'] = line.split(':')[1].strip()
+            cpu_info_dict['cpu_model_name'] = line.split(':')[1].strip()
         if "Architecture:" in line:
-            cpu_info_dict['CPU Architecture'] = line.split(':')[1].strip()
+            cpu_info_dict['cpu_architecture'] = line.split(':')[1].strip()
         if "CPU(s):" in line:
-            cpu_info_dict['CPU Core Count'] = line.split(':')[1].strip()
+            cpu_info_dict['cpu_core_count'] = line.split(':')[1].strip()
         if "CPU MHz:" in line:
-            cpu_info_dict['CPU Clock Speed (MHz)'] = line.split(':')[1].strip()
+            cpu_info_dict['cpu_clock_speed_(MHz)'] = line.split(':')[1].strip()
     return cpu_info_dict
 
 def get_ram_info():
     ram_info = {}
     svmem = psutil.virtual_memory()
-    ram_info['Total RAM (GB)'] = svmem.total / (1024 ** 3)
+    ram_info['total_DRAM_(GB)'] = svmem.total / (1024 ** 3)
 
     # Using dmidecode to get RAM speed and type
     try:
@@ -37,8 +38,8 @@ def get_ram_info():
         ram_details = subprocess.check_output("sudo dmidecode -t memory", shell=True).decode('utf-8')
         for item in ram_details.split("Memory Device\n"):
             if "Speed:" in item and "Type:" in item:
-                ram_info['RAM Speed (MHz)'] = item.split("Speed:")[1].split("MHz")[0].strip()
-                ram_info['RAM Type'] = item.split("Type:")[1].split("\n")[0].strip()
+                ram_info['RAM_speed_(MHz)'] = item.split("Speed:")[1].split("MHz")[0].strip()
+                ram_info['RAM_type'] = item.split("Type:")[1].split("\n")[0].strip()
                 break  # Assuming all RAM sticks have the same type and speed
     except Exception as e:
         print(f"Failed to get detailed RAM info: {e}")
@@ -48,10 +49,10 @@ def get_ram_info():
 def get_storage_info():
     storage_info = {}
     disk_io = psutil.disk_io_counters()
-    storage_info['Storage Read Count'] = disk_io.read_count
-    storage_info['Storage Write Count'] = disk_io.write_count
-    storage_info['Storage Read Bytes'] = disk_io.read_bytes
-    storage_info['Storage Write Bytes'] = disk_io.write_bytes
+    storage_info['storage_read_count'] = disk_io.read_count
+    storage_info['storage_write_count'] = disk_io.write_count
+    storage_info['storage_read_bytes'] = disk_io.read_bytes
+    storage_info['storage_write_bytes'] = disk_io.write_bytes
     print("linux storage")
     result = subprocess.check_output("lsblk -o NAME,TYPE,SIZE", shell=True).decode('utf-8')
     lines = result.strip().split('\n')[1:]  # skip header
@@ -63,7 +64,7 @@ def get_storage_info():
     data = [line.split() for line in lines]
     if data:
         df = pd.DataFrame(data, columns=['Name', 'Type', 'Size'])
-        storage_info['Storage Devices'] = df.to_dict('records')
+        storage_info['storage_devices'] = df.to_dict('records')
     # Use iostat for I/O statistics if available (install sysstat package)
     try:
         io_stats = subprocess.check_output("iostat -dx", shell=True).decode('utf-8')
@@ -80,8 +81,8 @@ def get_battery_info():
     if hasattr(psutil, 'sensors_battery'):
         battery = psutil.sensors_battery()
         if battery:
-            battery_info['Battery Capacity (%)'] = battery.percent
-            battery_info['Power Plugged'] = battery.power_plugged
+            battery_info['battery_capacity (%)'] = battery.percent
+            battery_info['power_plugged'] = battery.power_plugged
     return battery_info
 
 def get_system_uptime():
@@ -152,6 +153,26 @@ def read_vector_file(filename, dtype = np.float32):
 def l2_distance(a, b):
     return np.linalg.norm(a - b)
 
+def top_k_measurement_wrapper(db_, q):
+    results = db_.topk(1, q, len(q))
+    return results
+
+def run_single_query(db_, query, ground_truth):
+    start_time = time.time()
+    topk_res = memory_usage((top_k_measurement_wrapper, (db_, query)), retval=True, max_usage=True)
+    query_time = time.time() - start_time
+    found = 0
+    for id in topk_res[1][0]:
+        if id in ground_truth:
+            found += 1
+    recall = found / len(ground_truth)
+    row_dict = cpu_env
+    row_dict['peak_dram_(MB)'] = topk_res[0]
+    row_dict['index'] = IndexType.FAISS_FLAT.value
+    row_dict['latency_(s)'] = query_time
+    row_dict['recall@100'] = recall
+    return row_dict
+
 # Gather information
 cpu_info = get_cpu_info()
 ram_info = get_ram_info()
@@ -183,22 +204,29 @@ ground_truth = read_vector_file("../SPTAG/datasets/sift/sift_groundtruth.ivecs")
 
 
 rows = []
-for i, q in enumerate(queries):
-    start_time = time.time()
-    ids, distances = db_.topk(1, q, len(q))
-    query_time = time.time() - start_time
 
-    found = 0
-    for id in ids:
-        if id in ground_truth[i]:
-            found += 1
-    recall = found / len(ground_truth[i])
-    row_dict = cpu_env
-    row_dict['index'] = IndexType.FAISS_FLAT.value
-    row_dict['latency'] = query_time
-    row_dict['recall'] = recall
-    rows.append(row_dict)
+bar = Bar(f'{IndexType.FAISS_FLAT}_{cpu_info_dict['cpu_architecture']}: ', max=len(queries))
+for i, q in enumerate(queries):
+    rows.append(run_single_query(db_, q, ground_truth[i]))
+    bar.next()
+bar.finsh()
+
+# start_time = time.time()
+    # ids, distances = db_.topk(1, q, len(q))
+    # query_time = time.time() - start_time
+    #
+    # found = 0
+    # for id in ids:
+    #     if id in ground_truth[i]:
+    #         found += 1
+    # recall = found / len(ground_truth[i])
+    # row_dict = cpu_env
+    # row_dict['index'] = IndexType.FAISS_FLAT.value
+    # row_dict['latency'] = query_time
+    # row_dict['recall'] = recall
+    # rows.append(row_dict)
+
 
 df = pd.DataFrame(rows)
-df.to_csv('faissflat_x86_12.csv')
+df.to_csv('faissflat_x86_64_12c_8gb.csv')
 print(df)
