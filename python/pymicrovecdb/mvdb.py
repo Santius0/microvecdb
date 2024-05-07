@@ -23,6 +23,11 @@ class IndexType(Enum):
     SPANN = 3
     ANNOY = 4
 
+@unique
+class DISTANCE_METRIC(Enum):
+    L2_DISTANCE = 0
+    MAHALANOBIS_DISTANCE = 1
+
 class MVDB:
     def __init__(self, data_type: DATA_TYPE = DATA_TYPE.FLOAT):
         self.built = False
@@ -30,7 +35,7 @@ class MVDB:
         self.data_type = data_type
         self.mvdb_obj = mvdb_c.MVDB_init(data_type.value)
 
-    def create(self, index_type: IndexType, dims: np.int64, path: str, initial_data_path: str = "", initial_data: np.ndarray = np.ndarray([]), initial_data_size: np.int64 = 0, *args, **kwargs):
+    def create(self, index_type: IndexType, dims: np.int64, path: str, initial_data_path: str = "", initial_data: np.array = np.array([]), initial_data_size: np.int64 = 0, *args, **kwargs):
         mvdb_c.MVDB_create(self.data_type.value, self.mvdb_obj, index_type.value, dims, path, initial_data_path, initial_data, initial_data_size, None)
         self.index_type = index_type
         self.built = True
@@ -38,5 +43,6 @@ class MVDB:
     def open(self, path: str):
         mvdb_c.MVDB_open(self.data_type.value, self.mvdb_obj, path)
 
-    def topk(self, k: np.int64, c: np.float32 = 100.0):
-        return mvdb_c.MVDB_topk(self.data_type.value, self.mvdb_obj, k, c)
+    def topk(self, num_queries: np.uint64, query: np.array, k: np.uint64 = 5,
+             metric: DISTANCE_METRIC = DISTANCE_METRIC.L2_DISTANCE, c: np.float32 = 100.0):
+        return mvdb_c.MVDB_topk(self.data_type.value, self.mvdb_obj, num_queries, query, k, metric.value, c)

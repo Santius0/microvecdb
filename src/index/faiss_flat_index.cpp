@@ -1,6 +1,7 @@
 #include "faiss_flat_index.h"
 #include "exception.h"
 #include "filesystem.h"
+#include "utils.h"
 
 #include <iostream>
 #include <fstream>
@@ -50,6 +51,15 @@ namespace mvdb::index {
         if(fs::exists(path))
             throw std::runtime_error("'" + path + "' is invalid. make sure no file or dir exists at that location");
 
+        if(!initial_data_path.empty()) {
+            std::vector<T> data;
+            std::vector<size_t> start_indexes;
+            int num_vecs = fvecs_num_vecs<T>(initial_data_path);
+            read_fvecs<T>(initial_data_path, data, start_indexes, num_vecs);
+            faiss_index_->add(num_vecs, (float*)data.data());
+        } else if(initial_data_size > 0) {
+            faiss_index_->add(initial_data_size, (float*)initial_data);
+        }
         this->save_(path);
     }
 
@@ -86,13 +96,13 @@ namespace mvdb::index {
 
     template <typename T>
     void FaissFlatIndex<T>::save_(const std::string& path) const {
-        std::ofstream file(path + INDEX_META_EXT, std::ios::binary | std::ios::out);;
-        if (!file) {
-            std::cerr << "Error opening file for reading: \"" + path + INDEX_META_EXT + "\"\n";
-            return;
-        }
-        serialize_(file);
-        file.close();
+//        std::ofstream file(path + INDEX_META_EXT, std::ios::binary | std::ios::out);;
+//        if (!file) {
+//            std::cerr << "Error opening file for reading: \"" + path + INDEX_META_EXT + "\"\n";
+//            return;
+//        }
+//        serialize_(file);
+//        file.close();
         faiss::write_index(faiss_index_.get(), path.c_str());
     }
 
@@ -100,12 +110,12 @@ namespace mvdb::index {
     void FaissFlatIndex<T>::open(const std::string& path) {
         if(path.empty() || !fs::exists(path) || fs::is_directory(path))
             throw std::runtime_error("index path, '" + path + "' is either empty or invalid");
-        std::string meta_path = path + INDEX_META_EXT;
-        if(!fs::exists(meta_path) || fs::is_directory(meta_path))
-            throw std::runtime_error("index path, '" + path + "' is invalid");
-        std::ifstream in_file(meta_path, std::ios::binary | std::ios::in);
-        deserialize_(in_file);
-        in_file.close();
+//        std::string meta_path = path + INDEX_META_EXT;
+//        if(!fs::exists(meta_path) || fs::is_directory(meta_path))
+//            throw std::runtime_error("index path, '" + path + "' is invalid");
+//        std::ifstream in_file(meta_path, std::ios::binary | std::ios::in);
+//        deserialize_(in_file);
+//        in_file.close();
         if(!faiss_index_) faiss_index_ = std::make_unique<faiss::IndexFlatL2>(this->dims_);
         faiss_index_.reset(faiss::read_index(path.c_str()));
     }

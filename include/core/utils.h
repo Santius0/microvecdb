@@ -11,14 +11,17 @@ namespace mvdb {
     std::string trim(const std::string &str);
 
     std::string getCurrentTimeStamp();
-//    template<typename Func, typename Callback>
-//    auto run_task_with_callback(Func task, Callback callback);
 
     int next_closest_multiple(int n, int val);
 
-    std::vector<float> read_vector(std::ifstream &file);
+    template <typename T>
+    std::vector<T> read_vector(std::ifstream &file, const int& dims = 0);
 
-    void read_vectors(const std::string &filename, const int &num_vecs, const int &dims, value_t *vecs);
+    template <typename T>
+    void read_fvecs(const std::string& filePath, std::vector<T>& data, std::vector<size_t>& startIndexes, int num_vecs = -1);
+
+    template <typename T>
+    int fvecs_num_vecs(const std::string& path);
 
     void remove_trailing_slashes(std::string& path);
 

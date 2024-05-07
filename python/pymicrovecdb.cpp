@@ -516,15 +516,23 @@ static PyObject* MVDB_open(PyObject* self, PyObject* args) {
     Py_RETURN_NONE;
 }
 
+
 static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
     uint8_t data_type;
-    PyObject *mvdb_capsule;
-    uint64_t k;
+    PyObject *mvdb_capsule, *query_input;
+    uint64_t nq, k;
     double c;
+    mvdb::index::DISTANCE_METRIC metric;
 
-    if (!PyArg_ParseTuple(args, "BOld", &data_type, &mvdb_capsule, &k, &c)) return nullptr;
+    if (!PyArg_ParseTuple(args, "BOlO!lBd", &data_type, &mvdb_capsule, &nq, &PyArray_Type, &query_input, &k, &metric, &c)) return nullptr;
 
-//    switch (data_type) {
+    npy_intp return_arr_dims[1] = {static_cast<npy_intp>(nq*k)};
+    auto *ids = (mvdb::idx_t*)malloc(k * sizeof(mvdb::idx_t));
+    void *distances;
+    auto* query_pyarray = (PyArrayObject*)query_input;
+    PyObject *ids_npArray, *distances_npArray;
+    
+    switch (data_type) {
 //        case INT8: {
 //            auto *mvdb_ = static_cast<mvdb::MVDB<int8_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
 //            mvdb_->topk(k, (float)c);
@@ -565,21 +573,72 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
 //            mvdb_->topk(k, (float)c);
 //            break;
 //        }
-//        case FLOAT: {
-//            auto *mvdb_ = static_cast<mvdb::MVDB<float> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
-//            mvdb_->topk(k, (float)c);
-//            break;
-//        }
-//        case DOUBLE: {
-//            auto *mvdb_ = static_cast<mvdb::MVDB<double> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_double));
-//            mvdb_->topk(k, (float)c);
-//            break;
-//        }
-//        default:
-//            PyErr_SetString(PyExc_ValueError, "Failed to find topk results: unsupported data type");
-//            return nullptr;
-//    }
-    Py_RETURN_NONE;
+        case FLOAT: {
+            auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
+            if (PyArray_TYPE(query_pyarray) != NPY_FLOAT) {
+                PyErr_SetString(PyExc_TypeError, "Array should be of type float");
+                return nullptr;
+            }
+            auto *query = (float*)PyArray_DATA(query_pyarray);
+            distances = (float*)malloc(k * sizeof(float));
+            if (!ids || !distances){
+                PyErr_SetString(PyExc_TypeError, "either ids = nullptr or distances = nullptr => failed to generate allocate arrays for ids or distances");
+                return nullptr;
+            }
+            mvdb_->topk(nq, query, ids, (float*)distances, k, metric, (float)c);
+            distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_FLOAT, (void*)distances);
+            break;
+        }
+        case DOUBLE: {
+            auto *mvdb_ = static_cast<mvdb::MVDB<double>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_double));
+            if (PyArray_TYPE(query_pyarray) != NPY_DOUBLE) {
+                PyErr_SetString(PyExc_TypeError, "Array should be of type double");
+                return nullptr;
+            }
+            auto *query = (double*)PyArray_DATA(query_pyarray);
+            distances = (double*)malloc(k * sizeof(double));
+            if (!ids || !distances){
+                PyErr_SetString(PyExc_TypeError, "either ids = nullptr or distances = nullptr => failed to generate allocate arrays for ids or distances");
+                return nullptr;
+            }
+            mvdb_->topk(nq, query, ids, (double*)distances, k, metric, (float)c);
+            distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_DOUBLE, (void*)distances);
+            break;
+        }
+        default:
+            PyErr_SetString(PyExc_ValueError, "Failed to find topk results: unsupported data type");
+            return nullptr;
+    }
+    ids_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, (void*)ids);
+
+    PyArray_ENABLEFLAGS((PyArrayObject*)ids_npArray, NPY_ARRAY_OWNDATA); // ensure numpy owns and manages this data. this will make sure numpy frees the data when it's done
+    PyArray_ENABLEFLAGS((PyArrayObject*)distances_npArray, NPY_ARRAY_OWNDATA); // ensure numpy owns and manages this data. this will make sure numpy frees the data when it's done
+
+    if (!ids_npArray || !distances_npArray){
+        PyErr_SetString(PyExc_TypeError, "either ids_npArray = nullptr or distances_npArray = nullptr => failed to generate allocate arrays for ids or distances");
+        return nullptr;
+    }
+
+    PyObject* return_tuple = PyTuple_New(2);
+    if (!return_tuple) {
+        PyErr_SetString(PyExc_AssertionError, "return_tuple == nullptr => failed to create python return tuple");
+        return nullptr;
+    }
+
+    // PyTuple_SetItem steals a reference to the item
+    if (0 != PyTuple_SetItem(return_tuple, 0, ids_npArray)) {
+        // Handle error (and avoid memory leak)
+        Py_DECREF(return_tuple);
+        return nullptr;
+    }
+
+    if (0 != PyTuple_SetItem(return_tuple, 1, distances_npArray)) {
+        // Handle error (and avoid memory leak)
+        Py_DECREF(return_tuple);
+        return nullptr;
+    }
+
+    return return_tuple;
 }
 
 static PyMethodDef ExtensionMethods[] = {

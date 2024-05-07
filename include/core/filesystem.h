@@ -1,7 +1,7 @@
 #ifndef MICROVECDB_FILESYSTEM_H
 #define MICROVECDB_FILESYSTEM_H
 
-#include <string>
+#include <cstring>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -60,7 +60,7 @@ namespace fs {
             else
                 return DeleteFile(path) != 0; // Remove file
         #else
-            struct stat path_stat;
+            struct stat path_stat{};
             stat(path, &path_stat);
 
             if(S_ISDIR(path_stat.st_mode))
@@ -86,6 +86,19 @@ namespace fs {
 
     inline bool create_directory(const std::string& path){
         return create_directory(path.c_str());
+    }
+
+    inline const char* get_extension(const char* path) {
+        if (path == nullptr) return ""; // Check for null pointer
+        const char* last_dot = strrchr(path, '.');
+        if (last_dot == nullptr || last_dot == path) {
+            return ""; // No extension found or dot is at the start
+        }
+        return last_dot;
+    }
+
+    inline const char* get_extension(const std::string& path) {
+        return get_extension(path.c_str());
     }
 
 }

@@ -19,7 +19,7 @@
 
 namespace mvdb::index {
 
-    enum DISTANCE_METRIC {
+    enum DISTANCE_METRIC : unsigned char {
         L2_DISTANCE,
         MAHALANOBIS_DISTANCE
     };

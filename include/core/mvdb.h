@@ -31,7 +31,7 @@ namespace mvdb {
 //        void update();
 //        void remove();
 //
-        void topk(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k,
+        void topk(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k = 5,
                   const index::DISTANCE_METRIC& distance_metric = index::DISTANCE_METRIC::L2_DISTANCE,
                   const float& c = 100.0f);
 //        void range();

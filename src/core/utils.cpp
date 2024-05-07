@@ -51,36 +51,83 @@ namespace mvdb {
         return nextMultiple;
     }
 
-    std::vector<float> read_vector(std::ifstream& file) { // reads a single vector from the .fvecs file
-        std::vector<float> vec;
+    template <typename T>
+    std::vector<T> read_vector(std::ifstream& file, const int& dims) { // reads a single vector from the .fvecs file
+        std::vector<T> vec;
         int dimension;
         if (file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) { // Read the dimension of the vector
+//            if(dims > 0 && dims != dimension) throw std::runtime_error("specified dimensionality(" + std::to_string(dims) + ") does not match fvecs file dimensionality(" + std::to_string(dimension) + ")");
             vec.resize(dimension); // Resize the vector to hold all components
             for (int i = 0; i < dimension; ++i) {
-                file.read(reinterpret_cast<char*>(&vec[i]), sizeof(float)); // Read each component of the vector
+                file.read(reinterpret_cast<char*>(&vec[i]), sizeof(T)); // Read each component of the vector
             }
         }
         return vec;
     }
+    template std::vector<int8_t> read_vector<int8_t>(std::ifstream& file, const int& dims);
+    template std::vector<int16_t> read_vector<int16_t>(std::ifstream& file, const int& dims);
+    template std::vector<int32_t> read_vector<int32_t>(std::ifstream& file, const int& dims);
+    template std::vector<int64_t> read_vector<int64_t>(std::ifstream& file, const int& dims);
+    template std::vector<uint8_t> read_vector<uint8_t>(std::ifstream& file, const int& dims);
+    template std::vector<uint16_t> read_vector<uint16_t>(std::ifstream& file, const int& dims);
+    template std::vector<uint32_t> read_vector<uint32_t>(std::ifstream& file, const int& dims);
+    template std::vector<uint64_t> read_vector<uint64_t>(std::ifstream& file, const int& dims);
+    template std::vector<float> read_vector<float>(std::ifstream& file, const int& dims);
+    template std::vector<double> read_vector<double>(std::ifstream& file, const int& dims);
 
-    void read_vectors(const std::string& filename, const int& num_vecs, const int& dims, value_t *vecs) { // reads num_vecs vectors from a fvecs file
-        std::ifstream file(filename, std::ios::binary);
-        if(file){
-            for (int i = 0; i < num_vecs; ++i) {
-                if (file.eof()) {
-                    std::cout << "Reached the end of file before reading " << num_vecs << " records.\n";
-                    break;
-                }
-                std::vector<float> vec = read_vector(file);
-                for (size_t j = 0; j < vec.size(); j++) {
-                    vecs[i * dims + j] = vec[j];
-                }
-            }
-            file.close();
-        } else {
-            std::cerr << "Error opening file: " << filename << std::endl;
+    template<typename T>
+    void read_fvecs(const std::string& file_path, std::vector<T>& data, std::vector<size_t>& start_indexes, int num_vecs) {
+        std::ifstream file(file_path, std::ios::binary);
+        if (!file.is_open()) {
+            throw std::runtime_error("Failed to open file: " + file_path);
         }
+
+        int dimension;
+        if (!file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) {
+            throw std::runtime_error("Failed to read the dimension of the first vector.");
+        }
+
+        // Rewind to start to read dimensions again with each vector
+        file.seekg(0, std::ios::beg);
+
+        std::vector<T> vec(dimension);
+        size_t currentStartIndex = 0;
+        int vectorCount = 0;
+
+        while (file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) {
+            if (dimension != vec.size()) {
+                throw std::runtime_error("Inconsistent vector dimensions found.");
+            }
+
+            start_indexes.push_back(currentStartIndex);
+            for (int i = 0; i < dimension; ++i) {
+                if (!file.read(reinterpret_cast<char*>(&vec[i]), sizeof(T))) {
+                    throw std::runtime_error("Failed to read all elements of a vector.");
+                }
+                data.push_back(vec[i]);
+            }
+            currentStartIndex += dimension;
+            vectorCount++;
+
+            // Check if we have read the required number of vectors
+            if (num_vecs != -1 && vectorCount >= num_vecs) {
+                break;
+            }
+        }
+
+        file.close();
     }
+
+    template void read_fvecs<int8_t>(const std::string& file_path, std::vector<int8_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
+    template void read_fvecs<int16_t>(const std::string& file_path, std::vector<int16_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
+    template void read_fvecs<int32_t>(const std::string& file_path, std::vector<int32_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
+    template void read_fvecs<int64_t>(const std::string& file_path, std::vector<int64_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
+    template void read_fvecs<uint8_t>(const std::string& file_path, std::vector<uint8_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
+    template void read_fvecs<uint16_t>(const std::string& file_path, std::vector<uint16_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
+    template void read_fvecs<uint32_t>(const std::string& file_path, std::vector<uint32_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
+    template void read_fvecs<uint64_t>(const std::string& file_path, std::vector<uint64_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
+    template void read_fvecs<float>(const std::string& file_path, std::vector<float>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
+    template void read_fvecs<double>(const std::string& file_path, std::vector<double>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
 
     void remove_trailing_slashes(std::string& path) {
         // Removes all trailing '/' and '\' from the end of the string
@@ -88,4 +135,32 @@ namespace mvdb {
             return ch != '/' && ch != '\\';
         }).base(), path.end());
     }
+
+    template <typename T>
+    int fvecs_num_vecs(const std::string& path) {
+        std::ifstream file(path, std::ios::binary);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open the file, '" + path + "'" << std::endl;
+            return -1;
+        }
+        file.seekg(0, std::ios::end);
+        std::streampos fileSize = file.tellg();
+        file.seekg(0, std::ios::beg);
+        int dimension;
+        file.read(reinterpret_cast<char*>(&dimension), sizeof(int));
+        size_t vector_size = dimension * sizeof(T) + sizeof(int);
+        file.close();
+        return fileSize / vector_size;
+    }
+    template int fvecs_num_vecs<int8_t>(const std::string& path);
+    template int fvecs_num_vecs<int16_t>(const std::string& path);
+    template int fvecs_num_vecs<int32_t>(const std::string& path);
+    template int fvecs_num_vecs<int64_t>(const std::string& path);
+    template int fvecs_num_vecs<uint8_t>(const std::string& path);
+    template int fvecs_num_vecs<uint16_t>(const std::string& path);
+    template int fvecs_num_vecs<uint32_t>(const std::string& path);
+    template int fvecs_num_vecs<uint64_t>(const std::string& path);
+    template int fvecs_num_vecs<float>(const std::string& path);
+    template int fvecs_num_vecs<double>(const std::string& path);
+
 }

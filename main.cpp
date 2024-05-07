@@ -322,8 +322,8 @@ std::vector<float> read_vector(std::ifstream& file) {
 
 int main() {
 
-    auto * mvdb_ = new mvdb::MVDB<uint8_t>();
-    mvdb_->create(mvdb::index::IndexType::ANNOY, 20, "./testingtesting13", "", nullptr, 0, nullptr);
+    auto * mvdb_ = new mvdb::MVDB<float>();
+    mvdb_->create(mvdb::index::IndexType::FAISS_FLAT, 128, "../python/test_faiss_flat_db", "../SPTAG/datasets/sift/sift_base.fvecs");
     delete mvdb_;
 
 //    auto * db = new mvdb::DB_();
