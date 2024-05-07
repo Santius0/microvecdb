@@ -205,7 +205,7 @@ ground_truth = read_vector_file("../SPTAG/datasets/sift/sift_groundtruth.ivecs")
 
 rows = []
 
-bar = Bar(f'{IndexType.FAISS_FLAT}_{cpu_info_dict['cpu_architecture']}: ', max=len(queries))
+bar = Bar(f"{IndexType.FAISS_FLAT}_{cpu_info['cpu_architecture']}: ", max=len(queries))
 for i, q in enumerate(queries):
     rows.append(run_single_query(db_, q, ground_truth[i]))
     bar.next()
