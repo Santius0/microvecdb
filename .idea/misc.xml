@@ -12,7 +12,6 @@
     <excludeRoots>
       <file path="$PROJECT_DIR$/ImageBind/imagebind" />
       <file path="$PROJECT_DIR$/SPTAG" />
-      <file path="$PROJECT_DIR$/SPTAG/zstd_aarch64" />
       <file path="$PROJECT_DIR$/annoy" />
       <file path="$PROJECT_DIR$/diskann" />
       <file path="$PROJECT_DIR$/eigen" />
@@ -26,6 +25,7 @@
       <file path="$PROJECT_DIR$/numpy" />
       <file path="$PROJECT_DIR$/rocksdb" />
       <file path="$PROJECT_DIR$/spdlog" />
+      <file path="$PROJECT_DIR$/zstd_aarch64" />
     </excludeRoots>
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10.13 WSL (Ubuntu-22.04): (/home/santius/.virtualenvs/microvecdb/bin/python)" project-jdk-type="Python SDK" />

@@ -153,13 +153,13 @@ def read_vector_file(filename, dtype = np.float32):
 def l2_distance(a, b):
     return np.linalg.norm(a - b)
 
-def top_k_measurement_wrapper(db_, q):
-    results = db_.topk(1, q, len(q))
+def top_k_measurement_wrapper(db_, q, k):
+    results = db_.topk(1, q, k)
     return results
 
 def run_single_query(db_, query, ground_truth):
     start_time = time.time()
-    topk_res = memory_usage((top_k_measurement_wrapper, (db_, query)), retval=True, max_usage=True)
+    topk_res = memory_usage((top_k_measurement_wrapper, (db_, query, len(ground_truth))), retval=True, max_usage=True)
     query_time = time.time() - start_time
     found = 0
     for id in topk_res[1][0]:
@@ -167,10 +167,16 @@ def run_single_query(db_, query, ground_truth):
             found += 1
     recall = found / len(ground_truth)
     row_dict = cpu_env
+    row_dict['dataset'] = 'sift1M'
+    row_dict['dims'] = len(query)
+    row_dict['index_size'] = 1000000
+    row_dict['k'] = len(ground_truth)
+    row_dict['distance_metric'] = 'L2'
+    # row_dict['energy_usage'] = ''
     row_dict['peak_dram_(MB)'] = topk_res[0]
     row_dict['index'] = IndexType.FAISS_FLAT.value
     row_dict['latency_(s)'] = query_time
-    row_dict['recall@100'] = recall
+    row_dict['recall'] = recall
     return row_dict
 
 # Gather information
@@ -205,11 +211,13 @@ ground_truth = read_vector_file("../SPTAG/datasets/sift/sift_groundtruth.ivecs")
 
 rows = []
 
-bar = Bar(f"{IndexType.FAISS_FLAT}_{cpu_info['cpu_architecture']}: ", max=len(queries))
+bar = Bar(f"{IndexType.FAISS_FLAT}_{cpu_info['cpu_architecture']}: ", max=1000)
 for i, q in enumerate(queries):
+    if i > 1000:
+        break
     rows.append(run_single_query(db_, q, ground_truth[i]))
     bar.next()
-bar.finsh()
+bar.finish()
 
 # start_time = time.time()
     # ids, distances = db_.topk(1, q, len(q))

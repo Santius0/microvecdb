@@ -29,6 +29,52 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
 #find_package(benchmark REQUIRED)
+#message(FATAL_ERROR $ENV{HOME})
+#
+#find_path(NUMA_INCLUDE_DIR NAME numa.h HINTS
+#        ${CMAKE_SYSROOT}/local/include
+#        ${CMAKE_SYSROOT}/opt/local/include
+#        ${CMAKE_SYSROOT}/usr/local/include
+#        ${CMAKE_SYSROOT}/usr/include # this one
+#)
+#
+#find_library(NUMA_LIBRARY NAME libnuma.so HINTS
+#        ${CMAKE_SYSROOT}/local/lib64
+#        ${CMAKE_SYSROOT}/local/lib
+#        ${CMAKE_SYSROOT}/usr/local/lib64
+#        ${CMAKE_SYSROOT}/usr/local/lib
+#        ${CMAKE_SYSROOT}/opt/local/lib64
+#        ${CMAKE_SYSROOT}/opt/local/lib
+#        ${CMAKE_SYSROOT}/usr/lib64
+#        ${CMAKE_SYSROOT}/usr/lib
+#        ${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu
+#)
+#
+#find_library(NUMA_LIBRARY_STATIC NAME libnuma.a HINTS
+#        ${CMAKE_SYSROOT}/local/lib64
+#        ${CMAKE_SYSROOT}/local/lib
+#        ${CMAKE_SYSROOT}/usr/local/lib64
+#        ${CMAKE_SYSROOT}/usr/local/lib
+#        ${CMAKE_SYSROOT}/opt/local/lib64
+#        ${CMAKE_SYSROOT}/opt/local/lib
+#        ${CMAKE_SYSROOT}/usr/lib64
+#        ${CMAKE_SYSROOT}/usr/lib
+#        ${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu # this one
+#)
+#
+#if (NUMA_INCLUDE_DIR AND NUMA_LIBRARY AND NUMA_LIBRARY_STATIC)
+#    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -lnuma")
+#    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lnuma")
+#    include_directories (${NUMA_INCLUDE_DIR})
+#    message (STATUS "Found numa library: inc=${NUMA_INCLUDE_DIR}, lib=${NUMA_LIBRARY}, staticlib=${NUMA_LIBRARY_STATIC}")
+#    add_definitions(-DNUMA)
+#else ()
+#    set (NUMA_LIBRARY "")
+#    set (NUMA_LIBRARY_STATIC "")
+#    message (STATUS "WARNING: Numa library not found.")
+#    message (STATUS "Try: 'sudo yum install numactl numactl-devel' (or sudo apt-get install libnuma libnuma-dev)")
+#endif ()
+
 
 function(include_sub_directories_recursively root_dir)
     if (IS_DIRECTORY ${root_dir})
@@ -48,6 +94,9 @@ endfunction()
 add_executable(jetson_test jetson_test.cpp
 #        OpenMP::OpenMP_CXX OpenMP::OpenMP_C
 )
+target_link_directories(jetson_test PUBLIC ${PROJECT_SOURCE_DIR}/../numa_aarch64 ${PROJECT_SOURCE_DIR}/../zstd_aarch64)
+target_include_directories(jetson_test PUBLIC ${PROJECT_SOURCE_DIR}/../numa_aarch64 ${PROJECT_SOURCE_DIR}/../zstd_aarch64)
+target_link_libraries(jetson_test PUBLIC zstd pthread)
 
 #include_directories("${CMAKE_SYSROOT}/usr/include/aarch64-linux-gnu" "${CMAKE_SYSROOT}/usr/include/aarch64-linux-gnu/atlas")
 #link_directories("${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu" "${CMAKE_SYSROOT}/usr/include/aarch64-linux-gnu/atlas")
