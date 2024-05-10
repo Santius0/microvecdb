@@ -1,6 +1,8 @@
 #include <Python.h>
 #include <mvdb.h>
-//#include <spann_index.h>
+#include <faiss_flat_index.h>
+#include <annoy_index.h>
+#include <spann_index.h>
 #include <iostream>
 
 
@@ -10,6 +12,9 @@
 //#define DB_NAME "mvdb::DB"
 
 #define NAMED_ARGS "mvdb::NamedArgs"
+#define FAISS_FLAT_INDEX_NAMED_ARGS "mvdb::index::FaissFLatIndexNamedArgs"
+#define ANNOY_INDEX_NAMED_ARGS "mvdb::index::AnnoyIndexNamedArgs"
+#define SPANN_INDEX_NAMED_ARGS "mvdb::index::SPANNIndexNamedArgs"
 
 #define MVDB_NAME_int8_t "mvdb::MVDB<int8_t>"
 #define MVDB_NAME_int16_t "mvdb::MVDB<int16_t>"
@@ -154,6 +159,7 @@ enum DATA_TYPES : unsigned char {
 //    Py_RETURN_NONE;
 //}
 
+
 static void MVDB_delete_int8_t(PyObject* capsule) {
     delete static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(capsule, MVDB_NAME_int8_t));
     std::cout << "MVDB<int8_t> instance deleted" << std::endl;
@@ -231,12 +237,6 @@ static PyObject* MVDB_init(PyObject* self, PyObject* args) {
     }
 }
 
-//mvdb::NamedArgs* extract_named_args(PyObject* args_capsule) {
-//    auto * args = static_cast<mvdb::NamedArgs*>(PyCapsule_GetPointer(args_capsule, NAMED_ARGS));
-//    if(auto * c_args = dynamic_cast<mvdb::index::SPANNIndexNamedArgs*>(args))
-//        return c_args;
-//    return nullptr;
-//}
 
 int8_t* extract_int8_arr(PyObject* arr) {
     auto* pyarray = (PyArrayObject*)arr;
@@ -328,6 +328,17 @@ double* extract_double_arr(PyObject* arr) {
     return (double*)PyArray_DATA(pyarray);
 }
 
+mvdb::NamedArgs* extract_named_args(unsigned char index_type, PyObject* args_capsule) {
+    std::cout << (index_type == mvdb::index::IndexType::ANNOY) << std::endl;
+    if(index_type == mvdb::index::IndexType::FAISS_FLAT)
+        return static_cast<mvdb::index::FaissFlatIndexNamedArgs*>(PyCapsule_GetPointer(args_capsule, FAISS_FLAT_INDEX_NAMED_ARGS));
+    else if(index_type == mvdb::index::IndexType::ANNOY)
+        return static_cast<mvdb::index::AnnoyIndexNamedArgs*>(PyCapsule_GetPointer(args_capsule, ANNOY_INDEX_NAMED_ARGS));
+    else if(index_type == mvdb::index::IndexType::SPANN)
+        return static_cast<mvdb::index::SPANNIndexNamedArgs*>(PyCapsule_GetPointer(args_capsule, SPANN_INDEX_NAMED_ARGS));
+    return nullptr;
+}
+
 static PyObject* MVDB_create(PyObject* self, PyObject* args) {
     unsigned char data_type, index_type;
     PyObject *mvdb_capsule, *initial_data, *create_args_capsule;
@@ -337,12 +348,11 @@ static PyObject* MVDB_create(PyObject* self, PyObject* args) {
     if (!PyArg_ParseTuple(args, "BOBlssO!lO", &data_type, &mvdb_capsule, &index_type, &dims, &path, &initial_data_path, &PyArray_Type, &initial_data, &initial_data_size, &create_args_capsule)) return nullptr;
 
     void* extracted_data = nullptr;
-    mvdb::NamedArgs* c_args = nullptr; // TODO: accept custom args for indexes
-//    mvdb::NamedArgs* c_args = extract_named_args(create_args_capsule);
-//    if (!c_args) {
-//        PyErr_SetString(PyExc_TypeError, "Failed to extract NamedArgs");
-//        return nullptr;
-//    }
+    mvdb::NamedArgs* c_args = extract_named_args(index_type, create_args_capsule);
+    if (!c_args) {
+        PyErr_SetString(PyExc_TypeError, "Failed to extract NamedArgs");
+        return nullptr;
+    }
 
     switch (data_type) {
         case INT8: {
@@ -516,6 +526,42 @@ static PyObject* MVDB_open(PyObject* self, PyObject* args) {
     Py_RETURN_NONE;
 }
 
+static PyObject* MVDB_num_items(PyObject* self, PyObject* args) {
+    unsigned char data_type;
+    PyObject * mvdb_capsule;
+    if (!PyArg_ParseTuple(args, "BO", &data_type, &mvdb_capsule)) return nullptr;
+    if(data_type == INT8){
+        auto *mvdb_ = static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
+        return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
+    } else if (data_type == INT16) {
+        auto *mvdb_ = static_cast<mvdb::MVDB<int16_t >*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int16_t));
+        return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
+    } else if (data_type == INT32) {
+        auto *mvdb_ = static_cast<mvdb::MVDB<int32_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int32_t));
+        return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
+    } else if (data_type == INT64) {
+        auto *mvdb_ = static_cast<mvdb::MVDB<int64_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int64_t));
+        return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
+    } else if (data_type == UINT8) {
+        auto *mvdb_ = static_cast<mvdb::MVDB<uint8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint8_t));
+        return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
+    } else if (data_type == UINT16) {
+        auto *mvdb_ = static_cast<mvdb::MVDB<int16_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint16_t));
+        return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
+    } else if (data_type == UINT32) {
+        auto *mvdb_ = static_cast<mvdb::MVDB<int32_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint32_t));
+        return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
+    } else if (data_type == UINT64) {
+        auto *mvdb_ = static_cast<mvdb::MVDB<int64_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint64_t));
+        return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
+    } else if (data_type == FLOAT) {
+        auto *mvdb_ = static_cast<mvdb::MVDB<int64_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
+        return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
+    } else if (data_type == DOUBLE) {
+        auto *mvdb_ = static_cast<mvdb::MVDB<int64_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_double));
+        return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
+    }
+}
 
 static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
     uint8_t data_type;
@@ -568,11 +614,22 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
 //            mvdb_->topk(k, (float)c);
 //            break;
 //        }
-//        case UINT64: {
-//            auto *mvdb_ = static_cast<mvdb::MVDB<uint64_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint64_t));
-//            mvdb_->topk(k, (float)c);
-//            break;
-//        }
+        case UINT64: {
+            auto *mvdb_ = static_cast<mvdb::MVDB<uint64_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint64_t));
+            if (PyArray_TYPE(query_pyarray) != NPY_UINT64) {
+                PyErr_SetString(PyExc_TypeError, "Array should be of type uint64_t");
+                return nullptr;
+            }
+            auto *query = (uint64_t*)PyArray_DATA(query_pyarray);
+            distances = (uint64_t*)malloc(k * sizeof(uint64_t));
+            if (!ids || !distances){
+                PyErr_SetString(PyExc_TypeError, "either ids = nullptr or distances = nullptr => failed to generate allocate arrays for ids or distances");
+                return nullptr;
+            }
+            mvdb_->topk(nq, query, ids, (uint64_t*)distances, k, metric, (float)c);
+            distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_UINT64, (void*)distances);
+            break;
+        }
         case FLOAT: {
             auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
             if (PyArray_TYPE(query_pyarray) != NPY_FLOAT) {
@@ -641,24 +698,54 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
     return return_tuple;
 }
 
+static void FaissFlatIndexNamedArgs_delete(PyObject* capsule) {
+    delete static_cast<mvdb::index::FaissFlatIndexNamedArgs*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAMED_ARGS));
+}
+
+static PyObject* FaissFlatIndexNamedArgs_init(PyObject* self, PyObject* args) {
+    auto * na_ = new mvdb::index::FaissFlatIndexNamedArgs();
+    return PyCapsule_New(na_, FAISS_FLAT_INDEX_NAMED_ARGS, FaissFlatIndexNamedArgs_delete);
+}
+
+static void AnnoyIndexNamedArgs_delete(PyObject* capsule) {
+    delete static_cast<mvdb::index::AnnoyIndexNamedArgs*>(PyCapsule_GetPointer(capsule, ANNOY_INDEX_NAMED_ARGS));
+}
+
+static PyObject* AnnoyIndexNamedArgs_init(PyObject* self, PyObject* args) {
+    int n_trees, n_threads;
+    if (!PyArg_ParseTuple(args, "ii", &n_trees, &n_threads)) return nullptr;
+    auto * na_ = new mvdb::index::AnnoyIndexNamedArgs();
+    na_->n_trees = n_trees;
+    na_->n_threads = n_threads;
+    std::cout << "created AnnoyIndexNamedArgs_init" << std::endl;
+    return PyCapsule_New(na_, ANNOY_INDEX_NAMED_ARGS, AnnoyIndexNamedArgs_delete);
+}
+
+static void SPANNIndexNamedArgs_delete(PyObject* capsule) {
+    delete static_cast<mvdb::index::SPANNIndexNamedArgs*>(PyCapsule_GetPointer(capsule, SPANN_INDEX_NAMED_ARGS));
+}
+
+static PyObject* SPANNIndexNamedArgs_init(PyObject* self, PyObject* args) {
+    //    if (!PyArg_ParseTuple(args, "BOlO!lBd", &data_type, &mvdb_capsule, &nq, &PyArray_Type, &query_input, &k, &metric, &c)) return nullptr;
+    auto * na_ = new mvdb::index::SPANNIndexNamedArgs();
+    return PyCapsule_New(na_, SPANN_INDEX_NAMED_ARGS, SPANNIndexNamedArgs_delete);
+}
+
 static PyMethodDef ExtensionMethods[] = {
 //        { Python method name, C function to be called, arguments for this function, Docstring for this function },
         { "MVDB_init", MVDB_init, METH_VARARGS, "Initialise an MVDB object" },
         { "MVDB_create", MVDB_create, METH_VARARGS, "Create an MVDB database" },
         { "MVDB_open", MVDB_open, METH_VARARGS, "Open an MVDB database" },
         { "MVDB_topk", MVDB_topk, METH_VARARGS, "Find topk results" },
-//        { "DB_add_vector", DB_add_vector, METH_VARARGS, "Add vector data using a DB object" },
-//        { "DB_add_data", DB_add_data, METH_VARARGS, "Add data using a DB object" },
-//        { "DB_add_data_with_vector", DB_add_data_with_vector, METH_VARARGS, "Add raw data and vector data using a DB object" },
-//        { "DB_search_with_vector", DB_search_with_vector, METH_VARARGS, "Perform similarity using only vector data via a DB<> object" },
-//        { "DB_search", DB_search, METH_VARARGS, "Perform similarity using raw data via a DB object" },
-//        { "DB_start", DB_start, METH_VARARGS, "Start DB server" },
-//        { "DB_connect", DB_connect, METH_VARARGS, "Connect to distributed DB server" },
+        { "MVDB_num_items", MVDB_num_items, METH_VARARGS, "Returns number of items in db index" },
+        { "FaissFlatIndexNamedArgs_init", FaissFlatIndexNamedArgs_init, METH_VARARGS, "Return new named args obj for faiss flat index" },
+        { "AnnoyIndexNamedArgs_init", AnnoyIndexNamedArgs_init, METH_VARARGS, "Return new named args obj for ANNOY index" },
+        { "SPANNIndexNamedArgs_init", SPANNIndexNamedArgs_init, METH_VARARGS, "Return new named args obj for SPANN index" },
         { NULL, NULL, 0, NULL }  // Sentinel value ending the array
 };
 
 // Module definition
-static struct PyModuleDef myextensionmodule = {
+static struct PyModuleDef extensionmodule = {
     PyModuleDef_HEAD_INIT,
     "microvecdb",  // Name of the module
     NULL,            // Module documentation, NULL for none
@@ -669,5 +756,5 @@ static struct PyModuleDef myextensionmodule = {
 // Initialization function for this module
 PyMODINIT_FUNC PyInit_microvecdb(void) {
     import_array(); // Initialize NumPy API
-    return PyModule_Create(&myextensionmodule);
+    return PyModule_Create(&extensionmodule);
 }

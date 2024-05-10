@@ -8,7 +8,7 @@ import struct
 import time
 from memory_profiler import profile, memory_usage
 from progress.bar import Bar
-from pymicrovecdb import MVDB, DATA_TYPE, IndexType
+from pymicrovecdb import MVDB, DataType, IndexType
 
 def is_wsl():
     # Check if the script is running in the Windows Subsystem for Linux
@@ -199,7 +199,7 @@ print(processes_df.head())  # Print first few processes for brevity
 cpu_env = {**cpu_info, **ram_info, **storage_info, **battery_info}
 # cpu_end_df = pd.DataFrame([cpu_env])
 
-db_ = MVDB(DATA_TYPE.FLOAT)
+db_ = MVDB(DataType.FLOAT)
 
 # delete_directory("./test_faiss_flat_db")
 # db_.create(IndexType.FAISS_FLAT, 128, "./test_faiss_flat_db", "../SPTAG/datasets/sift/sift_base.fvecs")

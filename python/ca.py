@@ -7,7 +7,7 @@ import psutil
 import platform
 import datetime
 from memory_profiler import profile, memory_usage
-from pymicrovecdb import MVDB, DATA_TYPE, IndexType
+from pymicrovecdb import MVDB, DataType, IndexType
 import time
 import struct
 import pyJoules
@@ -111,7 +111,7 @@ def query(db_, query, ground_truth):
 # @profile
 def main():
     # Initialize database
-    db_ = MVDB(DATA_TYPE.FLOAT)
+    db_ = MVDB(DataType.FLOAT)
 
     # delete_directory("./test_faiss_flat_db")
     # db_.create(IndexType.FAISS_FLAT, 128, "./test_faiss_flat_db", "../SPTAG/datasets/sift/sift_base.fvecs")

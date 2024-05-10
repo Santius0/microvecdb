@@ -34,6 +34,7 @@ namespace mvdb::index {
             case IndexType::FAISS_FLAT:     return os << "FAISS_FLAT";
             case IndexType::FLAT:           return os << "FLAT";
             case IndexType::SPANN:           return os << "SPANN";
+            case IndexType::ANNOY:           return os << "ANNOY";
             default:                        return os << "invalid index type";
         }
     }

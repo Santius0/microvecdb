@@ -21,7 +21,7 @@ namespace mvdb {
         else if(index_type == index::IndexType::SPANN)
             _index = std::make_unique<index::SPANNIndex<T>>();
         else if(index_type == index::IndexType::ANNOY)
-            _index = std::make_unique<index::AnnoyIndex<T>>();
+            _index = std::make_unique<index::MVDBAnnoyIndex<T>>();
         else
             throw std::runtime_error("_index creation failed. invalid index_type, '" + std::to_string(index_type) + "'");
 //        else

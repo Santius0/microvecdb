@@ -317,62 +317,115 @@ std::vector<float> read_vector(std::ifstream& file) {
 }
 
 
-#include <mvdb.h>
-#include <index.h>
+#include "annoy_index.h"
+#include "test.h"
+
+#include <annoylib.h>
+#include "kissrandom.h"
+#include <iostream>
+#include <fstream>
+#include <vector>
+
+void read_fvecs(const std::string& filename, std::vector<std::vector<float>>& data) {
+    std::ifstream in(filename, std::ios::binary);
+    if (!in.is_open()) {
+        std::cerr << "Cannot open file: " << filename << std::endl;
+        return;
+    }
+
+    int d;
+    while (in.read((char*)&d, sizeof(int))) {  // Read dimensionality
+        std::vector<float> vec(d);
+        for (int i = 0; i < d; ++i) {
+            in.read((char*)&vec[i], sizeof(float));  // Read each component
+        }
+        data.push_back(vec);
+    }
+    in.close();
+}
 
 int main() {
 
-    auto * mvdb_ = new mvdb::MVDB<float>();
-    mvdb_->create(mvdb::index::IndexType::FAISS_FLAT, 128, "../python/test_faiss_flat_db", "../SPTAG/datasets/sift/sift_base.fvecs");
-    delete mvdb_;
-
-//    auto * db = new mvdb::DB_();
-//    std::string db_path = "../benchmarks/test_db.db";
-//    if(fs::exists(db_path))
-//        db->create(db_path, 96);
-//    else
-//        db->open(db_path);
-
-//    reading multiple fvecs file
-//    auto *faiss_flat_index = new mvdb::FaissFlatIndex(96, "../benchmarks/faiss_flat_index_test.index");
-//    mvdb::value_t *vecs = index->get_all();
-//    mvdb::idx_t dims = index->dims();
-//    for(int i = 0; i < index->ntotal(); ++i) {
-//        std::cout << "Vector " << i + 1 << ": [";
-//        for (size_t j = 0; j < dims; j++) {
-//            std::cout << vecs[i * dims + j] << (j < dims - 1 ? ", " : "");
-//        }
-//        std::cout << "]\n";
-//    }
-
-//    std::string filename = "../benchmarks/data/deep10M.fvecs";
-//    int num_fvecs = 10000;
-//    std::ifstream file(filename, std::ios::binary);
-//    if (!file) {
-//        std::cerr << "Cannot open file\n";
-//        return 1;
-//    }
-//    for (int i = 0; i < num_fvecs; ++i) {
-//        if (file.eof()) {
-//            std::cout << "Reached the end of file before reading " << num_fvecs << " records.\n";
-//            break;
-//        }
-//        std::vector<float> vec = read_vector(file);
-//        if(flat_index->add(1, vec.data(), nullptr) && faiss_flat_index->add(1, vec.data(), nullptr)) {
-//            std::cout << "Vector " << i + 1 << ": [";
-//            for (size_t j = 0; j < vec.size(); j++) {
-//                std::cout << vec[j] << (j < vec.size() - 1 ? ", " : "");
-//            }
-//            std::cout << "]\n";
-//        } else {
-//            std::cout << "FAIL!!" << std::endl;
-//        }
-//        flat_index->save("../benchmarks/flat_index_test.index");
-//        faiss_flat_index->save("../benchmarks/faiss_flat_index_test.index");
-//        // Process the vector here
-//    }
-//    file.close();
+//    auto * index = new mvdb::index::MVDBAnnoyIndex<float>();
 //
-//    delete faiss_flat_index;
+//    auto * jj = new float[15];
+//    jj[0] = 1;
+//    jj[1] = 2;
+//    jj[2] = 3;
+//    jj[3] = 4;
+//    jj[4] = 5;
+//    jj[5] = 6;
+//    jj[6] = 7;
+//    jj[7] = 8;
+//    jj[8] = 9;
+//    jj[9] = 10;
+//    jj[10] = 11;
+//    jj[11] = 12;
+//    jj[12] = 13;
+//    jj[13] = 14;
+//    jj[14] = 15;
+//
+//    auto * a = new mvdb::index::AnnoyIndexNamedArgs();
+//
+//    index->build(3, "./tt", "", jj, 5, a);
+//    auto * ids = new mvdb::idx_t[2];
+//    auto* dis = new float[2];
+//    auto* q = new float [3];
+//    q[0] = 7;
+//    q[1] = 8;
+//    q[2] = 9;
+//    index->topk(1, q, ids, dis, 3, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, 10.0f);
+//
+//    delete index;
+//    delete a;
+//    delete jj;
+//    delete[] ids;
+//    delete[] dis;
+//    delete[] q;
+//
+////    auto * h = new test();
+////    h->build();
+////    delete h;
+//
+//    return 0;
+
+
+    const std::string filename = "../data/sift1m/sift_base.fvecs";
+    std::vector<std::vector<float>> vectors;
+    read_fvecs(filename, vectors);
+
+    if (vectors.empty()) {
+        std::cerr << "No data read from file." << std::endl;
+        return 1;
+    }
+
+    int dim = vectors[0].size();
+    Annoy::AnnoyIndex<int, float, Annoy::Euclidean, Annoy::Kiss32Random, Annoy::AnnoyIndexSingleThreadedBuildPolicy> index(dim);  // Create Annoy index with the dimensionality of vectors
+
+    for (size_t i = 0; i < vectors.size(); ++i) {
+//        std::cout << "Adding vector " << i << " => ";
+//        for(int j = 0; j < vectors[i].size(); j++)
+//            std::cout << vectors[i].data()[j] << " ";
+//        std::cout << std::endl;
+        index.add_item(i, vectors[i].data());  // Add each vector to the index
+    }
+
+    index.build(10);  // Build the index with 10 trees
+
+    // Now, let's search for the 10th vector read in
+    if (vectors.size() < 10) {
+        std::cerr << "Less than 10 vectors read; cannot perform search." << std::endl;
+        return 1;
+    }
+
+    std::vector<int> closest_ids;
+    std::vector<float> distances;
+    index.get_nns_by_vector(vectors[500000].data(), 5, -1, &closest_ids, &distances);  // Search for 5 nearest neighbors
+
+    std::cout << "5 closest vectors to vector at index 500000 (should be 50000):" << std::endl;
+    for (size_t i = 0; i < closest_ids.size(); ++i) {
+        std::cout << "ID: " << closest_ids[i] << ", Distance: " << distances[i] << std::endl;
+    }
+
     return 0;
 }

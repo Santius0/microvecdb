@@ -58,7 +58,7 @@ namespace mvdb::index {
             read_fvecs<T>(initial_data_path, data, start_indexes, num_vecs);
             faiss_index_->add(num_vecs, (float*)data.data());
         } else if(initial_data_size > 0) {
-            faiss_index_->add(initial_data_size, (float*)initial_data);
+            faiss_index_->add((faiss::idx_t)initial_data_size, (float*)initial_data);
         }
         this->save_(path);
     }

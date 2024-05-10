@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
 
+#add_definitions(-DANNOYLIB_MULTITHREADED_BUILD)
+
 # Disable warnings
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-w) # Turn off all warnings for GCC/Clang
@@ -84,6 +86,7 @@ link_directories(
 
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/DiskANN/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/annoy)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/numpy/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
 
@@ -124,31 +127,31 @@ target_link_libraries(microvecdb_main PUBLIC microvecdb pthread)
 
 
 # Post build analysis >>>> ----------------------------------------------------------
-find_program(READELF_EXECUTABLE readelf)
-if(READELF_EXECUTABLE)
-    message(STATUS "readelf found")
-else ()
-    message(STATUS "readelf not found")
-endif()
-
-find_program(SIZE_EXECUTABLE size)
-if(SIZE_EXECUTABLE)
-    message(STATUS "size tool found")
-else ()
-    message(STATUS "size tool not found")
-endif()
-
-if(READELF_EXECUTABLE AND SIZE_EXECUTABLE)
-    set(SIZE_OUTPUT_FILE "${LIB_DIR}/../size_output.txt")
-    set(READELF_OUTPUT_FILE "${LIB_DIR}/../readelf_output.txt")
-    add_custom_command(
-            TARGET microvecdb POST_BUILD
-            COMMAND ${SIZE_EXECUTABLE} $<TARGET_FILE:microvecdb> > ${SIZE_OUTPUT_FILE}
-            COMMENT "Running size on microvecdb..."
-            COMMAND ${READELF_EXECUTABLE} -s $<TARGET_FILE:microvecdb> | sort -n -k3 > ${READELF_OUTPUT_FILE}
-            COMMENT "Running readelf on microvecdb..."
-)
-endif ()
+#find_program(READELF_EXECUTABLE readelf)
+#if(READELF_EXECUTABLE)
+#    message(STATUS "readelf found")
+#else ()
+#    message(STATUS "readelf not found")
+#endif()
+#
+#find_program(SIZE_EXECUTABLE size)
+#if(SIZE_EXECUTABLE)
+#    message(STATUS "size tool found")
+#else ()
+#    message(STATUS "size tool not found")
+#endif()
+#
+#if(READELF_EXECUTABLE AND SIZE_EXECUTABLE)
+#    set(SIZE_OUTPUT_FILE "${LIB_DIR}/../size_output.txt")
+#    set(READELF_OUTPUT_FILE "${LIB_DIR}/../readelf_output.txt")
+#    add_custom_command(
+#            TARGET microvecdb POST_BUILD
+#            COMMAND ${SIZE_EXECUTABLE} $<TARGET_FILE:microvecdb> > ${SIZE_OUTPUT_FILE}
+#            COMMENT "Running size on microvecdb..."
+#            COMMAND ${READELF_EXECUTABLE} -s $<TARGET_FILE:microvecdb> | sort -n -k3 > ${READELF_OUTPUT_FILE}
+#            COMMENT "Running readelf on microvecdb..."
+#)
+#endif ()
 # <<<< Post build analysis ----------------------------------------------------------
 
 #add_subdirectory(benchmarks)

@@ -2,29 +2,37 @@
 #define MICROVECDB_ANNOY_INDEX_H
 
 #include "index.h"
-#include "spann_index.h"
+#include "annoylib.h"
+#include "kissrandom.h"
 
 namespace mvdb::index {
 
     struct AnnoyIndexNamedArgs final : NamedArgs {
-        int option1 = 0;
+        int n_trees = 10;
+        int n_threads = -1;
         AnnoyIndexNamedArgs() = default;
         ~AnnoyIndexNamedArgs() override = default;
     };
 
     template <typename T = float>
-    class AnnoyIndex final : public Index<T> {
-        friend std::ostream& operator<<(std::ostream& os, const AnnoyIndex<T>& obj);
-        friend std::ostream& operator<<(std::ostream& os, const AnnoyIndex<T>* obj);
+    class MVDBAnnoyIndex final : public Index<T> {
+        #ifdef ANNOYLIB_MULTITHREADED_BUILD
+        std::unique_ptr<Annoy::AnnoyIndex<int, T, Annoy::Euclidean, Annoy::Kiss32Random, Annoy::AnnoyIndexMultiThreadedBuildPolicy>> annoy_index_;
+        #else
+        std::unique_ptr<Annoy::AnnoyIndex<int, T, Annoy::Euclidean, Annoy::Kiss32Random, Annoy::AnnoyIndexSingleThreadedBuildPolicy>> annoy_index_;
+        #endif
+        int n_trees = 10, n_threads = -1;
+        friend std::ostream& operator<<(std::ostream& os, const MVDBAnnoyIndex<T>& obj);
+        friend std::ostream& operator<<(std::ostream& os, const MVDBAnnoyIndex<T>* obj);
     protected:
         void save_(const std::string& path) const override;
     public:
         void serialize_(std::ostream &out) const override;
         void deserialize_(std::istream &in) override;
-        AnnoyIndex() = default;
-        ~AnnoyIndex() override = default;
-        AnnoyIndex(const AnnoyIndex&) = delete;
-        AnnoyIndex& operator=(const AnnoyIndex&) = delete;
+        MVDBAnnoyIndex() = default;
+        ~MVDBAnnoyIndex() override = default;
+        MVDBAnnoyIndex(const MVDBAnnoyIndex&) = delete;
+        MVDBAnnoyIndex& operator=(const MVDBAnnoyIndex&) = delete;
         [[nodiscard]] IndexType type() const override;
         void build(const idx_t &dims, const std::string& path, const std::string& initial_data_path,
                    const T* initial_data, const uint64_t& initial_data_size, const NamedArgs* args) override;
@@ -39,16 +47,16 @@ namespace mvdb::index {
         [[nodiscard]] idx_t ntotal() const override;
     };
 
-    extern template class AnnoyIndex<int8_t>;
-    extern template class AnnoyIndex<int16_t>;
-    extern template class AnnoyIndex<int32_t>;
-    extern template class AnnoyIndex<int64_t>;
-    extern template class AnnoyIndex<uint8_t>;
-    extern template class AnnoyIndex<uint16_t>;
-    extern template class AnnoyIndex<uint32_t>;
-    extern template class AnnoyIndex<uint64_t>;
-    extern template class AnnoyIndex<float>;
-    extern template class AnnoyIndex<double>;
+    extern template class MVDBAnnoyIndex<int8_t>;
+    extern template class MVDBAnnoyIndex<int16_t>;
+    extern template class MVDBAnnoyIndex<int32_t>;
+    extern template class MVDBAnnoyIndex<int64_t>;
+    extern template class MVDBAnnoyIndex<uint8_t>;
+    extern template class MVDBAnnoyIndex<uint16_t>;
+    extern template class MVDBAnnoyIndex<uint32_t>;
+    extern template class MVDBAnnoyIndex<uint64_t>;
+    extern template class MVDBAnnoyIndex<float>;
+    extern template class MVDBAnnoyIndex<double>;
 }
 
 #endif //MICROVECDB_ANNOY_INDEX_H
