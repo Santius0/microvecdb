@@ -49,16 +49,6 @@ namespace mvdb::index {
         }
         annoy_index_->build(this->n_trees, this->n_threads);
         this->save_(path);
-
-//        std::unique_ptr<T[]> v(new T[dims]);
-//        for (int i = 0; i < annoy_index_->get_n_items(); ++i) {
-//            annoy_index_->get_item(i, v.get());
-//            std::cout << "Vector " << i << ": ";
-//            for (int j = 0; j < dims; ++j) {
-//                std::cout << v[j] << " ";
-//            }
-//            std::cout << std::endl;
-//        }
     }
 
     template<typename T>
@@ -121,8 +111,8 @@ namespace mvdb::index {
                                  const DISTANCE_METRIC &distance_metric, const float &c) const {
         #pragma omp parallel
         {
-            std::vector<int> closest_ids; // DO NOT pre-allocate memory for annoy recepticles, it will ignore all pre-allcoated memory and allocate it's own memory right after
-            std::vector<T> closest_distances;
+            std::vector<int> closest_ids;           // DO NOT pre-allocate memory for Annoy recepticles!
+            std::vector<T> closest_distances;       // Annoy's search methods will ignore all pre-allcoated memory and allocate it's own memory right after
             #pragma omp parallel for schedule(dynamic) if (nq >= 10)
             for (idx_t i = 0; i < nq; i++) {
                 annoy_index_->get_nns_by_vector(query + i * this->dims_, k, -1, &closest_ids, &closest_distances);
@@ -132,16 +122,6 @@ namespace mvdb::index {
                 }
             }
         };
-//        std::unique_ptr<T[]> v(new T[this->dims()]);
-//        for (int i = 0; i < k; ++i) {
-//            annoy_index_->get_item(ids[i], v.get());
-//            std::cout << "Vector found => " << ids[i] << " =>  ";
-//            std::cout << "Distance => " << distances[i] << " =>  ";
-//            for (int j = 0; j < this->dims(); ++j) {
-//                std::cout << v[j] << " ";
-//            }
-//            std::cout << std::endl;
-//        }
     }
 
 
@@ -153,6 +133,16 @@ namespace mvdb::index {
     template<typename T>
     T *MVDBAnnoyIndex<T>::get_all() const {
         return nullptr;
+//        std::unique_ptr<T[]> v(new T[this->dims()]);
+//        for (int i = 0; i < k; ++i) {
+//            annoy_index_->get_item(ids[i], v.get());
+//            std::cout << "Vector found => " << ids[i] << " =>  ";
+//            std::cout << "Distance => " << distances[i] << " =>  ";
+//            for (int j = 0; j < this->dims(); ++j) {
+//                std::cout << v[j] << " ";
+//            }
+//            std::cout << std::endl;
+//        }
     }
 
     template<typename T>

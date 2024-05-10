@@ -579,41 +579,118 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
     PyObject *ids_npArray, *distances_npArray;
     
     switch (data_type) {
-//        case INT8: {
-//            auto *mvdb_ = static_cast<mvdb::MVDB<int8_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
-//            mvdb_->topk(k, (float)c);
-//            break;
-//        }
-//        case INT16: {
-//            auto * mvdb_ = static_cast<mvdb::MVDB<int16_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int16_t));
-//            mvdb_->topk(k, (float)c);
-//            break;
-//        }
-//        case INT32: {
-//            auto *mvdb_ = static_cast<mvdb::MVDB<int32_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int32_t));
-//            mvdb_->topk(k, (float)c);
-//            break;
-//        }
-//        case INT64: {
-//            auto *mvdb_ = static_cast<mvdb::MVDB<int64_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int64_t));
-//            mvdb_->topk(k, (float)c);
-//            break;
-//        }
-//        case UINT8: {
-//            auto *mvdb_ = static_cast<mvdb::MVDB<uint8_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint8_t));
-//            mvdb_->topk(k, (float)c);
-//            break;
-//        }
-//        case UINT16: {
-//            auto *mvdb_ = static_cast<mvdb::MVDB<uint16_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint16_t));
-//            mvdb_->topk(k, (float)c);
-//            break;
-//        }
-//        case UINT32: {
-//            auto *mvdb_ = static_cast<mvdb::MVDB<uint32_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint32_t));
-//            mvdb_->topk(k, (float)c);
-//            break;
-//        }
+        case INT8: {
+            auto *mvdb_ = static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
+            if (PyArray_TYPE(query_pyarray) != NPY_INT8) {
+                PyErr_SetString(PyExc_TypeError, "Array should be of type int8_t");
+                return nullptr;
+            }
+            auto *query = (int8_t*)PyArray_DATA(query_pyarray);
+            distances = (int8_t*)malloc(k * sizeof(int8_t));
+            if (!ids || !distances){
+                PyErr_SetString(PyExc_TypeError, "either ids = nullptr or distances = nullptr => failed to generate allocate arrays for ids or distances");
+                return nullptr;
+            }
+            mvdb_->topk(nq, query, ids, (int8_t*)distances, k, metric, (float)c);
+            distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT8, (void*)distances);
+            break;
+        }
+        case INT16: {
+            auto *mvdb_ = static_cast<mvdb::MVDB<int16_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int16_t));
+            if (PyArray_TYPE(query_pyarray) != NPY_INT16) {
+                PyErr_SetString(PyExc_TypeError, "Array should be of type int16_t");
+                return nullptr;
+            }
+            auto *query = (int16_t*)PyArray_DATA(query_pyarray);
+            distances = (int16_t*)malloc(k * sizeof(int16_t));
+            if (!ids || !distances){
+                PyErr_SetString(PyExc_TypeError, "either ids = nullptr or distances = nullptr => failed to generate allocate arrays for ids or distances");
+                return nullptr;
+            }
+            mvdb_->topk(nq, query, ids, (int16_t*)distances, k, metric, (float)c);
+            distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT16, (void*)distances);
+            break;
+        }
+        case INT32: {
+            auto *mvdb_ = static_cast<mvdb::MVDB<int32_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int32_t));
+            if (PyArray_TYPE(query_pyarray) != NPY_INT32) {
+                PyErr_SetString(PyExc_TypeError, "Array should be of type int32_t");
+                return nullptr;
+            }
+            auto *query = (int32_t*)PyArray_DATA(query_pyarray);
+            distances = (int32_t*)malloc(k * sizeof(int32_t));
+            if (!ids || !distances){
+                PyErr_SetString(PyExc_TypeError, "either ids = nullptr or distances = nullptr => failed to generate allocate arrays for ids or distances");
+                return nullptr;
+            }
+            mvdb_->topk(nq, query, ids, (int32_t*)distances, k, metric, (float)c);
+            distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT32, (void*)distances);
+            break;
+        }
+        case INT64: {
+            auto *mvdb_ = static_cast<mvdb::MVDB<int64_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int64_t));
+            if (PyArray_TYPE(query_pyarray) != NPY_INT64) {
+                PyErr_SetString(PyExc_TypeError, "Array should be of type int64_t");
+                return nullptr;
+            }
+            auto *query = (int64_t*)PyArray_DATA(query_pyarray);
+            distances = (int64_t*)malloc(k * sizeof(int64_t));
+            if (!ids || !distances){
+                PyErr_SetString(PyExc_TypeError, "either ids = nullptr or distances = nullptr => failed to generate allocate arrays for ids or distances");
+                return nullptr;
+            }
+            mvdb_->topk(nq, query, ids, (int64_t*)distances, k, metric, (float)c);
+            distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, (void*)distances);
+            break;
+        }
+        case UINT8: {
+            auto *mvdb_ = static_cast<mvdb::MVDB<uint8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint8_t));
+            if (PyArray_TYPE(query_pyarray) != NPY_UINT8) {
+                PyErr_SetString(PyExc_TypeError, "Array should be of type uint8_t");
+                return nullptr;
+            }
+            auto *query = (uint8_t*)PyArray_DATA(query_pyarray);
+            distances = (uint8_t*)malloc(k * sizeof(uint8_t));
+            if (!ids || !distances){
+                PyErr_SetString(PyExc_TypeError, "either ids = nullptr or distances = nullptr => failed to generate allocate arrays for ids or distances");
+                return nullptr;
+            }
+            mvdb_->topk(nq, query, ids, (uint8_t*)distances, k, metric, (float)c);
+            distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_UINT8, (void*)distances);
+            break;
+        }
+        case UINT16: {
+            auto *mvdb_ = static_cast<mvdb::MVDB<uint16_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint16_t));
+            if (PyArray_TYPE(query_pyarray) != NPY_UINT16) {
+                PyErr_SetString(PyExc_TypeError, "Array should be of type uint16_t");
+                return nullptr;
+            }
+            auto *query = (uint16_t*)PyArray_DATA(query_pyarray);
+            distances = (uint16_t*)malloc(k * sizeof(uint16_t));
+            if (!ids || !distances){
+                PyErr_SetString(PyExc_TypeError, "either ids = nullptr or distances = nullptr => failed to generate allocate arrays for ids or distances");
+                return nullptr;
+            }
+            mvdb_->topk(nq, query, ids, (uint16_t*)distances, k, metric, (float)c);
+            distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_UINT16, (void*)distances);
+            break;
+        }
+        case UINT32: {
+            auto *mvdb_ = static_cast<mvdb::MVDB<uint32_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint32_t));
+            if (PyArray_TYPE(query_pyarray) != NPY_UINT32) {
+                PyErr_SetString(PyExc_TypeError, "Array should be of type uint32_t");
+                return nullptr;
+            }
+            auto *query = (uint32_t*)PyArray_DATA(query_pyarray);
+            distances = (uint32_t*)malloc(k * sizeof(uint32_t));
+            if (!ids || !distances){
+                PyErr_SetString(PyExc_TypeError, "either ids = nullptr or distances = nullptr => failed to generate allocate arrays for ids or distances");
+                return nullptr;
+            }
+            mvdb_->topk(nq, query, ids, (uint32_t*)distances, k, metric, (float)c);
+            distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_UINT32, (void*)distances);
+            break;
+        }
         case UINT64: {
             auto *mvdb_ = static_cast<mvdb::MVDB<uint64_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint64_t));
             if (PyArray_TYPE(query_pyarray) != NPY_UINT64) {
@@ -747,7 +824,7 @@ static PyMethodDef ExtensionMethods[] = {
 // Module definition
 static struct PyModuleDef extensionmodule = {
     PyModuleDef_HEAD_INIT,
-    "microvecdb",  // Name of the module
+    "microvecdb",    // Name of the module
     NULL,            // Module documentation, NULL for none
     -1,              // Size of per-interpreter state of the module, or -1 if the module keeps state in global variables.
     ExtensionMethods
