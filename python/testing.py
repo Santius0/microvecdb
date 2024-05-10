@@ -57,7 +57,7 @@ def read_vector_file(filename, dtype = np.float32):
 
 
 
-@profile
+# @profile
 def main():
     dims = 3
     test_data = np.array([
@@ -67,12 +67,14 @@ def main():
         4.2, 5.3, 3.4
     ], dtype=np.float32)
     db_ = MVDB(DataType.FLOAT)
-    delete_directory("./test_faiss_flat_db")
-    db_.create(IndexType.ANNOY, dims, "./test_faiss_flat_db", "", test_data, int(len(test_data)/dims))
+    # delete_directory("./test_faiss_flat_db")
+    # db_.create(IndexType.ANNOY, dims, "./test_faiss_flat_db", "", test_data, int(len(test_data)/dims))
     # db_.create(IndexType.ANNOY, 128, "./test_faiss_flat_db", "../data/sift1m/sift_base.fvecs")
-    print(f"num_items: {db_.num_items()}")
-    # db_.open("./test_faiss_flat_db")
-    res = db_.topk(2, np.array([1.0, 1.1, 1.2, 8.2, 3.3, 6.3], dtype=np.float32))
+    # print(f"num_items: {db_.num_items()}")
+    db_.open("./test_faiss_flat_db")
+    res = db_.topk(2, np.array([
+                                1.0, 1.1, 1.2,
+                                8.2, 3.3, 6.3], dtype=np.float32))
     # queries = read_vector_file("../data/sift1m/sift_query.fvecs")
     # query_vector = queries[10]
     # print(query_vector)

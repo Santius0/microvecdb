@@ -93,7 +93,14 @@ namespace mvdb::index {
 
     template<typename T>
     void MVDBAnnoyIndex<T>::open(const std::string &path) {
-        annoy_index_->load(path.c_str());
+        #ifdef ANNOYLIB_MULTITHREADED_BUILD
+                annoy_index_ = std::make_unique<Annoy::AnnoyIndex<int, T, Annoy::Euclidean, Annoy::Kiss32Random, Annoy::AnnoyIndexMultiThreadedBuildPolicy>>(this->dims_);
+        #else
+                annoy_index_ = std::make_unique<Annoy::AnnoyIndex<int, T, Annoy::Euclidean, Annoy::Kiss32Random, Annoy::AnnoyIndexSingleThreadedBuildPolicy>>(this->dims_);
+        #endif
+        std::cout << path << std::endl;
+        if (!annoy_index_->load(path.c_str()))
+            throw std::runtime_error("Failed to load index file, '" + path +"'\n");
     }
 
     template<typename T>

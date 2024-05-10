@@ -573,7 +573,7 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
     if (!PyArg_ParseTuple(args, "BOlO!lBd", &data_type, &mvdb_capsule, &nq, &PyArray_Type, &query_input, &k, &metric, &c)) return nullptr;
 
     npy_intp return_arr_dims[1] = {static_cast<npy_intp>(nq*k)};
-    auto *ids = (mvdb::idx_t*)malloc(k * sizeof(mvdb::idx_t));
+    auto *ids = (mvdb::idx_t*)malloc(nq * k * sizeof(mvdb::idx_t));
     void *distances;
     auto* query_pyarray = (PyArrayObject*)query_input;
     PyObject *ids_npArray, *distances_npArray;
@@ -714,7 +714,7 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
                 return nullptr;
             }
             auto *query = (float*)PyArray_DATA(query_pyarray);
-            distances = (float*)malloc(k * sizeof(float));
+            distances = (float*)malloc(nq * k * sizeof(float));
             if (!ids || !distances){
                 PyErr_SetString(PyExc_TypeError, "either ids = nullptr or distances = nullptr => failed to generate allocate arrays for ids or distances");
                 return nullptr;
@@ -771,7 +771,6 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
         Py_DECREF(return_tuple);
         return nullptr;
     }
-
     return return_tuple;
 }
 
