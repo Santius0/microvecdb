@@ -1,5 +1,14 @@
 #include "spann_index.h"
 
+#include "Helper/VectorSetReader.h"
+#include "Core/VectorIndex.h"
+#include "Core/Common.h"
+#include "Helper/SimpleIniReader.h"
+
+#include <memory>
+#include <iostream>
+#include <Core/Common/DistanceUtils.h>
+
 namespace mvdb::index {
 
     template <typename T>
@@ -33,14 +42,58 @@ namespace mvdb::index {
 
     template <typename T>
     void SPANNIndex<T>::build(const idx_t &dims, const std::string& path, const std::string& initial_data_path, const T* initial_data, const uint64_t& initial_data_size, const NamedArgs* args) {
-        if(args) {
-            if (const auto *spann_args = dynamic_cast<const SPANNIndexNamedArgs *>(args)) {
+        // Hard-coded options setup
+        BuilderOptions options;
+        options.m_inputFiles = "path_to_input_vectors.txt"; // Specify the input file path
+        options.m_outputFolder = "path_to_output_folder";   // Specify the output folder path
+        options.m_indexAlgoType = SPTAG::IndexAlgoType::KDT;       // Specify the index algorithm type
+        options.m_builderConfigFile = "path_to_config.ini"; // Specify the configuration file path
+        options.m_quantizerFile = "path_to_quantizer_file"; // Specify the quantizer file path
+        options.m_metaMapping = true;                       // Enable or disable metadata mapping
 
-            } else {
-                throw std::runtime_error("failed to dynamic_cast from NamedArgs to SPANNIndexNamedArgs");
+        // Load configuration from ini file
+        SPTAG::Helper::IniReader iniReader;
+        if (iniReader.LoadIniFile(options.m_builderConfigFile) != SPTAG::ErrorCode::Success) {
+            std::cerr << "Cannot open index configure file!\n";
+            return;
+        }
+
+        // Create index builder instance based on the algorithm type
+        auto indexBuilder = SPTAG::VectorIndex::CreateInstance(options.m_indexAlgoType, options.m_inputValueType);
+        if (!options.m_quantizerFile.empty()) {
+            indexBuilder->LoadQuantizer(options.m_quantizerFile);
+            if (!indexBuilder->m_pQuantizer) {
+                std::cerr << "Failed to load quantizer.\n";
+                return;
             }
         }
-        std::cout << "BUILDING SPANNIndex at " << path << std::endl;
+
+        // Set additional parameters from the ini file
+        std::string sections[] = {"Base", "SelectHead", "BuildHead", "BuildSSDIndex", "Index"};
+        for (const auto& section : sections) {
+            for (const auto& iter : iniReader.GetParameters(section)) {
+                indexBuilder->SetParameter(iter.first.c_str(), iter.second.c_str(), section);
+            }
+        }
+
+        // Load vectors and build index
+        SPTAG::ErrorCode code;
+        std::shared_ptr<SPTAG::VectorSet> vecset;
+        auto vectorReader = SPTAG::Helper::VectorSetReader::CreateInstance(&options);
+        if (vectorReader->LoadFile(options.m_inputFiles) != SPTAG::ErrorCode::Success) {
+            std::cerr << "Failed to read input file.\n";
+            return;
+        }
+        vecset = vectorReader->GetVectorSet();
+        code = indexBuilder->BuildIndex(vecset, vectorReader->GetMetadataSet(), options.m_metaMapping, options.m_normalized, true);
+
+        // Check for success and save the index
+        if (code == SPTAG::ErrorCode::Success) {
+            indexBuilder->SaveIndex(options.m_outputFolder);
+        } else {
+            std::cerr << "Failed to build index.\n";
+            return;
+        }
     }
 
     template<typename T>

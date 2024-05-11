@@ -87,6 +87,7 @@ link_directories(
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/DiskANN/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/annoy)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/SPTAG/AnnService/inc)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/numpy/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
 
