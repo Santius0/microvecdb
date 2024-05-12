@@ -303,129 +303,28 @@
 //}
 
 
-// reads a single vector from the .fvecs file
-std::vector<float> read_vector(std::ifstream& file) {
-    std::vector<float> vec;
-    int dimension;
-    if (file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) { // Read the dimension of the vector
-        vec.resize(dimension); // Resize the vector to hold all components
-        for (int i = 0; i < dimension; ++i) {
-            file.read(reinterpret_cast<char*>(&vec[i]), sizeof(float)); // Read each component of the vector
-        }
-    }
-    return vec;
-}
+#include "inc/Helper/VectorSetReader.h"
+#include "inc/Helper/SimpleIniReader.h"
+#include "inc/Helper/CommonHelper.h"
+#include "inc/Helper/StringConvert.h"
+#include "inc/Helper/AsyncFileReader.h"
+#include "inc/Core/Common/CommonUtils.h"
+#include "inc/Core/Common/TruthSet.h"
+#include "inc/Core/Common/QueryResultSet.h"
+#include "inc/Core/VectorIndex.h"
 
-
-#include "annoy_index.h"
-#include "test.h"
-
-#include <annoylib.h>
-#include "kissrandom.h"
-#include <iostream>
-#include <fstream>
-#include <vector>
-
-void read_fvecs(const std::string& filename, std::vector<std::vector<float>>& data) {
-    std::ifstream in(filename, std::ios::binary);
-    if (!in.is_open()) {
-        std::cerr << "Cannot open file: " << filename << std::endl;
-        return;
-    }
-
-    int d;
-    while (in.read((char*)&d, sizeof(int))) {  // Read dimensionality
-        std::vector<float> vec(d);
-        for (int i = 0; i < d; ++i) {
-            in.read((char*)&vec[i], sizeof(float));  // Read each component
-        }
-        data.push_back(vec);
-    }
-    in.close();
-}
+#include "SSDServing/SSDIndex.h"
 
 int main() {
-
-//    auto * index = new mvdb::index::MVDBAnnoyIndex<float>();
-//
-//    auto * jj = new float[15];
-//    jj[0] = 1;
-//    jj[1] = 2;
-//    jj[2] = 3;
-//    jj[3] = 4;
-//    jj[4] = 5;
-//    jj[5] = 6;
-//    jj[6] = 7;
-//    jj[7] = 8;
-//    jj[8] = 9;
-//    jj[9] = 10;
-//    jj[10] = 11;
-//    jj[11] = 12;
-//    jj[12] = 13;
-//    jj[13] = 14;
-//    jj[14] = 15;
-//
-//    auto * a = new mvdb::index::AnnoyIndexNamedArgs();
-//
-//    index->build(3, "./tt", "", jj, 5, a);
-//    auto * ids = new mvdb::idx_t[2];
-//    auto* dis = new float[2];
-//    auto* q = new float [3];
-//    q[0] = 7;
-//    q[1] = 8;
-//    q[2] = 9;
-//    index->topk(1, q, ids, dis, 3, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, 10.0f);
-//
-//    delete index;
-//    delete a;
-//    delete jj;
-//    delete[] ids;
-//    delete[] dis;
-//    delete[] q;
-//
-////    auto * h = new test();
-////    h->build();
-////    delete h;
-//
-//    return 0;
-
-
-    const std::string filename = "../data/sift1m/sift_base.fvecs";
-    std::vector<std::vector<float>> vectors;
-    read_fvecs(filename, vectors);
-
-    if (vectors.empty()) {
-        std::cerr << "No data read from file." << std::endl;
-        return 1;
+    std::shared_ptr<SPTAG::VectorIndex> vecIndex;
+    auto ret = SPTAG::VectorIndex::LoadIndex("../SPTAG/Release/sift1m_index_dir", vecIndex);
+    if (SPTAG::ErrorCode::Success != ret || nullptr == vecIndex) {
+        std::cout << "Cannot open index configure file!");
+        return -1;
     }
-
-    int dim = vectors[0].size();
-    Annoy::AnnoyIndex<int, float, Annoy::Euclidean, Annoy::Kiss32Random, Annoy::AnnoyIndexSingleThreadedBuildPolicy> index(dim);  // Create Annoy index with the dimensionality of vectors
-
-    for (size_t i = 0; i < vectors.size(); ++i) {
-//        std::cout << "Adding vector " << i << " => ";
-//        for(int j = 0; j < vectors[i].size(); j++)
-//            std::cout << vectors[i].data()[j] << " ";
-//        std::cout << std::endl;
-        index.add_item(i, vectors[i].data());  // Add each vector to the index
-    }
-
-    index.build(10);  // Build the index with 10 trees
-
-    // Now, let's search for the 10th vector read in
-    if (vectors.size() < 10) {
-        std::cerr << "Less than 10 vectors read; cannot perform search." << std::endl;
-        return 1;
-    }
-
-    std::vector<int> closest_ids;
-    std::vector<float> distances;
-    index.get_nns_by_vector(vectors[500000].data(), 5, -1, &closest_ids, &distances);  // Search for 5 nearest neighbors
-
-    std::cout << "5 closest vectors to vector at index 500000 (should be 50000):" << std::endl;
-    for (size_t i = 0; i < closest_ids.size(); ++i) {
-        std::cout << "ID: " << closest_ids[i] << ", Distance: " << distances[i] << std::endl;
-    }
-
+    SPTAG::SPANN::Options* opts = ((SPTAG::SPANN::Index<float>*)vecIndex.get())->GetOptions();
+    if(opts == nullptr) std::cout << "FAIL!" << std::endl;
+    else std::cout << "SUCCESS!" << std::endl;
+    SPTAG::SSDServing::SSDIndex::Search((SPTAG::SPANN::Index<float>*)(vecIndex.get()));
     return 0;
 }

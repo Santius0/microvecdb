@@ -95,8 +95,8 @@ def query(db_, query, ground_truth):
     start_time = time.time()
     results = db_.topk(1, query, len(ground_truth))
     result_ids, results_distances = results
-    print(result_ids)
-    print(results_distances)
+    print(f'ids: {result_ids}')
+    print(f'distances: {results_distances}')
     query_time = time.time() - start_time
 
     # Calculate recall
@@ -110,17 +110,17 @@ def query(db_, query, ground_truth):
 
 # @profile
 def main():
-    # Initialize database
+    # # Initialize database
     db_ = MVDB(DataType.FLOAT)
-
-    # delete_directory("./test_faiss_flat_db")
-    # db_.create(IndexType.FAISS_FLAT, 128, "./test_faiss_flat_db", "../SPTAG/datasets/sift/sift_base.fvecs")
-    db_.open("./test_faiss_flat_db")
-
-    # Load query data
-    # data = read_vector_file("../SPTAG/datasets/sift/sift_base.fvecs")
-    queries = read_vector_file("../SPTAG/datasets/sift/sift_query.fvecs")
-    ground_truth = read_vector_file("../SPTAG/datasets/sift/sift_groundtruth.ivecs")
+    #
+    delete_directory("./test_faiss_flat_db")
+    db_.create(IndexType.FAISS_FLAT, 128, "./test_faiss_flat_db", "../SPTAG/Release/sift1m/sift_base.fvecs")
+    # db_.open("./test_faiss_flat_db")
+    #
+    # # Load query data
+    # # data = read_vector_file("../SPTAG/datasets/sift/sift_base.fvecs")
+    queries = read_vector_file("../SPTAG/Release/sift1m/sift_query.fvecs")
+    ground_truth = read_vector_file("../SPTAG/Release/sift1m/sift_groundtruth.ivecs")
 
     query(db_, queries[0], ground_truth[0])
     #
@@ -141,8 +141,8 @@ def main():
     #
     # recall = correct_answers / len(ground_truth[0])
     # print(recall)
-    # print(queries[0])
-    # print(ground_truth[0])
+    print(queries[0])
+    print(ground_truth[0])
     # print(ground_truth[0][0])
     # print(data[ground_truth[0][0]])
     # print(data[ground_truth[0][1]])

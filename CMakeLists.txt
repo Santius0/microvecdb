@@ -81,13 +81,14 @@ include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/storage)
 link_directories(
         ${LIB_DIR}/lib
         ${PROJECT_SOURCE_DIR}/faiss/lib
+        ${PROJECT_SOURCE_DIR}/SPTAG/Release
 #        ${PROJECT_SOURCE_DIR}/DiskANN/build/src
 )
 
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/DiskANN/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/annoy)
-include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/SPTAG/AnnService/inc)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/SPTAG/AnnService)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/numpy/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/fasttext/src)
 
@@ -105,10 +106,13 @@ add_library(microvecdb SHARED ${SRC_FILES})
 #target_include_directories(microvecdb PUBLIC "${MKL_LIBRARY_DIR}")
 target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C
 #        ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
-        pthread m dl
         faiss faiss_c
+        DistanceUtils
+        SPTAGLibStatic
 #        diskann diskann_s
         rocksdb
+        pthread m dl
+        zstd
 )
 set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
 
@@ -122,7 +126,7 @@ set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIREC
 
 # main:
 add_executable(microvecdb_main main.cpp)
-target_link_libraries(microvecdb_main PUBLIC microvecdb pthread)
+target_link_libraries(microvecdb_main PUBLIC microvecdb DistanceUtils SPTAGLibStatic pthread)
 
 # <<<< Configuring targets ----------------------------------------------------------
 
