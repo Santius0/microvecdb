@@ -87,7 +87,7 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
 
         include_directories (${NUMA_INCLUDE_DIR})
         message (STATUS "Found numa library: inc=${NUMA_INCLUDE_DIR}, lib=${NUMA_LIBRARY}, staticlib=${NUMA_LIBRARY_STATIC}")
-        add_definitions(-DNUMA)
+#        add_definitions(-DNUMA)
     else ()
         set (NUMA_LIBRARY "")
         set (NUMA_LIBRARY_STATIC "")
