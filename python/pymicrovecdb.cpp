@@ -526,7 +526,7 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
     void *distances;
     auto* query_pyarray = (PyArrayObject*)query_input;
     PyObject *ids_npArray, *distances_npArray;
-    
+
     switch (data_type) {
         case INT8: {
             auto *mvdb_ = static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));

@@ -33,6 +33,8 @@
 
 #include <inc/Core/SPANN/Index.h>
 
+#include <type_traits>
+
 
 namespace mvdb::index {
 
@@ -121,25 +123,33 @@ namespace mvdb::index {
     };
 
     template <typename T>
-    int Process(std::shared_ptr<SearcherOptions> options, SPTAG::VectorIndex& index) {
+    int Process(const std::shared_ptr<SearcherOptions>& options, SPTAG::VectorIndex& index,
+                idx_t *ids = nullptr, void *distances = nullptr,
+                std::shared_ptr<SPTAG::VectorSet> queryVectors = nullptr,
+                std::shared_ptr<SPTAG::MetadataSet> queryMetas = nullptr) {
         std::ofstream log("Recall-result.out", std::ios::app);
         if (!log.is_open()) {
             SPTAG::SPTAGLIB_LOG(SPTAG::Helper::LogLevel::LL_Error, "ERROR: Cannot open logging file!\n");
             exit(-1);
         }
 
-        auto vectorReader = SPTAG::Helper::VectorSetReader::CreateInstance(options);
-        if (SPTAG::ErrorCode::Success != vectorReader->LoadFile(options->m_queryFile)) {
-            SPTAG::SPTAGLIB_LOG(SPTAG::Helper::LogLevel::LL_Error, "Failed to read query file.\n");
-            exit(1);
+        if(queryVectors == nullptr) {
+            auto vectorReader = SPTAG::Helper::VectorSetReader::CreateInstance(options);
+            if (SPTAG::ErrorCode::Success != vectorReader->LoadFile(options->m_queryFile)) {
+                SPTAG::SPTAGLIB_LOG(SPTAG::Helper::LogLevel::LL_Error, "Failed to read query file.\n");
+                exit(1);
+            }
+            queryVectors = vectorReader->GetVectorSet(0, options->m_debugQuery);
+            queryMetas = vectorReader->GetMetadataSet();
+            std::cout << "USING FVECS FILE FOR QUERY!!\n";
+        } else {
+            std::cout << "USING MEMORY FOR QUERY!!\n";
         }
-        auto queryVectors = vectorReader->GetVectorSet(0, options->m_debugQuery);
-        auto queryMetas = vectorReader->GetMetadataSet();
 
         std::shared_ptr<SPTAG::Helper::ReaderOptions> dataOptions(new SPTAG::Helper::ReaderOptions(queryVectors->GetValueType(), queryVectors->Dimension(), options->m_dataFileType));
         auto dataReader = SPTAG::Helper::VectorSetReader::CreateInstance(dataOptions);
         std::shared_ptr<SPTAG::VectorSet> dataVectors;
-        if (options->m_dataFile != "") {
+        if (!options->m_dataFile.empty()) {
             if (SPTAG::ErrorCode::Success != dataReader->LoadFile(options->m_dataFile)) {
                 SPTAG::SPTAGLIB_LOG(SPTAG::Helper::LogLevel::LL_Error, "Failed to read data file.\n");
                 exit(1);
@@ -149,7 +159,7 @@ namespace mvdb::index {
 
         std::shared_ptr<SPTAG::Helper::DiskIO> ftruth;
         int truthDim = 0;
-        if (options->m_truthFile != "") {
+        if (!options->m_truthFile.empty()) {
             if (options->m_genTruth) {
                 if (dataVectors == nullptr) {
                     SPTAG::SPTAGLIB_LOG(SPTAG::Helper::LogLevel::LL_Error, "Cannot load data vectors to generate groundtruth! Please speicify data vector file by setting -df option.\n");
@@ -173,7 +183,7 @@ namespace mvdb::index {
         }
 
         std::shared_ptr<SPTAG::Helper::DiskIO> fp;
-        if (options->m_resultFile != "") {
+        if (!options->m_resultFile.empty()) {
             fp = SPTAG::f_createIO();
             if (fp == nullptr || !fp->Initialize(options->m_resultFile.c_str(), std::ios::out | std::ios::binary)) {
                 SPTAG::SPTAGLIB_LOG(SPTAG::Helper::LogLevel::LL_Error, "ERROR: Cannot open %s for write!\n", options->m_resultFile.c_str());
@@ -211,6 +221,7 @@ namespace mvdb::index {
 
         SPTAG::SPTAGLIB_LOG(SPTAG::Helper::LogLevel::LL_Info, "[query]\t\t[maxcheck]\t[avg] \t[99%] \t[95%] \t[recall] \t[qps] \t[mem]\n");
         std::vector<float> totalAvg(maxCheck.size(), 0.0), total99(maxCheck.size(), 0.0), total95(maxCheck.size(), 0.0), totalRecall(maxCheck.size(), 0.0), totalLatency(maxCheck.size(), 0.0);
+
         for (int startQuery = 0; startQuery < queryVectors->Count(); startQuery += options->m_batch) {
             int numQuerys = min(options->m_batch, queryVectors->Count() - startQuery);
             for (SPTAG::SizeType i = 0; i < numQuerys; i++) results[i].SetTarget(queryVectors->GetVector(startQuery + i));
@@ -289,8 +300,7 @@ namespace mvdb::index {
                 totalLatency[mc] += batchLatency;
             }
 
-            if (fp != nullptr)
-            {
+            if (fp != nullptr) {
                 if (options->m_outputformat == 0) {
                     for (SPTAG::SizeType i = 0; i < numQuerys; i++)
                     {
@@ -302,7 +312,8 @@ namespace mvdb::index {
                             }
                         }
                         else {
-                            std::string qid = std::to_string(i);
+//                            std::string qid = std::to_string(i);
+                            std::string qid = std::to_string(startQuery + i);
                             if (fp->WriteBinary(qid.length(), qid.c_str()) != qid.length()) {
                                 SPTAG::SPTAGLIB_LOG(SPTAG::Helper::LogLevel::LL_Error, "Cannot write qid %d bytes!\n", qid.length());
                                 exit(1);
@@ -360,13 +371,31 @@ namespace mvdb::index {
                         }
                     }
                 }
+            } else {
+                for (SPTAG::SizeType i = 0; i < numQuerys; i++) {
+                    for (int j = 0; j < options->m_K; j++) {
+                        if constexpr (std::is_same_v<T, int8_t>)
+                            *((int8_t*)distances + startQuery * options->m_K + i * options->m_K + j) = (T)results[i].GetResult(j)->Dist / baseSquare;
+                        else if constexpr (std::is_same_v<T, int16_t>)
+                            *((int16_t*)distances + startQuery * options->m_K + i * options->m_K + j) = (T)results[i].GetResult(j)->Dist / baseSquare;
+                        else if constexpr (std::is_same_v<T, uint8_t>)
+                            *((uint8_t*)distances + startQuery * options->m_K + i * options->m_K + j) = (T)results[i].GetResult(j)->Dist / baseSquare;
+                        else if constexpr (std::is_same_v<T, float>) {
+                            *((float*)distances + startQuery * options->m_K + i * options->m_K + j) = (T) results[i].GetResult(j)->Dist / baseSquare;
+                        }
+                        else throw std::runtime_error("invalid type T in search process");
+                        if (results[i].GetResult(j)->VID < 0) {
+                            ids[startQuery * options->m_K + i * options->m_K + j] = -1;
+                            continue;
+                        }
+                        ids[startQuery * options->m_K + i * options->m_K + j] = results[i].GetResult(j)->VID;
+                    }
+                }
             }
         }
         for (int mc = 0; mc < maxCheck.size(); mc++)
             SPTAG::SPTAGLIB_LOG(SPTAG::Helper::LogLevel::LL_Info, "%d-%d\t%s\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n", 0, queryVectors->Count(), maxCheck[mc].c_str(), (totalAvg[mc] / queryVectors->Count()), (total99[mc] / queryVectors->Count()), (total95[mc] / queryVectors->Count()), (totalRecall[mc] / queryVectors->Count()), (queryVectors->Count() / totalLatency[mc]));
-
         SPTAG::SPTAGLIB_LOG(SPTAG::Helper::LogLevel::LL_Info, "Output results finish!\n");
-
         if (fp != nullptr) fp->ShutDown();
         log.close();
         return 0;
@@ -406,6 +435,24 @@ namespace mvdb::index {
         [[nodiscard]] idx_t ntotal() const override;
         [[nodiscard]] bool built() const override;
     };
+
+//    template int Process<int8_t>(const std::shared_ptr<SearcherOptions>& options, SPTAG::VectorIndex& index,
+//                                 idx_t *ids = nullptr, int8_t *distances = nullptr,
+//                                 std::shared_ptr<SPTAG::VectorSet> queryVectors = nullptr,
+//                                 std::shared_ptr<SPTAG::MetadataSet> queryMetas = nullptr);
+//    template int Process<int16_t>(const std::shared_ptr<SearcherOptions>& options, SPTAG::VectorIndex& index,
+//                                  idx_t *ids = nullptr, int16_t *distances = nullptr,
+//                                  std::shared_ptr<SPTAG::VectorSet> queryVectors = nullptr,
+//                                  std::shared_ptr<SPTAG::MetadataSet> queryMetas = nullptr);
+//    template int Process<uint8_t>(const std::shared_ptr<SearcherOptions>& options, SPTAG::VectorIndex& index,
+//                                  idx_t *ids = nullptr, uint8_t *distances = nullptr,
+//                                  std::shared_ptr<SPTAG::VectorSet> queryVectors = nullptr,
+//                                  std::shared_ptr<SPTAG::MetadataSet> queryMetas = nullptr);
+//    template int Process<float>(const std::shared_ptr<SearcherOptions>& options, SPTAG::VectorIndex& index,
+//                                idx_t *ids = nullptr, float *distances = nullptr,
+//                                std::shared_ptr<SPTAG::VectorSet> queryVectors = nullptr,
+//                                std::shared_ptr<SPTAG::MetadataSet> queryMetas = nullptr);
+
 
     extern template class SPANNIndex<int8_t>;
     extern template class SPANNIndex<int16_t>;

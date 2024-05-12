@@ -66,28 +66,33 @@ def main():
         8.2, 3.3, 6.4,
         4.2, 5.3, 3.4
     ], dtype=np.float32)
+    # data = read_vector_file("../SPTAG/Release/sift1m/sift_base.fvecs")
     db_ = MVDB(DataType.FLOAT)
-    delete_directory("./test_SPANN_db")
-    db_.create(
-        index_type=IndexType.SPANN,
-        dims=3,
-        path="./test_SPANN_db",
-        # initial_data_path="../SPTAG/Release/sift1m/sift_base.fvecs",
-        initial_data=test_data
-    )
+    # delete_directory("./test_SPANN_disk")
+    # db_.create(
+    #     index_type=IndexType.SPANN,
+    #     dims=128,
+    #     path="./test_SPANN_disk",
+    #     initial_data_path="../SPTAG/Release/sift1m/sift_base.fvecs"
+    #     # initial_data=data
+    # )
+    # print(db_.dims)
     # db_.create(IndexType.ANNOY, dims, "./test_faiss_flat_db", "", test_data, int(len(test_data)/dims))
     # db_.create(IndexType.ANNOY, 128, "./test_faiss_flat_db", "../data/sift1m/sift_base.fvecs")
     # print(f"num_items: {db_.num_items()}")
-    # db_.open("./test_SPANN_db")
+    db_.open("./test_SPANN_disk")
+
     # res = db_.topk(2, np.array([
-    #                             1.0, 1.1, 1.2,
-    #                             8.2, 3.3, 6.3], dtype=np.float32))
-    # queries = read_vector_file("../data/sift1m/sift_query.fvecs")
+    #     1.0, 1.1, 1.2,                        8.2, 3.3, 6.3], dtype=np.float32))
+
+    queries = read_vector_file("../data/sift1m/sift_query.fvecs")
     # query_vector = queries[10]
     # print(query_vector)
-    # res = db_.topk(1, query_vector, dtype=np.float32)
+    res = db_.topk(query=queries.flatten(), dtype=np.float32)
     # print(db_)
-    # print(res)
+    print(len(res[0]))
+    print(res[0][0])
+    print(res[0][-1])
     # unittest.main()
 
 if __name__ == '__main__':

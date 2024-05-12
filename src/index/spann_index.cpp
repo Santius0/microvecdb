@@ -1,6 +1,5 @@
 #include "spann_index.h"
 #include "exception.h"
-#include <type_traits>
 
 namespace mvdb::index {
 
@@ -70,7 +69,7 @@ namespace mvdb::index {
 
         if(path.empty()) throw std::runtime_error("output path cannot be empty");
 
-        if((!initial_data_path.empty() && initial_data_size > 0) || (initial_data_path.empty() && initial_data_size == 0))
+        if((!initial_data_path.empty() && initial_data_size > 0) || (initial_data_path.empty() && initial_data_size <= 0))
             throw std::runtime_error("Only exactly one of 'initial_data' and 'initial_data_path' accepted");
 
         if constexpr (std::is_same_v<T, int8_t>) {
@@ -193,16 +192,15 @@ namespace mvdb::index {
     void SPANNIndex<T>::topk(const idx_t &nq, T *query, idx_t *ids, T *distances, const idx_t &k,
                                const DISTANCE_METRIC &distance_metric, const float& c) const {
 //        ./indexsearcher -x sift1m_index_dir_Saved/ -d 128 -v Float -f XVEC -i sift1m/sift_query.fvecs -o outputSearch.txt -k 100
+//
 
-        uint64_t query_size_bytes = sizeof(T) * this->dims_ * nq;
-        SPTAG::ByteArray vec_set_byte_arr = SPTAG::ByteArray::Alloc(query_size_bytes);
-        char* vecBuf = reinterpret_cast<char*>(vec_set_byte_arr.Data());
-        memcpy(vecBuf, query, query_size_bytes);
-        std::shared_ptr<SPTAG::VectorSet> vec_set(new SPTAG::BasicVectorSet(vec_set_byte_arr, builder_options_->m_inputValueType, this->dims_, nq));
 
 //        std::string index_path = "./mySPANNIndex";
         std::string query_path = "../SPTAG/Release/sift1m/sift_query.fvecs";
-        std::string output_path = "./mySPANNIndex_search_output.txt";
+//        std::string query_path = "";
+//        std::string output_path = "./mySPANNIndex_search_output_1.txt";
+//        std::string output_path = "./mySPANNIndex_search_output_all.txt";
+        std::string output_path = "";
 
         std::shared_ptr<SearcherOptions> options(new SearcherOptions);
         options->m_indexFolder = builder_options_->m_outputFolder;
@@ -211,7 +209,9 @@ namespace mvdb::index {
         options->m_inputFileType = SPTAG::VectorFileType::XVEC; // have user pass this if it should change
         options->m_queryFile = query_path;
         options->m_resultFile = output_path;
+//        options->m_outputformat = 0;
         options->m_K = (int)k;
+        options->m_batch = 100;
 
         sptag_vector_index_->SetQuantizerADC(options->m_enableADC);
 
@@ -225,10 +225,20 @@ namespace mvdb::index {
         }
         sptag_vector_index_->UpdateIndex();
 
+        std::shared_ptr<SPTAG::VectorSet> vec_set = nullptr;
+        std::shared_ptr<SPTAG::MetadataSet> meta_set(nullptr);
+        if(options->m_queryFile.empty()) {
+            uint64_t query_size_bytes = sizeof(T) * this->dims_ * nq;
+            SPTAG::ByteArray vec_set_byte_arr = SPTAG::ByteArray::Alloc(query_size_bytes);
+            char *vecBuf = reinterpret_cast<char *>(vec_set_byte_arr.Data());
+            memcpy(vecBuf, query, query_size_bytes);
+            vec_set.reset(new SPTAG::BasicVectorSet(vec_set_byte_arr, builder_options_->m_inputValueType, this->dims_, nq));
+        }
+
         switch (options->m_inputValueType) {
             #define DefineVectorValueType(Name, Type) \
             case SPTAG::VectorValueType::Name: \
-            Process<Type>(options, *(sptag_vector_index_.get())); \
+            Process<Type>(options, *(sptag_vector_index_.get()), ids, distances, vec_set, meta_set); \
             break; \
 
             #include <inc/Core/DefinitionList.h>
@@ -250,7 +260,7 @@ namespace mvdb::index {
 
     template<typename T>
     idx_t SPANNIndex<T>::dims() const {
-        return 0;
+        return this->dims_;
     }
 
     template<typename T>
@@ -264,6 +274,7 @@ namespace mvdb::index {
         return this->built_;
     }
 
+
     template class SPANNIndex<int8_t>;
     template class SPANNIndex<int16_t>;
     template class SPANNIndex<int32_t>;
@@ -274,4 +285,5 @@ namespace mvdb::index {
     template class SPANNIndex<uint64_t>;
     template class SPANNIndex<float>;
     template class SPANNIndex<double>;
+
 }
