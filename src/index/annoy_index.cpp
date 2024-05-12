@@ -49,6 +49,7 @@ namespace mvdb::index {
         }
         annoy_index_->build(this->n_trees, this->n_threads);
         this->save_(path);
+        this->built_ = true;
     }
 
     template<typename T>
@@ -75,6 +76,7 @@ namespace mvdb::index {
         serialize_numeric<idx_t>(out, this->dims_);
         serialize_numeric<int>(out, this->n_trees);
         serialize_numeric<int>(out, this->n_threads);
+        serialize_numeric<bool>(out, this->built_);
     }
 
     template<typename T>
@@ -84,6 +86,7 @@ namespace mvdb::index {
         this->dims_ = deserialize_numeric<idx_t>(in);
         this->n_trees = deserialize_numeric<int>(in);
         this->n_threads = deserialize_numeric<int>(in);
+        this->built_ = deserialize_numeric<bool>(in);
     }
 
     template<typename T>
@@ -152,14 +155,19 @@ namespace mvdb::index {
 //        }
     }
 
-    template<typename T>
+    template <typename T>
     idx_t MVDBAnnoyIndex<T>::dims() const {
         return this->dims_;
     }
 
-    template<typename T>
+    template <typename T>
     idx_t MVDBAnnoyIndex<T>::ntotal() const {
         return this->annoy_index_->get_n_items();
+    }
+
+    template <typename T>
+    bool MVDBAnnoyIndex<T>::built() const {
+        return this->built_;
     }
 
     template class MVDBAnnoyIndex<int8_t>;

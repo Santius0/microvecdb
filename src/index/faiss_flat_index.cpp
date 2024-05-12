@@ -28,6 +28,7 @@ namespace mvdb::index {
     void FaissFlatIndex<T>::serialize_(std::ostream& out) const {
         serialize_numeric<unsigned char>(out, type());
         serialize_numeric<idx_t>(out, this->dims_);
+        serialize_numeric<bool>(out, this->built_);
     }
 
     template <typename T>
@@ -35,6 +36,7 @@ namespace mvdb::index {
         auto type = deserialize_numeric<unsigned char>(in);
         if (type != FAISS_FLAT) throw std::runtime_error("Unexpected index type: " + std::to_string(type));
         this->dims_ = deserialize_numeric<idx_t>(in);
+        this->built_ = deserialize_numeric<bool>(in);
     }
 
     template <typename T>
@@ -61,6 +63,7 @@ namespace mvdb::index {
             faiss_index_->add((faiss::idx_t)initial_data_size, (float*)initial_data);
         }
         this->save_(path);
+        this->built_ = true;
     }
 
     template <typename T>
@@ -174,6 +177,11 @@ namespace mvdb::index {
     template <typename T>
     T* FaissFlatIndex<T>::index() const {
         return get_all();
+    }
+
+    template <typename T>
+    bool FaissFlatIndex<T>::built() const {
+        return this->built_;
     }
 
     template class FaissFlatIndex<int8_t>;

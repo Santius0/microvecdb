@@ -45,6 +45,7 @@ namespace mvdb::index {
         [[nodiscard]] T* get_all() const override;
         [[nodiscard]] idx_t dims() const override;
         [[nodiscard]] idx_t ntotal() const override;
+        [[nodiscard]] bool built() const override;
     };
 
     extern template class MVDBAnnoyIndex<int8_t>;

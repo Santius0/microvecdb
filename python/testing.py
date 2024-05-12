@@ -67,20 +67,27 @@ def main():
         4.2, 5.3, 3.4
     ], dtype=np.float32)
     db_ = MVDB(DataType.FLOAT)
-    # delete_directory("./test_faiss_flat_db")
+    delete_directory("./test_SPANN_db")
+    db_.create(
+        index_type=IndexType.SPANN,
+        dims=3,
+        path="./test_SPANN_db",
+        # initial_data_path="../SPTAG/Release/sift1m/sift_base.fvecs",
+        initial_data=test_data
+    )
     # db_.create(IndexType.ANNOY, dims, "./test_faiss_flat_db", "", test_data, int(len(test_data)/dims))
     # db_.create(IndexType.ANNOY, 128, "./test_faiss_flat_db", "../data/sift1m/sift_base.fvecs")
     # print(f"num_items: {db_.num_items()}")
-    db_.open("./test_faiss_flat_db")
-    res = db_.topk(2, np.array([
-                                1.0, 1.1, 1.2,
-                                8.2, 3.3, 6.3], dtype=np.float32))
+    # db_.open("./test_SPANN_db")
+    # res = db_.topk(2, np.array([
+    #                             1.0, 1.1, 1.2,
+    #                             8.2, 3.3, 6.3], dtype=np.float32))
     # queries = read_vector_file("../data/sift1m/sift_query.fvecs")
     # query_vector = queries[10]
     # print(query_vector)
     # res = db_.topk(1, query_vector, dtype=np.float32)
     # print(db_)
-    print(res)
+    # print(res)
     # unittest.main()
 
 if __name__ == '__main__':

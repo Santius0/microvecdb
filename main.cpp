@@ -319,7 +319,7 @@ int main() {
     std::shared_ptr<SPTAG::VectorIndex> vecIndex;
     auto ret = SPTAG::VectorIndex::LoadIndex("../SPTAG/Release/sift1m_index_dir", vecIndex);
     if (SPTAG::ErrorCode::Success != ret || nullptr == vecIndex) {
-        std::cout << "Cannot open index configure file!");
+        std::cout << "Cannot open index configure file!";
         return -1;
     }
     SPTAG::SPANN::Options* opts = ((SPTAG::SPANN::Index<float>*)vecIndex.get())->GetOptions();

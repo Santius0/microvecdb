@@ -1,16 +1,13 @@
 #include "spann_index.h"
 #include "exception.h"
-
-#include "Helper/VectorSetReader.h"
-#include "Core/VectorIndex.h"
-#include "Core/Common.h"
-#include "Helper/SimpleIniReader.h"
-
-#include <memory>
-#include <iostream>
-#include <Core/Common/DistanceUtils.h>
+#include <type_traits>
 
 namespace mvdb::index {
+
+    template <typename T>
+    SPANNIndex<T>::SPANNIndex() {
+        builder_options_ = std::make_shared<BuilderOptions>();
+    }
 
     template <typename T>
     IndexType SPANNIndex<T>::type() const {
@@ -32,6 +29,18 @@ namespace mvdb::index {
     void SPANNIndex<T>::serialize_(std::ostream& out) const {
         serialize_numeric<unsigned char>(out, type());
         serialize_numeric<idx_t>(out, this->dims_);
+        serialize_numeric<SPTAG::DimensionType>(out, builder_options_->m_dimension);
+        serialize_string(out, builder_options_->m_inputFiles);
+        serialize_string(out, builder_options_->m_outputFolder);
+        serialize_numeric<unsigned char>(out, static_cast<const unsigned char>(builder_options_->m_indexAlgoType));
+        serialize_numeric<unsigned char>(out, static_cast<const unsigned char>(builder_options_->m_inputValueType));
+        serialize_string(out, builder_options_->m_builderConfigFile);
+        serialize_string(out, builder_options_->m_quantizerFile);
+        serialize_numeric<bool>(out, builder_options_->m_metaMapping);
+        serialize_numeric<bool>(out, builder_options_->m_normalized);
+        serialize_numeric<unsigned char>(out, static_cast<const unsigned char>(builder_options_->m_inputFileType));
+        serialize_numeric<uint32_t>(out, builder_options_->m_threadNum);
+        serialize_numeric<bool>(out, this->built_);
     }
 
     template <typename T>
@@ -39,21 +48,135 @@ namespace mvdb::index {
         auto type = deserialize_numeric<unsigned char>(in);
         if (type != SPANN) throw std::runtime_error("Unexpected index type: " + std::to_string(type));
         this->dims_ = deserialize_numeric<idx_t>(in);
+        builder_options_->m_dimension = deserialize_numeric<SPTAG::DimensionType>(in);
+        builder_options_->m_inputFiles = deserialize_string(in);
+        builder_options_->m_outputFolder = deserialize_string(in);
+        builder_options_->m_indexAlgoType = static_cast<SPTAG::IndexAlgoType>(deserialize_numeric<unsigned char>(in));
+        builder_options_->m_inputValueType = static_cast<SPTAG::VectorValueType>(deserialize_numeric<unsigned char>(in));
+        builder_options_->m_builderConfigFile = deserialize_string(in);
+        builder_options_->m_quantizerFile = deserialize_string(in);
+        builder_options_->m_metaMapping = deserialize_numeric<bool>(in);
+        builder_options_->m_normalized = deserialize_numeric<bool>(in);
+        builder_options_->m_inputFileType = static_cast<SPTAG::VectorFileType>(deserialize_numeric<unsigned char>(in));
+        builder_options_->m_threadNum = deserialize_numeric<uint32_t>(in);
+        this->built_ = deserialize_numeric<bool>(in);
     }
 
     template <typename T>
-    void SPANNIndex<T>::build(const idx_t &dims, const std::string& path, const std::string& initial_data_path, const T* initial_data, const uint64_t& initial_data_size, const NamedArgs* args) {
-        throw not_implemented("SPANNIndex::build not implemented");
+    void SPANNIndex<T>::build(const idx_t &dims, const std::string& path, const std::string& initial_data_path,
+                              const T* initial_data, const uint64_t& initial_data_size, const NamedArgs* args) {
+
+//        ./indexbuilder -c buildconfig.ini -d 128 -v Float -f XVEC -i sift1m/sift_base.fvecs -o sift1m_index_dir_Saved -a SPANN
+
+        if(path.empty()) throw std::runtime_error("output path cannot be empty");
+
+        if((!initial_data_path.empty() && initial_data_size > 0) || (initial_data_path.empty() && initial_data_size == 0))
+            throw std::runtime_error("Only exactly one of 'initial_data' and 'initial_data_path' accepted");
+
+        if constexpr (std::is_same_v<T, int8_t>) {
+            sptag_vector_index_ = SPTAG::VectorIndex::CreateInstance(SPTAG::IndexAlgoType::SPANN,
+                                                                     SPTAG::VectorValueType::Int8);
+            builder_options_->m_inputValueType = SPTAG::VectorValueType::Int8;
+        }
+        else if constexpr (std::is_same_v<T, int16_t>) {
+            sptag_vector_index_ = SPTAG::VectorIndex::CreateInstance(SPTAG::IndexAlgoType::SPANN,
+                                                                     SPTAG::VectorValueType::Int16);
+            builder_options_->m_inputValueType = SPTAG::VectorValueType::Int16;
+        }
+        else if constexpr (std::is_same_v<T, uint8_t>) {
+            sptag_vector_index_ = SPTAG::VectorIndex::CreateInstance(SPTAG::IndexAlgoType::SPANN,
+                                                                     SPTAG::VectorValueType::UInt8);
+            builder_options_->m_inputValueType = SPTAG::VectorValueType::UInt8;
+        }
+        else if constexpr (std::is_same_v<T, float>) {
+            sptag_vector_index_ = SPTAG::VectorIndex::CreateInstance(SPTAG::IndexAlgoType::SPANN,
+                                                                     SPTAG::VectorValueType::Float);
+            builder_options_->m_inputValueType = SPTAG::VectorValueType::Float;
+        }
+        else
+            throw std::runtime_error("Unsupported data SPANN Index data type");
+
+
+        std::string build_config_path = "../SPTAG/Release/buildconfig.ini";
+
+        this->dims_ = dims;
+        builder_options_->m_dimension = static_cast<SPTAG::DimensionType>(dims);
+        builder_options_->m_inputFiles = initial_data_path;
+        builder_options_->m_outputFolder = path;
+        builder_options_->m_indexAlgoType = SPTAG::IndexAlgoType::SPANN;
+        builder_options_->m_builderConfigFile = build_config_path;
+        builder_options_->m_quantizerFile = "";
+        builder_options_->m_metaMapping = false;
+        builder_options_->m_normalized = false;
+        builder_options_->m_inputFileType = SPTAG::VectorFileType::XVEC;
+
+
+        if (!builder_options_->m_quantizerFile.empty()) {
+            sptag_vector_index_->LoadQuantizer(builder_options_->m_quantizerFile);
+            if (!sptag_vector_index_->m_pQuantizer)
+                throw std::runtime_error("failed to open quantizer file, '" + builder_options_->m_quantizerFile + "'");
+        }
+
+        SPTAG::Helper::IniReader iniReader;
+        if (!builder_options_->m_builderConfigFile.empty() && iniReader.LoadIniFile(builder_options_->m_builderConfigFile) != SPTAG::ErrorCode::Success)
+            throw std::runtime_error("cannot open index configure file, '" + builder_options_->m_builderConfigFile + "'");
+
+        std::string sections[] = { "Base", "SelectHead", "BuildHead", "BuildSSDIndex", "Index" };
+        for (const auto & section : sections) {
+            if (!iniReader.DoesParameterExist(section, "NumberOfThreads"))
+                iniReader.SetParameter(section, "NumberOfThreads", std::to_string(builder_options_->m_threadNum));
+            for (const auto& iter : iniReader.GetParameters(section)) {
+                if(section == "Base" && iter.first == "indexdirectory"){
+                    std::cout << "Skipping [Base][IndexDirectory] => Setting value to specified output folder = '" << builder_options_->m_outputFolder << "'" <<std::endl;
+                    sptag_vector_index_->SetParameter(iter.first, builder_options_->m_outputFolder, section);
+                } else {
+                    sptag_vector_index_->SetParameter(iter.first, iter.second, section);
+                }
+            }
+        }
+
+        SPTAG::ErrorCode code;
+
+        std::shared_ptr<SPTAG::VectorSet> vec_set;
+        std::shared_ptr<SPTAG::MetadataSet> metadata_set;
+        if(!initial_data_path.empty()){
+            auto vectorReader = SPTAG::Helper::VectorSetReader::CreateInstance(builder_options_);
+            if (SPTAG::ErrorCode::Success != vectorReader->LoadFile(builder_options_->m_inputFiles))
+                throw std::runtime_error("failed to read input file, '" + builder_options_->m_inputFiles + "'");
+            vec_set = vectorReader->GetVectorSet();
+            metadata_set = vectorReader->GetMetadataSet();
+        } else {
+            uint64_t query_size_bytes = sizeof(T) * this->dims_ * initial_data_size;
+            SPTAG::ByteArray vec_set_byte_arr = SPTAG::ByteArray::Alloc(query_size_bytes);
+            char* vecBuf = reinterpret_cast<char*>(vec_set_byte_arr.Data());
+            memcpy(vecBuf, initial_data, query_size_bytes);
+            vec_set.reset(new SPTAG::BasicVectorSet(vec_set_byte_arr,
+                                                    builder_options_->m_inputValueType,
+                                                    this->dims_, initial_data_size));
+            metadata_set = nullptr;
+        }
+
+        code = sptag_vector_index_->BuildIndex(vec_set, metadata_set,
+                                               builder_options_->m_metaMapping,
+                                               builder_options_->m_normalized, true);
+
+        if (code == SPTAG::ErrorCode::Success)
+            save_(builder_options_->m_outputFolder);
+        else
+            throw std::runtime_error("failed to build index, '" + builder_options_->m_outputFolder + "'");
+        this->built_ = true;
     }
 
     template<typename T>
     void SPANNIndex<T>::save_(const std::string &path) const {
-
+        sptag_vector_index_->SaveIndex(builder_options_->m_outputFolder);
     }
 
     template<typename T>
     void SPANNIndex<T>::open(const std::string &path) {
-
+        auto ret = SPTAG::VectorIndex::LoadIndex(path, sptag_vector_index_);
+        if (SPTAG::ErrorCode::Success != ret || nullptr == sptag_vector_index_)
+            throw std::runtime_error("failed to open index configure file in dir, '" + path + "'");
     }
 
     template<typename T>
@@ -69,7 +192,50 @@ namespace mvdb::index {
     template<typename T>
     void SPANNIndex<T>::topk(const idx_t &nq, T *query, idx_t *ids, T *distances, const idx_t &k,
                                const DISTANCE_METRIC &distance_metric, const float& c) const {
+//        ./indexsearcher -x sift1m_index_dir_Saved/ -d 128 -v Float -f XVEC -i sift1m/sift_query.fvecs -o outputSearch.txt -k 100
 
+        uint64_t query_size_bytes = sizeof(T) * this->dims_ * nq;
+        SPTAG::ByteArray vec_set_byte_arr = SPTAG::ByteArray::Alloc(query_size_bytes);
+        char* vecBuf = reinterpret_cast<char*>(vec_set_byte_arr.Data());
+        memcpy(vecBuf, query, query_size_bytes);
+        std::shared_ptr<SPTAG::VectorSet> vec_set(new SPTAG::BasicVectorSet(vec_set_byte_arr, builder_options_->m_inputValueType, this->dims_, nq));
+
+//        std::string index_path = "./mySPANNIndex";
+        std::string query_path = "../SPTAG/Release/sift1m/sift_query.fvecs";
+        std::string output_path = "./mySPANNIndex_search_output.txt";
+
+        std::shared_ptr<SearcherOptions> options(new SearcherOptions);
+        options->m_indexFolder = builder_options_->m_outputFolder;
+        options->m_dimension = builder_options_->m_dimension;
+        options->m_inputValueType = builder_options_->m_inputValueType;
+        options->m_inputFileType = SPTAG::VectorFileType::XVEC; // have user pass this if it should change
+        options->m_queryFile = query_path;
+        options->m_resultFile = output_path;
+        options->m_K = (int)k;
+
+        sptag_vector_index_->SetQuantizerADC(options->m_enableADC);
+
+        SPTAG::Helper::IniReader iniReader;
+        std::string sections[] = { "Base", "SelectHead", "BuildHead", "BuildSSDIndex", "Index" };
+        for (const auto & section : sections) {
+            if (!iniReader.DoesParameterExist(section, "NumberOfThreads"))
+                iniReader.SetParameter(section, "NumberOfThreads", std::to_string(options->m_threadNum));
+            for (const auto& iter : iniReader.GetParameters(section))
+                sptag_vector_index_->SetParameter(iter.first, iter.second, section);
+        }
+        sptag_vector_index_->UpdateIndex();
+
+        switch (options->m_inputValueType) {
+            #define DefineVectorValueType(Name, Type) \
+            case SPTAG::VectorValueType::Name: \
+            Process<Type>(options, *(sptag_vector_index_.get())); \
+            break; \
+
+            #include <inc/Core/DefinitionList.h>
+            #undef DefineVectorValueType
+
+            default: break;
+        }
     }
 
     template<typename T>
@@ -89,7 +255,13 @@ namespace mvdb::index {
 
     template<typename T>
     idx_t SPANNIndex<T>::ntotal() const {
+//        sptag_vector_index_->
         return 0;
+    }
+
+    template <typename T>
+    bool SPANNIndex<T>::built() const {
+        return this->built_;
     }
 
     template class SPANNIndex<int8_t>;

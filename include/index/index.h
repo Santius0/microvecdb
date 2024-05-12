@@ -53,6 +53,7 @@ namespace mvdb::index {
     protected:
         idx_t dims_ = 0;
         idx_t ntotal_ = 0;
+        bool built_ = false;
         virtual void save_(const std::string& path) const = 0;               // save current index state and data to location specified via index_path_
     public:
         void serialize_(std::ostream &out) const override = 0;
@@ -74,18 +75,9 @@ namespace mvdb::index {
         virtual T* get_all() const = 0;                     // reconstruct and return all vectors
         [[nodiscard]] virtual idx_t dims() const = 0;                       // returns dimensions of index
         [[nodiscard]] virtual idx_t ntotal() const  = 0;                    // returns current number of values in index
+        [[nodiscard]] virtual bool built() const = 0;
     };
 
-//    extern template class Index<int8_t>;
-//    extern template class Index<int16_t>;
-//    extern template class Index<int32_t>;
-//    extern template class Index<int64_t>;
-//    extern template class Index<uint8_t>;
-//    extern template class Index<uint16_t>;
-//    extern template class Index<uint32_t>;
-//    extern template class Index<uint64_t>;
-//    extern template class Index<float>;
-//    extern template class Index<double>;
 
 } // namespace mvdb::index
 
