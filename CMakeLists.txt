@@ -4,8 +4,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
 #set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE) # neon is included by default in the armv8-a architecture
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -latomic -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE) # neon is included by default in the armv8-a architecture
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -latomic -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE)
 
 
 add_definitions(-DANNOYLIB_MULTITHREADED_BUILD)
@@ -120,6 +120,8 @@ target_link_libraries(microvecdb PUBLIC
         rocksdb
         pthread m dl
         zstd
+        openblas
+        stdc++fs
 )
 set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
 
