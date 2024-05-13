@@ -19,7 +19,7 @@ endif()
 
 #find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 #find_package(CUDAToolkit REQUIRED)
-find_package(OpenMP REQUIRED)
+#find_package(OpenMP REQUIRED)
 #include(FetchContent)
 
 set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
