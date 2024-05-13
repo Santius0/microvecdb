@@ -134,8 +134,8 @@ set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
 
 # main:
-add_executable(microvecdb_main main.cpp)
-target_link_libraries(microvecdb_main PUBLIC microvecdb DistanceUtils SPTAGLibStatic pthread)
+#add_executable(microvecdb_main main.cpp)
+#target_link_libraries(microvecdb_main PUBLIC microvecdb DistanceUtils SPTAGLibStatic pthread)
 
 # <<<< Configuring targets ----------------------------------------------------------
 
