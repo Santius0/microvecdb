@@ -2,19 +2,25 @@ cmake_minimum_required(VERSION 3.27)
 project(microvecdb)
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3 -fPIC")
-set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3 -fPIC")
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE) # neon is included by default in the armv8-a architecture
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE)
+#set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -fPIC -march=armv8-a -O3" CACHE STRING "" FORCE) # neon is included by default in the armv8-a architecture
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -fPIC -march=armv8-a -O3" CACHE STRING "" FORCE)
+else ()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3 -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3 -fPIC")
+    find_package(OpenMP REQUIRED)
+endif ()
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -latomic")
 
 add_definitions(-DANNOYLIB_MULTITHREADED_BUILD)
 
 # Disable warnings
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-w) # Turn off all warnings for GCC/Clang
+    add_compile_options(-w)
 elseif(MSVC)
-    add_compile_options(/W0) # Turn off all warnings for MSVC
+    add_compile_options(/W0)
 endif()
 
 #find_package(Eigen3 3.3 REQUIRED NO_MODULE)
@@ -32,11 +38,8 @@ else()
     message(FATAL_ERROR "Unsupported build type: ${CMAKE_BUILD_TYPE}")
 endif()
 
-## making sure output directory exists
+# making sure output directory exists
 file(MAKE_DIRECTORY "${LIB_DIR}")
-
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
 
 # Constructing Platform Tag >>>> ----------------------------------------------------------
 set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
@@ -80,17 +83,19 @@ include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/index)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/operators)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/storage)
 
-link_directories(
-        ${LIB_DIR}/lib
-        ${PROJECT_SOURCE_DIR}/faiss/lib
-        ${PROJECT_SOURCE_DIR}/SPTAG/Release
-)
-#
-#link_directories(
-#        ${LIB_DIR}/lib
-#        ${PROJECT_SOURCE_DIR}/jetson/lib/faiss_aarch64/usr/lib/aarch64-linux-gnu
-#        ${PROJECT_SOURCE_DIR}/jetson/lib/SPTAG_aarch64
-#)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+    link_directories(
+            ${LIB_DIR}/lib
+            ${PROJECT_SOURCE_DIR}/jetson/lib/faiss_aarch64/usr/lib/aarch64-linux-gnu
+            ${PROJECT_SOURCE_DIR}/jetson/lib/SPTAG_aarch64
+    )
+else ()
+    link_directories(
+            ${LIB_DIR}/lib
+            ${PROJECT_SOURCE_DIR}/faiss/lib
+            ${PROJECT_SOURCE_DIR}/SPTAG/Release
+    )
+endif ()
 
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/annoy)
@@ -107,13 +112,11 @@ file(GLOB_RECURSE SRC_FILES
         src/storage/*.cpp
 )
 
-find_package(OpenMP REQUIRED)
 # microvecdb:
 add_library(microvecdb SHARED ${SRC_FILES})
 #target_include_directories(microvecdb PUBLIC "${MKL_LIBRARY_DIR}")
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
 target_link_libraries(microvecdb PUBLIC
-        OpenMP::OpenMP_CXX OpenMP::OpenMP_C
-#        ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
         faiss
         DistanceUtils
         SPTAGLibStatic
@@ -123,6 +126,20 @@ target_link_libraries(microvecdb PUBLIC
         openblas
         stdc++fs
 )
+else ()
+    target_link_libraries(microvecdb PUBLIC
+            OpenMP::OpenMP_CXX OpenMP::OpenMP_C
+            # ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
+            faiss
+            DistanceUtils
+            SPTAGLibStatic
+            rocksdb
+            pthread m dl
+            zstd
+            openblas
+            stdc++fs
+    )
+endif ()
 set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
 
 # microvecdb.cpython
