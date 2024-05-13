@@ -18,7 +18,7 @@ module = Extension("microvecdb",
                                  f"{BASE_DIR}/include/storage", f"{BASE_DIR}/faiss/include", f"{BASE_DIR}/annoy",
                                  f"{BASE_DIR}/SPTAG/AnnService", f"{BASE_DIR}/SPTAG/AnnService/inc",
                                  f"{BASE_DIR}/numpy/include"],
-                   library_dirs=[f"{BASE_DIR}/lib", f"{BASE_DIR}/lib/SPTAG_aarch64"],
+                   library_dirs=[f"{BASE_DIR}/lib", f"{BASE_DIR}/jetson/lib/SPTAG_aarch64"],
                    libraries=['microvecdb', 'DistanceUtils', 'SPTAGLibStatic', 'pthread'],
                    extra_compile_args=['-std=c++17', '-fopenmp', '-fPIC']
                    )
