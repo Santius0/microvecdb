@@ -62,20 +62,22 @@ message(STATUS "Platform Tag: ${PLATFORM_TAG}")
 
 # Getting Python Major & Minor Version >>>> ----------------------------------------------------------
 find_path(Python3_INCLUDE_DIRS NAME Python.h HINTS
+        ${CMAKE_SYSROOT}/usr/include/python3.6m
         ${CMAKE_SYSROOT}/usr/include/python3.6
         ${CMAKE_SYSROOT}/usr/include
 )
 
-find_library(Python3_LIBRARIES NAME libpython3.6.so HINTS
+find_library(Python3_LIBRARIES NAME libpython3.6m.so HINTS
         ${CMAKE_SYSROOT}/usr/lib/python3.6/config-3.6m-aarch64-linux-gnu
         ${CMAKE_SYSROOT}/usr/lib/python3.6
         ${CMAKE_SYSROOT}/usr/local/lib/python3.6
         ${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu
 )
 
-set(Python3_VERSION 3.6)
+set(Python3_VERSION 3.6m)
 message(STATUS "Python3_INCLUDE_DIRS: ${Python3_INCLUDE_DIRS}")
 message(STATUS "Python3_LIBRARIES: ${Python3_LIBRARIES}")
+message(STATUS "Python3_VERSION: ${Python3_VERSION}")
 string(REPLACE "." ";" PYTHON_VERSION_LIST ${Python3_VERSION})
 list(GET PYTHON_VERSION_LIST 0 PYTHON_MAJOR_VERSION)
 list(GET PYTHON_VERSION_LIST 1 PYTHON_MINOR_VERSION)
@@ -123,7 +125,7 @@ file(GLOB_RECURSE SRC_FILES
 )
 
 add_library(microvecdb SHARED ${SRC_FILES})
-target_link_libraries(microvecdb PUBLIC faiss DistanceUtils SPTAGLibStatic rocksdb pthread m dl zstd)
+#target_link_libraries(microvecdb PUBLIC faiss DistanceUtils SPTAGLibStatic rocksdb pthread m dl zstd)
 set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
 set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
 
