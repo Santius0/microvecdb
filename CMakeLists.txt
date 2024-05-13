@@ -4,9 +4,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
 #set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -latomic -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE) # neon is included by default in the armv8-a architecture
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -latomic -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE)
-
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE) # neon is included by default in the armv8-a architecture
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -latomic")
 
 add_definitions(-DANNOYLIB_MULTITHREADED_BUILD)
 
