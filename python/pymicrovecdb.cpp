@@ -6,8 +6,8 @@
 #include <iostream>
 
 
-//#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-//#include <numpy/arrayobject.h>
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
 
 //#define DB_NAME "mvdb::DB"
 
@@ -44,7 +44,9 @@ enum DATA_TYPES : unsigned char {
 static PyObject* hello(PyObject* self, PyObject* args) {
     int num;
     if (!PyArg_ParseTuple(args, "i", &num)) return nullptr;
+    std::cout << "NPY_INT = " << NPY_INT << std::endl;
     std::cout << "hello with number = " << num << std::endl;
+    Py_RETURN_NONE;
 }
 //
 //static void MVDB_delete_int8_t(PyObject* capsule) {
@@ -853,6 +855,6 @@ static struct PyModuleDef extensionmodule = {
 
 // Initialization function for this module
 PyMODINIT_FUNC PyInit_microvecdb(void) {
-//    import_array(); // Initialize NumPy API
+    import_array(); // Initialize NumPy API
     return PyModule_Create(&extensionmodule);
 }

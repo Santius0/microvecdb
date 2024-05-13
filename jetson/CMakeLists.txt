@@ -114,7 +114,7 @@ link_directories(
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/lib/faiss_aarch64/usr/include)
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../annoy)
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../SPTAG/AnnService)
-#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../numpy/include)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../numpy/include)
 #include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../fasttext/src)
 
 file(GLOB_RECURSE SRC_FILES
