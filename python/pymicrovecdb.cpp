@@ -6,8 +6,8 @@
 #include <iostream>
 
 
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
+//#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+//#include <numpy/arrayobject.h>
 
 //#define DB_NAME "mvdb::DB"
 
@@ -853,6 +853,6 @@ static struct PyModuleDef extensionmodule = {
 
 // Initialization function for this module
 PyMODINIT_FUNC PyInit_microvecdb(void) {
-    import_array(); // Initialize NumPy API
+//    import_array(); // Initialize NumPy API
     return PyModule_Create(&extensionmodule);
 }

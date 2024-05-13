@@ -110,12 +110,12 @@ link_directories(
         ${PROJECT_SOURCE_DIR}/lib/libm_aarch64
 )
 
-include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/lib/zstd_aarch64)
-include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/lib/faiss_aarch64/usr/include)
-include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../annoy)
-include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../SPTAG/AnnService)
-include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../numpy/include)
-include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../fasttext/src)
+#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/lib/zstd_aarch64)
+#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/lib/faiss_aarch64/usr/include)
+#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../annoy)
+#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../SPTAG/AnnService)
+#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../numpy/include)
+#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../fasttext/src)
 
 file(GLOB_RECURSE SRC_FILES
         ${PROJECT_SOURCE_DIR}/../src/core/*.cpp
@@ -124,16 +124,16 @@ file(GLOB_RECURSE SRC_FILES
         ${PROJECT_SOURCE_DIR}/../src/storage/*.cpp
 )
 
-add_library(microvecdb SHARED ${SRC_FILES})
+#add_library(microvecdb SHARED ${SRC_FILES})
 #target_link_libraries(microvecdb PUBLIC faiss DistanceUtils SPTAGLibStatic rocksdb pthread m dl zstd)
-set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
-set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
+#set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
+#set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
 
 
 # microvecdb.cpython
 set(PYTHON_EXTENSION_TARGET "microvecdb.cpython-${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}-${PLATFORM_TAG}")
 add_library(${PYTHON_EXTENSION_TARGET} MODULE ${PROJECT_SOURCE_DIR}/../python/pymicrovecdb.cpp)
 target_include_directories(${PYTHON_EXTENSION_TARGET} PUBLIC ${Python3_INCLUDE_DIRS})
-target_link_libraries(${PYTHON_EXTENSION_TARGET} ${Python3_LIBRARIES} microvecdb)
+#target_link_libraries(${PYTHON_EXTENSION_TARGET} ${Python3_LIBRARIES} microvecdb)
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
