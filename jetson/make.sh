@@ -27,7 +27,8 @@ cd "$BUILD_DIR" || exit
 
 # Run CMake and Make
 cmake ..
-make
+# shellcheck disable=SC2046
+make -j$(nproc)
 
 # Return to the original directory
 cd ..

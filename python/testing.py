@@ -70,17 +70,17 @@ def main():
     db_ = MVDB(DataType.FLOAT)
     # delete_directory("./test_SPANN_disk")
     # db_.create(
-    #     index_type=IndexType.SPANN,
+    #     index_type=IndexType.FAISS_FLAT,
     #     dims=128,
-    #     path="./test_SPANN_disk",
-    #     initial_data_path="../SPTAG/Release/sift1m/sift_base.fvecs"
-    #     # initial_data=data
+    #     path="./test_FAISS_index",
+    #     # initial_data_path="../SPTAG/Release/sift1m/sift_base.fvecs"
+    #     initial_data=data
     # )
     # print(db_.dims)
     # db_.create(IndexType.ANNOY, dims, "./test_faiss_flat_db", "", test_data, int(len(test_data)/dims))
     # db_.create(IndexType.ANNOY, 128, "./test_faiss_flat_db", "../data/sift1m/sift_base.fvecs")
     # print(f"num_items: {db_.num_items()}")
-    db_.open("./test_SPANN_disk")
+    db_.open("./test_FAISS_index")
 
     # res = db_.topk(2, np.array([
     #     1.0, 1.1, 1.2,                        8.2, 3.3, 6.3], dtype=np.float32))
@@ -90,6 +90,7 @@ def main():
     # print(query_vector)
     res = db_.topk(query=queries.flatten(), dtype=np.float32)
     # print(db_)
+    print(res)
     print(len(res[0]))
     print(res[0][0])
     print(res[0][-1])

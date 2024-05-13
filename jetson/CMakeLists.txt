@@ -1,7 +1,24 @@
 cmake_minimum_required(VERSION 3.27)
 project(microvecdb-jetson-nano-2gb)
 set(CMAKE_CXX_STANDARD 17)
-add_compile_options(-std=c++17)
+
+#if(CMAKE_BUILD_TYPE STREQUAL "Release")
+#    message(STATUS "Build type: Release")
+#    #    set(LIB_DIR ${PROJECT_SOURCE_DIR}/release/lib)
+#elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+#    message(STATUS "Build type: Debug")
+#    #    set(LIB_DIR ${PROJECT_SOURCE_DIR}/debug/lib)
+#else()
+#    message(FATAL_ERROR "Unsupported build type: ${CMAKE_BUILD_TYPE}")
+#endif()
+
+#set(BUILD_SHARED_LIBS ON)
+#
+#set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+add_definitions(-DANNOYLIB_MULTITHREADED_BUILD)
+
+set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
 
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR aarch64)
@@ -16,8 +33,8 @@ set(CMAKE_C_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/linario/gcc-linaro-7.3.1-2018.
 set(CMAKE_CXX_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/linario/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++")
 
 #available flags: -march=armv8-a -mfloat-abi=hard -mfpu=neon -mfpu=crypto-neon-fp-armv8
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE) # neon is included by default in the armv8-a architecture
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE) # neon is included by default in the armv8-a architecture
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE)
 
 set(CMAKE_STAGING_PREFIX "${CMAKE_SYSROOT}")
 set(CMAKE_FIND_ROOT_PATH "${CMAKE_SYSROOT}")
@@ -28,53 +45,42 @@ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
-#find_package(benchmark REQUIRED)
-#message(FATAL_ERROR $ENV{HOME})
-#
-#find_path(NUMA_INCLUDE_DIR NAME numa.h HINTS
-#        ${CMAKE_SYSROOT}/local/include
-#        ${CMAKE_SYSROOT}/opt/local/include
-#        ${CMAKE_SYSROOT}/usr/local/include
-#        ${CMAKE_SYSROOT}/usr/include # this one
-#)
-#
-#find_library(NUMA_LIBRARY NAME libnuma.so HINTS
-#        ${CMAKE_SYSROOT}/local/lib64
-#        ${CMAKE_SYSROOT}/local/lib
-#        ${CMAKE_SYSROOT}/usr/local/lib64
-#        ${CMAKE_SYSROOT}/usr/local/lib
-#        ${CMAKE_SYSROOT}/opt/local/lib64
-#        ${CMAKE_SYSROOT}/opt/local/lib
-#        ${CMAKE_SYSROOT}/usr/lib64
-#        ${CMAKE_SYSROOT}/usr/lib
-#        ${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu
-#)
-#
-#find_library(NUMA_LIBRARY_STATIC NAME libnuma.a HINTS
-#        ${CMAKE_SYSROOT}/local/lib64
-#        ${CMAKE_SYSROOT}/local/lib
-#        ${CMAKE_SYSROOT}/usr/local/lib64
-#        ${CMAKE_SYSROOT}/usr/local/lib
-#        ${CMAKE_SYSROOT}/opt/local/lib64
-#        ${CMAKE_SYSROOT}/opt/local/lib
-#        ${CMAKE_SYSROOT}/usr/lib64
-#        ${CMAKE_SYSROOT}/usr/lib
-#        ${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu # this one
-#)
-#
-#if (NUMA_INCLUDE_DIR AND NUMA_LIBRARY AND NUMA_LIBRARY_STATIC)
-#    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -lnuma")
-#    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lnuma")
-#    include_directories (${NUMA_INCLUDE_DIR})
-#    message (STATUS "Found numa library: inc=${NUMA_INCLUDE_DIR}, lib=${NUMA_LIBRARY}, staticlib=${NUMA_LIBRARY_STATIC}")
-#    add_definitions(-DNUMA)
-#else ()
-#    set (NUMA_LIBRARY "")
-#    set (NUMA_LIBRARY_STATIC "")
-#    message (STATUS "WARNING: Numa library not found.")
-#    message (STATUS "Try: 'sudo yum install numactl numactl-devel' (or sudo apt-get install libnuma libnuma-dev)")
-#endif ()
+# Constructing Platform Tag >>>> ----------------------------------------------------------
+set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    set(OS "linux-gnu")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    set(OS "win32")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+    set(OS "darwin")
+else()
+    set(OS ${CMAKE_SYSTEM_NAME})
+endif()
+set(PLATFORM_TAG "${ARCHITECTURE}-${OS}")
+message(STATUS "Platform Tag: ${PLATFORM_TAG}")
+# <<<< Constructing Platform Tag  ----------------------------------------------------------
 
+# Getting Python Major & Minor Version >>>> ----------------------------------------------------------
+find_path(Python3_INCLUDE_DIRS NAME Python.h HINTS
+        ${CMAKE_SYSROOT}/usr/include/python3.6
+        ${CMAKE_SYSROOT}/usr/include
+)
+
+find_library(Python3_LIBRARIES NAME libpython3.6.so HINTS
+        ${CMAKE_SYSROOT}/usr/lib/python3.6/config-3.6m-aarch64-linux-gnu
+        ${CMAKE_SYSROOT}/usr/lib/python3.6
+        ${CMAKE_SYSROOT}/usr/local/lib/python3.6
+        ${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu
+)
+
+set(Python3_VERSION 3.6)
+message(STATUS "Python3_INCLUDE_DIRS: ${Python3_INCLUDE_DIRS}")
+message(STATUS "Python3_LIBRARIES: ${Python3_LIBRARIES}")
+string(REPLACE "." ";" PYTHON_VERSION_LIST ${Python3_VERSION})
+list(GET PYTHON_VERSION_LIST 0 PYTHON_MAJOR_VERSION)
+list(GET PYTHON_VERSION_LIST 1 PYTHON_MINOR_VERSION)
+message(STATUS "CPython Version: ${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}")
+# <<<< Getting Python Major & Minor Version ----------------------------------------------------------
 
 function(include_sub_directories_recursively root_dir)
     if (IS_DIRECTORY ${root_dir})
@@ -89,28 +95,43 @@ function(include_sub_directories_recursively root_dir)
     endif()
 endfunction()
 
-#find_package(OpenMP REQUIRED)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../include/core)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../include/index)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../include/operators)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../include/storage)
 
-add_executable(jetson_test jetson_test.cpp
-#        OpenMP::OpenMP_CXX OpenMP::OpenMP_C
+link_directories(
+        ${PROJECT_SOURCE_DIR}/lib
+        ${PROJECT_SOURCE_DIR}/lib/faiss_aarch64/usr/lib/aarch64-linux-gnu
+        ${PROJECT_SOURCE_DIR}/lib/SPTAG_aarch64
+        ${PROJECT_SOURCE_DIR}/lib/zstd_aarch64
+        ${PROJECT_SOURCE_DIR}/lib/libm_aarch64
 )
-target_link_directories(jetson_test PUBLIC ${PROJECT_SOURCE_DIR}/../numa_aarch64 ${PROJECT_SOURCE_DIR}/../zstd_aarch64)
-target_include_directories(jetson_test PUBLIC ${PROJECT_SOURCE_DIR}/../numa_aarch64 ${PROJECT_SOURCE_DIR}/../zstd_aarch64)
-target_link_libraries(jetson_test PUBLIC zstd pthread)
 
-#include_directories("${CMAKE_SYSROOT}/usr/include/aarch64-linux-gnu" "${CMAKE_SYSROOT}/usr/include/aarch64-linux-gnu/atlas")
-#link_directories("${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu" "${CMAKE_SYSROOT}/usr/include/aarch64-linux-gnu/atlas")
-#include_sub_directories_recursively(${CMAKE_CURRENT_SOURCE_DIR}/../include)
-#include_sub_directories_recursively(${CMAKE_CURRENT_SOURCE_DIR}/../fasttext/src)
-#include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../eigen)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/lib/zstd_aarch64)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/lib/faiss_aarch64/usr/include)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../annoy)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../SPTAG/AnnService)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../numpy/include)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/../fasttext/src)
 
-#file(GLOB_RECURSE FASTTEXT_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../fasttext/src/*.cc")
-#list(REMOVE_ITEM FASTTEXT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../fasttext/src/main.cc") # gathering all the fasttext src files and removing main.cc
+file(GLOB_RECURSE SRC_FILES
+        ${PROJECT_SOURCE_DIR}/../src/core/*.cpp
+        ${PROJECT_SOURCE_DIR}/../src/index/*.cpp
+        ${PROJECT_SOURCE_DIR}/../src/operators/*.cpp
+        ${PROJECT_SOURCE_DIR}/../src/storage/*.cpp
+)
 
-#add_library(microvecdb ${CMAKE_CURRENT_SOURCE_DIR}/../src/index/distances.cpp)
+add_library(microvecdb SHARED ${SRC_FILES})
+target_link_libraries(microvecdb PUBLIC faiss DistanceUtils SPTAGLibStatic rocksdb pthread m dl zstd)
+set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
+set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
 
-#target_include_directories(microvecdb PRIVATE ${eigen_SOURCE_DIR})
-#target_link_libraries(microvecdb PUBLIC pthread openblas OpenMP::OpenMP_CXX OpenMP::OpenMP_C)
 
-#add_executable(distance_metrics_benchmarks ${CMAKE_CURRENT_SOURCE_DIR}/../benchmarks/index/distance_metrics_benchmarks.cpp)
-#target_link_libraries(distance_metrics_benchmarks microvecdb benchmark::benchmark)
+# microvecdb.cpython
+set(PYTHON_EXTENSION_TARGET "microvecdb.cpython-${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}-${PLATFORM_TAG}")
+add_library(${PYTHON_EXTENSION_TARGET} MODULE ${PROJECT_SOURCE_DIR}/../python/pymicrovecdb.cpp)
+target_include_directories(${PYTHON_EXTENSION_TARGET} PUBLIC ${Python3_INCLUDE_DIRS})
+target_link_libraries(${PYTHON_EXTENSION_TARGET} ${Python3_LIBRARIES} microvecdb)
+set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
+set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})

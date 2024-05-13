@@ -53,6 +53,8 @@ message(STATUS "Platform Tag: ${PLATFORM_TAG}")
 
 # Getting Python Major & Minor Version >>>> ----------------------------------------------------------
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+message(STATUS "Python3_INCLUDE_DIRS: ${Python3_INCLUDE_DIRS}")
+message(STATUS "Python3_LIBRARIES: ${Python3_LIBRARIES}")
 string(REPLACE "." ";" PYTHON_VERSION_LIST ${Python3_VERSION})
 list(GET PYTHON_VERSION_LIST 0 PYTHON_MAJOR_VERSION)
 list(GET PYTHON_VERSION_LIST 1 PYTHON_MINOR_VERSION)

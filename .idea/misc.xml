@@ -16,16 +16,21 @@
       <file path="$PROJECT_DIR$/diskann" />
       <file path="$PROJECT_DIR$/eigen" />
       <file path="$PROJECT_DIR$/faiss" />
+      <file path="$PROJECT_DIR$/faiss-src" />
       <file path="$PROJECT_DIR$/fasttext" />
       <file path="$PROJECT_DIR$/imagebind" />
       <file path="$PROJECT_DIR$/jetson/build" />
       <file path="$PROJECT_DIR$/jetson/jetson-nano-sysroot" />
+      <file path="$PROJECT_DIR$/jetson/lib/SPTAG_aarch64" />
+      <file path="$PROJECT_DIR$/jetson/lib/faiss_aarch64" />
+      <file path="$PROJECT_DIR$/jetson/lib/libm_aarch64" />
+      <file path="$PROJECT_DIR$/jetson/lib/openblas_aarch64" />
+      <file path="$PROJECT_DIR$/jetson/lib/zstd_aarch64" />
       <file path="$PROJECT_DIR$/jetson/linario" />
       <file path="$PROJECT_DIR$/jetson/tegra_fs" />
       <file path="$PROJECT_DIR$/numpy" />
       <file path="$PROJECT_DIR$/rocksdb" />
       <file path="$PROJECT_DIR$/spdlog" />
-      <file path="$PROJECT_DIR$/zstd_aarch64" />
     </excludeRoots>
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10.13 WSL (Ubuntu-22.04): (/home/santius/.virtualenvs/microvecdb/bin/python)" project-jdk-type="Python SDK" />
