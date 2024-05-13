@@ -12,6 +12,8 @@ import os
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(CURRENT_DIR)
 
+print(BASE_DIR)
+# LIB_DIR = os.path.join(CURRENT_DIR, '..', 'lib')  # Adjusted relative path to 'lib' directory
 
 setup(
     name='pymicrovecdb',
@@ -22,7 +24,7 @@ setup(
     include_package_data=True,
     package_data={'pymicrovecdb': [
         os.path.join(BASE_DIR, 'lib', 'libmicrovecdb.so'),
-        os.path.join(BASE_DIR, 'lib', 'microvecdb.cpython-38-x86_64-linux-gnu.so'),
+        os.path.join(BASE_DIR, 'lib', 'microvecdb.cpython-36-aarch64-linux-gnu.so'),
     ]},
     install_requires=[
         'numpy>=1.24.4'
