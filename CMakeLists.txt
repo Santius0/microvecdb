@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.27)
 project(microvecdb)
 set(CMAKE_CXX_STANDARD 17)
 
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
-#set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE) # neon is included by default in the armv8-a architecture
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3 -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3 -fPIC")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE) # neon is included by default in the armv8-a architecture
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -latomic")
 
 add_definitions(-DANNOYLIB_MULTITHREADED_BUILD)
@@ -19,7 +19,6 @@ endif()
 
 #find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 #find_package(CUDAToolkit REQUIRED)
-#find_package(OpenMP REQUIRED)
 #include(FetchContent)
 
 set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
@@ -81,17 +80,17 @@ include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/index)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/operators)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/storage)
 
-#link_directories(
-#        ${LIB_DIR}/lib
-#        ${PROJECT_SOURCE_DIR}/faiss/lib
-#        ${PROJECT_SOURCE_DIR}/SPTAG/Release
-#)
-
 link_directories(
         ${LIB_DIR}/lib
-        ${PROJECT_SOURCE_DIR}/jetson/lib/faiss_aarch64/usr/lib/aarch64-linux-gnu
-        ${PROJECT_SOURCE_DIR}/jetson/lib/SPTAG_aarch64
+        ${PROJECT_SOURCE_DIR}/faiss/lib
+        ${PROJECT_SOURCE_DIR}/SPTAG/Release
 )
+#
+#link_directories(
+#        ${LIB_DIR}/lib
+#        ${PROJECT_SOURCE_DIR}/jetson/lib/faiss_aarch64/usr/lib/aarch64-linux-gnu
+#        ${PROJECT_SOURCE_DIR}/jetson/lib/SPTAG_aarch64
+#)
 
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/annoy)
@@ -108,11 +107,12 @@ file(GLOB_RECURSE SRC_FILES
         src/storage/*.cpp
 )
 
+find_package(OpenMP REQUIRED)
 # microvecdb:
 add_library(microvecdb SHARED ${SRC_FILES})
 #target_include_directories(microvecdb PUBLIC "${MKL_LIBRARY_DIR}")
 target_link_libraries(microvecdb PUBLIC
-#        OpenMP::OpenMP_CXX OpenMP::OpenMP_C
+        OpenMP::OpenMP_CXX OpenMP::OpenMP_C
 #        ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
         faiss
         DistanceUtils
@@ -134,8 +134,8 @@ set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
 
 # main:
-#add_executable(microvecdb_main main.cpp)
-#target_link_libraries(microvecdb_main PUBLIC microvecdb DistanceUtils SPTAGLibStatic pthread)
+add_executable(microvecdb_main main.cpp)
+target_link_libraries(microvecdb_main PUBLIC microvecdb DistanceUtils SPTAGLibStatic pthread)
 
 # <<<< Configuring targets ----------------------------------------------------------
 

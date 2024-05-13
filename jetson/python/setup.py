@@ -6,28 +6,26 @@
 # //      then do a: pip install .
 # //      from in the 'python' folder
 
-from setuptools import setup, Extension, find_packages
+from distutils.core import setup, Extension
 import os
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR = os.path.dirname(CURRENT_DIR)
+BASE_DIR = os.path.dirname(os.path.dirname(CURRENT_DIR))
 
-print(BASE_DIR)
-# LIB_DIR = os.path.join(CURRENT_DIR, '..', 'lib')  # Adjusted relative path to 'lib' directory
+module = Extension("pymicrovecdb",
+                   sources = [f"{BASE_DIR}/python/pymicrovecdb.cpp"],
+                   include_dirs=[f"{BASE_DIR}/include/core", f"{BASE_DIR}/include/index", f"{BASE_DIR}/include/operators",
+                                 f"{BASE_DIR}/include/storage", f"{BASE_DIR}/faiss/include", f"{BASE_DIR}/annoy",
+                                 f"{BASE_DIR}/SPTAG/AnnService", f"{BASE_DIR}/SPTAG/AnnService/inc",
+                                 f"{BASE_DIR}/numpy/include"],
+                   library_dirs=[f"{BASE_DIR}/lib"],
+                   libraries=['microvecdb'],
+                   extra_compile_args=['-std=c++17 -fopenmp -fPIC']
+                   )
 
 setup(
     name='pymicrovecdb',
     version='0.1.0',
     description='MicroVecDB C++ Interface Package',
-    package_dir={'': '.'},
-    packages=['pymicrovecdb'],
-    include_package_data=True,
-    package_data={'pymicrovecdb': [
-        os.path.join(BASE_DIR, 'lib', 'libmicrovecdb.so'),
-        os.path.join(BASE_DIR, 'lib', 'microvecdb.cpython-36-aarch64-linux-gnu.so'),
-    ]},
-    install_requires=[
-        'numpy>=1.24.4'
-    ],
-    zip_safe=True
+    ext_modules=[module],
 )

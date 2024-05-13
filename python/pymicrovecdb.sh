@@ -5,10 +5,10 @@ set -e
 
 # Run python setup.py bdist_wheel
 echo "Building the wheel package..."
-python3 setup.py bdist_wheel
+python3 setup.py bdist_wheel sdist
 
 # Install the package
 echo "Installing the package..."
-pip install .
+pip3 install .
 
 echo "Build and installation completed successfully!"
