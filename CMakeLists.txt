@@ -2,8 +2,11 @@ cmake_minimum_required(VERSION 3.27)
 project(microvecdb)
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
+#set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE) # neon is included by default in the armv8-a architecture
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -fPIC --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE)
+
 
 add_definitions(-DANNOYLIB_MULTITHREADED_BUILD)
 
@@ -108,7 +111,8 @@ file(GLOB_RECURSE SRC_FILES
 # microvecdb:
 add_library(microvecdb SHARED ${SRC_FILES})
 #target_include_directories(microvecdb PUBLIC "${MKL_LIBRARY_DIR}")
-target_link_libraries(microvecdb PUBLIC OpenMP::OpenMP_CXX OpenMP::OpenMP_C
+target_link_libraries(microvecdb PUBLIC
+#        OpenMP::OpenMP_CXX OpenMP::OpenMP_C
 #        ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
         faiss
         DistanceUtils
