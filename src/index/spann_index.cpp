@@ -95,19 +95,22 @@ namespace mvdb::index {
         else
             throw std::runtime_error("Unsupported data SPANN Index data type");
 
+        const auto *spann_args = dynamic_cast<const SPANNIndexNamedArgs *>(args);
+        if (!spann_args)
+            throw std::runtime_error("Failed to dynamic_cast from NamedArgs to SPANNIndexNamedArgs");
 
-        std::string build_config_path = "../SPTAG/Release/buildconfig.ini";
 
         this->dims_ = dims;
         builder_options_->m_dimension = static_cast<SPTAG::DimensionType>(dims);
         builder_options_->m_inputFiles = initial_data_path;
         builder_options_->m_outputFolder = path;
         builder_options_->m_indexAlgoType = SPTAG::IndexAlgoType::SPANN;
-        builder_options_->m_builderConfigFile = build_config_path;
-        builder_options_->m_quantizerFile = "";
-        builder_options_->m_metaMapping = false;
-        builder_options_->m_normalized = false;
+        builder_options_->m_builderConfigFile = spann_args->build_config_path;
+        builder_options_->m_quantizerFile = spann_args->quantizer_path;
+        builder_options_->m_metaMapping = spann_args->meta_mapping;
+        builder_options_->m_normalized = spann_args->normalized;
         builder_options_->m_inputFileType = SPTAG::VectorFileType::XVEC;
+        builder_options_->m_threadNum = spann_args->thread_num;
 
 
         if (!builder_options_->m_quantizerFile.empty()) {
@@ -189,26 +192,24 @@ namespace mvdb::index {
     }
 
     template<typename T>
-    void SPANNIndex<T>::topk(const idx_t &nq, T *query, idx_t *ids, T *distances, const idx_t &k,
-                               const DISTANCE_METRIC &distance_metric, const float& c) const {
-//        ./indexsearcher -x sift1m_index_dir_Saved/ -d 128 -v Float -f XVEC -i sift1m/sift_query.fvecs -o outputSearch.txt -k 100
-//
+    void SPANNIndex<T>::topk(const idx_t &nq, T *query, const std::string& query_path,
+                             const std::string& result_path, idx_t *ids, T *distances, const idx_t &k,
+                             const DISTANCE_METRIC &distance_metric, const float& c) const {
+//  ./indexsearcher -x sift1m_index_dir_Saved/ -d 128 -v Float -f XVEC -i sift1m/sift_query.fvecs -o outputSearch.txt -k 100
 
+        if(query_path.empty() && query == nullptr)
+            throw std::runtime_error("either query or query_path is required");
 
-//        std::string index_path = "./mySPANNIndex";
-        std::string query_path = "../SPTAG/Release/sift1m/sift_query.fvecs";
-//        std::string query_path = "";
-//        std::string output_path = "./mySPANNIndex_search_output_1.txt";
-//        std::string output_path = "./mySPANNIndex_search_output_all.txt";
-        std::string output_path = "";
+        if(!query_path.empty() && query != nullptr)
+            throw std::runtime_error("Exactly one of query and query_path accepted");
 
         std::shared_ptr<SearcherOptions> options(new SearcherOptions);
         options->m_indexFolder = builder_options_->m_outputFolder;
         options->m_dimension = builder_options_->m_dimension;
         options->m_inputValueType = builder_options_->m_inputValueType;
-        options->m_inputFileType = SPTAG::VectorFileType::XVEC; // have user pass this if it should change
+        options->m_inputFileType = SPTAG::VectorFileType::XVEC;
         options->m_queryFile = query_path;
-        options->m_resultFile = output_path;
+        options->m_resultFile = result_path;
 //        options->m_outputformat = 0;
         options->m_K = (int)k;
         options->m_batch = 100;

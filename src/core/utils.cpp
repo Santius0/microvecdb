@@ -66,17 +66,11 @@ namespace mvdb {
     }
     template std::vector<int8_t> read_vector<int8_t>(std::ifstream& file, const int& dims);
     template std::vector<int16_t> read_vector<int16_t>(std::ifstream& file, const int& dims);
-    template std::vector<int32_t> read_vector<int32_t>(std::ifstream& file, const int& dims);
-    template std::vector<int64_t> read_vector<int64_t>(std::ifstream& file, const int& dims);
     template std::vector<uint8_t> read_vector<uint8_t>(std::ifstream& file, const int& dims);
-    template std::vector<uint16_t> read_vector<uint16_t>(std::ifstream& file, const int& dims);
-    template std::vector<uint32_t> read_vector<uint32_t>(std::ifstream& file, const int& dims);
-    template std::vector<uint64_t> read_vector<uint64_t>(std::ifstream& file, const int& dims);
     template std::vector<float> read_vector<float>(std::ifstream& file, const int& dims);
-    template std::vector<double> read_vector<double>(std::ifstream& file, const int& dims);
 
     template<typename T>
-    void read_fvecs(const std::string& file_path, std::vector<T>& data, std::vector<size_t>& start_indexes, int num_vecs) {
+    void read_xvecs(const std::string& file_path, std::vector<T> &data, std::vector<size_t>& start_indexes, int num_vecs) {
         std::ifstream file(file_path, std::ios::binary);
         if (!file.is_open()) {
             throw std::runtime_error("Failed to open file: " + file_path);
@@ -118,16 +112,10 @@ namespace mvdb {
         file.close();
     }
 
-    template void read_fvecs<int8_t>(const std::string& file_path, std::vector<int8_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
-    template void read_fvecs<int16_t>(const std::string& file_path, std::vector<int16_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
-    template void read_fvecs<int32_t>(const std::string& file_path, std::vector<int32_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
-    template void read_fvecs<int64_t>(const std::string& file_path, std::vector<int64_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
-    template void read_fvecs<uint8_t>(const std::string& file_path, std::vector<uint8_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
-    template void read_fvecs<uint16_t>(const std::string& file_path, std::vector<uint16_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
-    template void read_fvecs<uint32_t>(const std::string& file_path, std::vector<uint32_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
-    template void read_fvecs<uint64_t>(const std::string& file_path, std::vector<uint64_t>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
-    template void read_fvecs<float>(const std::string& file_path, std::vector<float>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
-    template void read_fvecs<double>(const std::string& file_path, std::vector<double>& data, std::vector<size_t>& start_indexes, int num_vecs = -1);
+    template void read_xvecs<int8_t>(const std::string& file_path, std::vector<int8_t> &data, std::vector<size_t>& start_indexes, int num_vecs = -1);
+    template void read_xvecs<int16_t>(const std::string& file_path, std::vector<int16_t> &data, std::vector<size_t>& start_indexes, int num_vecs = -1);
+    template void read_xvecs<uint8_t>(const std::string& file_path, std::vector<uint8_t> &data, std::vector<size_t>& start_indexes, int num_vecs = -1);
+    template void read_xvecs<float>(const std::string& file_path, std::vector<float> &data, std::vector<size_t>& start_indexes, int num_vecs = -1);
 
     void remove_trailing_slashes(std::string& path) {
         // Removes all trailing '/' and '\' from the end of the string
@@ -137,7 +125,7 @@ namespace mvdb {
     }
 
     template <typename T>
-    int fvecs_num_vecs(const std::string& path) {
+    int xvecs_num_vecs(const std::string& path) {
         std::ifstream file(path, std::ios::binary);
         if (!file.is_open()) {
             std::cerr << "Failed to open the file, '" + path + "'" << std::endl;
@@ -152,15 +140,11 @@ namespace mvdb {
         file.close();
         return fileSize / vector_size;
     }
-    template int fvecs_num_vecs<int8_t>(const std::string& path);
-    template int fvecs_num_vecs<int16_t>(const std::string& path);
-    template int fvecs_num_vecs<int32_t>(const std::string& path);
-    template int fvecs_num_vecs<int64_t>(const std::string& path);
-    template int fvecs_num_vecs<uint8_t>(const std::string& path);
-    template int fvecs_num_vecs<uint16_t>(const std::string& path);
-    template int fvecs_num_vecs<uint32_t>(const std::string& path);
-    template int fvecs_num_vecs<uint64_t>(const std::string& path);
-    template int fvecs_num_vecs<float>(const std::string& path);
-    template int fvecs_num_vecs<double>(const std::string& path);
+
+    template int xvecs_num_vecs<int>(const std::string& path);
+    template int xvecs_num_vecs<int8_t>(const std::string& path);
+    template int xvecs_num_vecs<int16_t>(const std::string& path);
+    template int xvecs_num_vecs<uint8_t>(const std::string& path);
+    template int xvecs_num_vecs<float>(const std::string& path);
 
 }

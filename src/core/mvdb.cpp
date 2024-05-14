@@ -1,4 +1,5 @@
 #include "mvdb.h"
+#include "utils.h"
 
 namespace mvdb {
 
@@ -49,20 +50,16 @@ namespace mvdb {
     }
 
     template <typename T>
-    void MVDB<T>::topk(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k,
-                            const index::DISTANCE_METRIC& distance_metric, const float& c) {
-                db_->index()->topk(nq, query, ids, distances, k, distance_metric, c);
+    void MVDB<T>::topk(const idx_t& nq, T* query, std::string query_path, std::string result_path,
+                       idx_t* ids, T* distances, const idx_t& k,
+                       const index::DISTANCE_METRIC& distance_metric, const float& c) {
+        remove_trailing_slashes(query_path);
+        remove_trailing_slashes(result_path);
+        db_->index()->topk(nq, query, query_path, result_path, ids, distances, k, distance_metric, c);
     }
 
     template class MVDB<int8_t>;
     template class MVDB<int16_t>;
-    template class MVDB<int32_t>;
-    template class MVDB<int64_t>;
     template class MVDB<uint8_t>;
-    template class MVDB<uint16_t>;
-    template class MVDB<uint32_t>;
-    template class MVDB<uint64_t>;
     template class MVDB<float>;
-    template class MVDB<double>;
-
 }

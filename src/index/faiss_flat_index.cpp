@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <type_traits>
 
 namespace mvdb::index {
 
@@ -56,8 +57,12 @@ namespace mvdb::index {
         if(!initial_data_path.empty()) {
             std::vector<T> data;
             std::vector<size_t> start_indexes;
-            int num_vecs = fvecs_num_vecs<T>(initial_data_path);
-            read_fvecs<T>(initial_data_path, data, start_indexes, num_vecs);
+            int num_vecs = 0;
+            if(std::is_same_v<T, float>)
+                num_vecs = xvecs_num_vecs<float>(initial_data_path);
+            else
+                num_vecs = xvecs_num_vecs<int32_t>(initial_data_path);
+            read_xvecs<T>(initial_data_path, data, start_indexes, num_vecs);
             faiss_index_->add(num_vecs, (float*)data.data());
         } else if(initial_data_size > 0) {
             faiss_index_->add((faiss::idx_t)initial_data_size, (float*)initial_data);
@@ -124,9 +129,18 @@ namespace mvdb::index {
     }
 
     template <typename T>
-    void FaissFlatIndex<T>::topk(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k,
+    void FaissFlatIndex<T>::topk(const idx_t& nq, T* query, const std::string& query_path,
+                                 const std::string& result_path, idx_t* ids, T* distances, const idx_t& k,
                                  const DISTANCE_METRIC& distance_metric, const float& c) const{
-        faiss_index_->search(static_cast<long>(nq), (float*)(query), k, (float*)(distances), reinterpret_cast<faiss::idx_t*>(ids));
+        if(!query_path.empty())
+            throw std::runtime_error("Query file with FaissFlatIndex topk not supported...yet");
+
+        if(!result_path.empty())
+            throw std::runtime_error("Result file with FaissFlatIndex topk not supported...yet");
+
+        faiss_index_->search(static_cast<long>(nq), (float*)(query), k, (float*)(distances),
+                             reinterpret_cast<faiss::idx_t*>(ids));
+
     }
 
     template <typename T>
@@ -186,13 +200,7 @@ namespace mvdb::index {
 
     template class FaissFlatIndex<int8_t>;
     template class FaissFlatIndex<int16_t>;
-    template class FaissFlatIndex<int32_t>;
-    template class FaissFlatIndex<int64_t>;
     template class FaissFlatIndex<uint8_t>;
-    template class FaissFlatIndex<uint16_t>;
-    template class FaissFlatIndex<uint32_t>;
-    template class FaissFlatIndex<uint64_t>;
     template class FaissFlatIndex<float>;
-    template class FaissFlatIndex<double>;
 
 } // namespace mvdb

@@ -173,12 +173,6 @@ namespace mvdb {
 
     template class DB_<int8_t>;
     template class DB_<int16_t>;
-    template class DB_<int32_t>;
-    template class DB_<int64_t>;
     template class DB_<uint8_t>;
-    template class DB_<uint16_t>;
-    template class DB_<uint32_t>;
-    template class DB_<uint64_t>;
     template class DB_<float>;
-    template class DB_<double>;
 }

@@ -2,6 +2,8 @@
 #include "filesystem.h"
 #include "utils.h"
 
+#include <type_traits>
+
 #include <omp.h>
 #include <cstring>
 
@@ -36,8 +38,13 @@ namespace mvdb::index {
         if (!initial_data_path.empty()) {
             std::vector<T> data;
             std::vector<size_t> start_indexes;
-            int num_vecs = fvecs_num_vecs<T>(initial_data_path);
-            read_fvecs<T>(initial_data_path, data, start_indexes, num_vecs);
+
+            int num_vecs = 0;
+            if(std::is_same_v<T, float>)
+                num_vecs = xvecs_num_vecs<float>(initial_data_path);
+            else
+                num_vecs = xvecs_num_vecs<int32_t>(initial_data_path);
+            read_xvecs<T>(initial_data_path, data, start_indexes, num_vecs);
             for (int i = 0; i < num_vecs; i++)
                 annoy_index_->add_item(i, data.data() + i * dims);
         } else if (initial_data_size > 0) {
@@ -117,8 +124,16 @@ namespace mvdb::index {
     }
 
     template<typename T>
-    void MVDBAnnoyIndex<T>::topk(const idx_t &nq, T *query, idx_t *ids, T *distances, const idx_t &k,
+    void MVDBAnnoyIndex<T>::topk(const idx_t &nq, T *query, const std::string& query_path,
+                                 const std::string& result_path, idx_t *ids, T *distances, const idx_t &k,
                                  const DISTANCE_METRIC &distance_metric, const float &c) const {
+
+        if(!query_path.empty())
+            throw std::runtime_error("Query file with MVDBAnnoyIndex topk not supported...yet");
+
+        if(!result_path.empty())
+            throw std::runtime_error("Result file with MVDBAnnoyIndex topk not supported...yet");
+
         #pragma omp parallel
         {
             std::vector<int> closest_ids;           // DO NOT pre-allocate memory for Annoy recepticles!
@@ -172,12 +187,6 @@ namespace mvdb::index {
 
     template class MVDBAnnoyIndex<int8_t>;
     template class MVDBAnnoyIndex<int16_t>;
-    template class MVDBAnnoyIndex<int32_t>;
-    template class MVDBAnnoyIndex<int64_t>;
     template class MVDBAnnoyIndex<uint8_t>;
-    template class MVDBAnnoyIndex<uint16_t>;
-    template class MVDBAnnoyIndex<uint32_t>;
-    template class MVDBAnnoyIndex<uint64_t>;
     template class MVDBAnnoyIndex<float>;
-    template class MVDBAnnoyIndex<double>;
 }

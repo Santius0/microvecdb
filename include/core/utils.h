@@ -18,10 +18,10 @@ namespace mvdb {
     std::vector<T> read_vector(std::ifstream &file, const int& dims = 0);
 
     template <typename T>
-    void read_fvecs(const std::string& filePath, std::vector<T>& data, std::vector<size_t>& startIndexes, int num_vecs = -1);
+    void read_xvecs(const std::string& filePath, std::vector<T>& data, std::vector<size_t>& startIndexes, int num_vecs = -1);
 
     template <typename T>
-    int fvecs_num_vecs(const std::string& path);
+    int xvecs_num_vecs(const std::string& path);
 
     void remove_trailing_slashes(std::string& path);
 

@@ -39,7 +39,8 @@ namespace mvdb::index {
         void open(const std::string& path) override;
         [[nodiscard]] bool add(const idx_t& n, T* data, idx_t* ids) override;
         [[nodiscard]] bool remove(const idx_t& n, const idx_t* ids) override;
-        void topk(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k,
+        void topk(const idx_t& nq, T* query, const std::string& query_path,
+                  const std::string& result_path, idx_t* ids, T* distances, const idx_t& k,
                   const DISTANCE_METRIC& distance_metric, const float& c) const override;
         T* get(idx_t& n, idx_t* keys) const override;
         [[nodiscard]] T* get_all() const override;
@@ -50,14 +51,8 @@ namespace mvdb::index {
 
     extern template class MVDBAnnoyIndex<int8_t>;
     extern template class MVDBAnnoyIndex<int16_t>;
-    extern template class MVDBAnnoyIndex<int32_t>;
-    extern template class MVDBAnnoyIndex<int64_t>;
     extern template class MVDBAnnoyIndex<uint8_t>;
-    extern template class MVDBAnnoyIndex<uint16_t>;
-    extern template class MVDBAnnoyIndex<uint32_t>;
-    extern template class MVDBAnnoyIndex<uint64_t>;
     extern template class MVDBAnnoyIndex<float>;
-    extern template class MVDBAnnoyIndex<double>;
 }
 
 #endif //MICROVECDB_ANNOY_INDEX_H

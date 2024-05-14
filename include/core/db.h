@@ -125,14 +125,8 @@ namespace mvdb {
 
     extern template class DB_<int8_t>;
     extern template class DB_<int16_t>;
-    extern template class DB_<int32_t>;
-    extern template class DB_<int64_t>;
     extern template class DB_<uint8_t>;
-    extern template class DB_<uint16_t>;
-    extern template class DB_<uint32_t>;
-    extern template class DB_<uint64_t>;
     extern template class DB_<float>;
-    extern template class DB_<double>;
 }
 
 #endif //DB_H

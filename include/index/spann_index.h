@@ -35,14 +35,17 @@
 
 #include <type_traits>
 
+#define max_threads std::thread::hardware_concurrency();
 
 namespace mvdb::index {
+
+    static const unsigned int hw_concurrency = std::thread::hardware_concurrency();
 
     class BuilderOptions : public SPTAG::Helper::ReaderOptions {
     public:
         BuilderOptions() : SPTAG::Helper::ReaderOptions(SPTAG::VectorValueType::Float, 0,
                                                         SPTAG::VectorFileType::TXT, "|",
-                                                        std::thread::hardware_concurrency()) {
+                                                        hw_concurrency) {
             AddRequiredOption(m_outputFolder, "-o", "--outputfolder", "Output folder.");
             AddRequiredOption(m_indexAlgoType, "-a", "--algo", "Index Algorithm type.");
             AddOptionalOption(m_inputFiles, "-i", "--input", "Input raw data.");
@@ -89,7 +92,7 @@ namespace mvdb::index {
             AddOptionalOption(m_outputformat, "-of", "--ouputformat", "0: TXT 1: BINARY.");
         }
 
-        ~SearcherOptions() {}
+        ~SearcherOptions() = default;
 
         std::string m_queryFile;
 
@@ -312,7 +315,6 @@ namespace mvdb::index {
                             }
                         }
                         else {
-//                            std::string qid = std::to_string(i);
                             std::string qid = std::to_string(startQuery + i);
                             if (fp->WriteBinary(qid.length(), qid.c_str()) != qid.length()) {
                                 SPTAG::SPTAGLIB_LOG(SPTAG::Helper::LogLevel::LL_Error, "Cannot write qid %d bytes!\n", qid.length());
@@ -403,8 +405,13 @@ namespace mvdb::index {
 
 
     struct SPANNIndexNamedArgs final : NamedArgs {
-        SPANNIndexNamedArgs() = default;
-        ~SPANNIndexNamedArgs() override = default;
+            std::string build_config_path = "../SPTAG/Release/buildconfig.ini";
+            std::string quantizer_path;
+            bool meta_mapping = false;
+            bool normalized = false;
+            uint32_t thread_num = hw_concurrency;
+            SPANNIndexNamedArgs() = default;
+            ~SPANNIndexNamedArgs() override = default;
     };
 
     template <typename T = float>
@@ -427,7 +434,8 @@ namespace mvdb::index {
         void open(const std::string& path) override;
         [[nodiscard]] bool add(const idx_t& n, T* data, idx_t* ids) override;
         [[nodiscard]] bool remove(const idx_t& n, const idx_t* ids) override;
-        void topk(const idx_t& nq, T* query, idx_t* ids, T* distances, const idx_t& k,
+        void topk(const idx_t& nq, T* query, const std::string& query_path,
+                  const std::string& result_path, idx_t* ids, T* distances, const idx_t& k,
                   const DISTANCE_METRIC& distance_metric, const float& c) const override;
         T* get(idx_t& n, idx_t* keys) const override;
         [[nodiscard]] T* get_all() const override;
@@ -436,34 +444,10 @@ namespace mvdb::index {
         [[nodiscard]] bool built() const override;
     };
 
-//    template int Process<int8_t>(const std::shared_ptr<SearcherOptions>& options, SPTAG::VectorIndex& index,
-//                                 idx_t *ids = nullptr, int8_t *distances = nullptr,
-//                                 std::shared_ptr<SPTAG::VectorSet> queryVectors = nullptr,
-//                                 std::shared_ptr<SPTAG::MetadataSet> queryMetas = nullptr);
-//    template int Process<int16_t>(const std::shared_ptr<SearcherOptions>& options, SPTAG::VectorIndex& index,
-//                                  idx_t *ids = nullptr, int16_t *distances = nullptr,
-//                                  std::shared_ptr<SPTAG::VectorSet> queryVectors = nullptr,
-//                                  std::shared_ptr<SPTAG::MetadataSet> queryMetas = nullptr);
-//    template int Process<uint8_t>(const std::shared_ptr<SearcherOptions>& options, SPTAG::VectorIndex& index,
-//                                  idx_t *ids = nullptr, uint8_t *distances = nullptr,
-//                                  std::shared_ptr<SPTAG::VectorSet> queryVectors = nullptr,
-//                                  std::shared_ptr<SPTAG::MetadataSet> queryMetas = nullptr);
-//    template int Process<float>(const std::shared_ptr<SearcherOptions>& options, SPTAG::VectorIndex& index,
-//                                idx_t *ids = nullptr, float *distances = nullptr,
-//                                std::shared_ptr<SPTAG::VectorSet> queryVectors = nullptr,
-//                                std::shared_ptr<SPTAG::MetadataSet> queryMetas = nullptr);
-
-
     extern template class SPANNIndex<int8_t>;
     extern template class SPANNIndex<int16_t>;
-    extern template class SPANNIndex<int32_t>;
-    extern template class SPANNIndex<int64_t>;
     extern template class SPANNIndex<uint8_t>;
-    extern template class SPANNIndex<uint16_t>;
-    extern template class SPANNIndex<uint32_t>;
-    extern template class SPANNIndex<uint64_t>;
     extern template class SPANNIndex<float>;
-    extern template class SPANNIndex<double>;
 }
 
 #endif //MICROVECDB_SPANN_INDEX_H
