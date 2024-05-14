@@ -37,6 +37,7 @@ setup(
     package_data={'pymicrovecdb': [
         os.path.join(BASE_DIR, 'lib', 'libmicrovecdb.so'),
         os.path.join(BASE_DIR, 'lib', 'microvecdb.cpython-38-x86_64-linux-gnu.so'),
+        os.path.join(BASE_DIR, 'lib', 'microvecdb.cpython-38-aarch64-linux-gnu.so'),
         # os.path.join(BASE_DIR, 'faiss', 'lib', 'libfaiss.so'),
         # os.path.join(BASE_DIR, 'faiss', 'lib', 'libfaiss_c.so')
     ]},
