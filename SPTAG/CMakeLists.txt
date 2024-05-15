@@ -7,6 +7,13 @@ project (SPTAGLib)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# disable warnings
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-w)
+elseif(MSVC)
+    add_compile_options(/W0)
+endif()
+
 if (CROSS_COMPILE)
     message(STATUS "Cross Compilation Initiated")
     set(CMAKE_SYSTEM_NAME Linux)
@@ -16,8 +23,8 @@ if (CROSS_COMPILE)
 #    set(CMAKE_CXX_COMPILER /home/santius/x-tools/aarch64-unknown-linux-gnu/bin/aarch64-unknown-linux-gnu-g++)
 #    set(CMAKE_SYSROOT /home/santius/x-tools/aarch64-unknown-linux-gnu/aarch64-unknown-linux-gnu/sysroot)
 
-    set(CMAKE_C_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/linario/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc")
-    set(CMAKE_CXX_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/linario/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++")
+    set(CMAKE_C_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc")
+    set(CMAKE_CXX_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++")
     set(CMAKE_SYSROOT "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/jetson-nano-sysroot")
 
     message(STATUS "sysroot=${CMAKE_SYSROOT}")

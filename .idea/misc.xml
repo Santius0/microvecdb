@@ -3,6 +3,9 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.10.13 WSL (Ubuntu-22.04): (/home/santius/microvecdb/microvecdb/venv/bin/python)" />
   </component>
+  <component name="CMakePythonSetting">
+    <option name="pythonIntegrationState" value="YES" />
+  </component>
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
   <component name="CidrRootsConfiguration">
     <sourceRoots>
@@ -20,6 +23,7 @@
       <file path="$PROJECT_DIR$/fasttext" />
       <file path="$PROJECT_DIR$/imagebind" />
       <file path="$PROJECT_DIR$/jetson/build" />
+      <file path="$PROJECT_DIR$/jetson/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu" />
       <file path="$PROJECT_DIR$/jetson/jetson-nano-sysroot" />
       <file path="$PROJECT_DIR$/jetson/lib/SPTAG_aarch64" />
       <file path="$PROJECT_DIR$/jetson/lib/faiss_aarch64" />
