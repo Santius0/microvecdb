@@ -38,19 +38,13 @@ if (CROSS_COMPILE)
     set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 endif ()
 
-# Disable warnings
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-w)
-elseif(MSVC)
-    add_compile_options(/W0)
-endif()
+message(STATUS "System Processor: ${CMAKE_SYSTEM_PROCESSOR}")
 
 function(CXX_COMPILER_DUMPVERSION _OUTPUT_VERSION)
   exec_program(${CMAKE_CXX_COMPILER}
     ARGS ${CMAKE_CXX_COMPILER_ARG1} -dumpversion
     OUTPUT_VARIABLE COMPILER_VERSION
   )
-
   set(${_OUTPUT_VERSION} ${COMPILER_VERSION} PARENT_SCOPE)
 endfunction()
 
@@ -87,14 +81,13 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
 
         include_directories (${NUMA_INCLUDE_DIR})
         message (STATUS "Found numa library: inc=${NUMA_INCLUDE_DIR}, lib=${NUMA_LIBRARY}, staticlib=${NUMA_LIBRARY_STATIC}")
-#        add_definitions(-DNUMA)
+#        add_definitions(-DNUMA) # disable all numa stuff as jetson ano doesn't need it
     else ()
         set (NUMA_LIBRARY "")
         set (NUMA_LIBRARY_STATIC "")
         message (STATUS "WARNING: Numa library not found.")
         message (STATUS "Try: 'sudo yum install numactl numactl-devel' (or sudo apt-get install libnuma libnuma-dev)")
     endif ()
-
 elseif(WIN32)
     if(NOT MSVC14)
          message(FATAL_ERROR "On Windows, only MSVC version 14 are supported!") 
@@ -132,12 +125,12 @@ endif()
 
 set (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
-if(CROSS_COMPILE)
-#    if(CMAKE_SYSTEM_PROCESSOR MATCHES "armv7-a")
-#        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp --sysroot=${CMAKE_SYSROOT} -march=armv7-a -mfpu=neon -mfloat-abi=hard -O2" CACHE STRING "" FORCE)
-#    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+if(CROSS_COMPILE OR (("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang") AND ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm" OR "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "aarch64")))
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "armv7-a")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp --sysroot=${CMAKE_SYSROOT} -march=armv7-a -mfpu=neon -mfloat-abi=hard -O2" CACHE STRING "" FORCE)
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp --sysroot=${CMAKE_SYSROOT} -march=armv8-a -O3" CACHE STRING "" FORCE)
-#    endif()
+    endif()
 else ()
     find_package(OpenMP)
     if (OpenMP_FOUND)
@@ -161,10 +154,10 @@ endif()
 option(GPU "GPU" ON)
 option(LIBRARYONLY "LIBRARYONLY" OFF)
 
-if(NOT CROSS_COMPILE)
+#if(NOT CROSS_COMPILE)
 #    message(STATUS "Building zstd from source")
 #    add_subdirectory (ThirdParty/zstd/build/cmake)
-endif()
+#endif()
 
 add_subdirectory (AnnService)
 #add_subdirectory (Test)

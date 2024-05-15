@@ -30,29 +30,32 @@ add_library (DistanceUtils STATIC
         src/Core/Common/InstructionUtils.cpp
 )
 
-#if(CROSS_COMPILE)
-#    target_compile_options(DistanceUtils PRIVATE -mfpu=neon -mfloat-abi=softfp -fPIC) # armv7-a
-    target_compile_options(DistanceUtils PRIVATE -march=armv8-a -fPIC)  # NEON is enabled by default in ARMv8
-#else()
-#    target_compile_options(DistanceUtils PRIVATE -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -fPIC)
-#endif()
+if(CROSS_COMPILE OR (("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang") AND ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm" OR "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "aarch64")))
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "armv7-a")
+        target_compile_options(DistanceUtils PRIVATE -fopenmp --sysroot=${CMAKE_SYSROOT} -march=armv7-a -mfpu=neon -mfloat-abi=hard -O2) # armv7-a
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+        target_compile_options(DistanceUtils PRIVATE -fopenmp --sysroot=${CMAKE_SYSROOT} -march=armv8-a -fPIC)  # NEON is enabled by default in ARMv8
+    endif ()
+else()
+    target_compile_options(DistanceUtils PRIVATE -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -fPIC)
+endif()
 
 # if an arm device, use precompiled libs other use libs compiled from source
-if(CROSS_COMPILE)
-    message(STATUS "Using prebuilt aarch64 zstd")
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../zstd_aarch64)
-    link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../zstd_aarch64)
-    set(ZSTD_LIB_SHARED "zstd")
-    set(ZSTD_LIB_STATIC "zstd")
-else ()
-    set(Zstd ${PROJECT_SOURCE_DIR}/ThirdParty/zstd)
-    include_directories(${Zstd}/lib)
-    set(ZSTD_LIB_SHARED "libzstd_shared")
-    set(ZSTD_LIB_STATIC "libzstd_static")
-endif ()
-
-message(STATUS "ZSTD_LIB_SHARED: ${ZSTD_LIB_SHARED}")
-message(STATUS "ZSTD_LIB_STATIC: ${ZSTD_LIB_STATIC}")
+#if(CROSS_COMPILE)
+#    message(STATUS "Using prebuilt aarch64 zstd")
+#    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../zstd_aarch64)
+#    link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../zstd_aarch64)
+#    set(ZSTD_LIB_SHARED "zstd")
+#    set(ZSTD_LIB_STATIC "zstd")
+#else ()
+#    set(Zstd ${PROJECT_SOURCE_DIR}/ThirdParty/zstd)
+#    include_directories(${Zstd}/lib)
+#    set(ZSTD_LIB_SHARED "libzstd_shared")
+#    set(ZSTD_LIB_STATIC "libzstd_static")
+#endif ()
+#
+#message(STATUS "ZSTD_LIB_SHARED: ${ZSTD_LIB_SHARED}")
+#message(STATUS "ZSTD_LIB_STATIC: ${ZSTD_LIB_STATIC}")
 
 #add_library (SPTAGLib SHARED ${SRC_FILES} ${HDR_FILES})
 #target_link_libraries (SPTAGLib DistanceUtils ${ZSTD_LIB_SHARED} ${NUMA_LIBRARY})
@@ -61,8 +64,10 @@ message(STATUS "ZSTD_LIB_STATIC: ${ZSTD_LIB_STATIC}")
 #endif()
 
 add_library (SPTAGLibStatic STATIC ${SRC_FILES} ${HDR_FILES})
+#target_link_libraries (SPTAGLibStatic DistanceUtils ${ZSTD_LIB_STATIC} ${NUMA_LIBRARY_STATIC})
 target_link_libraries (SPTAGLibStatic DistanceUtils zstd ${NUMA_LIBRARY_STATIC})
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+    message(STATUS "-fPIC on")
     target_compile_options(SPTAGLibStatic PRIVATE -fPIC)
 endif()
 
