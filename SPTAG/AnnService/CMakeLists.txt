@@ -61,7 +61,7 @@ message(STATUS "ZSTD_LIB_STATIC: ${ZSTD_LIB_STATIC}")
 #endif()
 
 add_library (SPTAGLibStatic STATIC ${SRC_FILES} ${HDR_FILES})
-target_link_libraries (SPTAGLibStatic DistanceUtils ${ZSTD_LIB_STATIC} ${NUMA_LIBRARY_STATIC})
+target_link_libraries (SPTAGLibStatic DistanceUtils zstd ${NUMA_LIBRARY_STATIC})
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     target_compile_options(SPTAGLibStatic PRIVATE -fPIC)
 endif()
