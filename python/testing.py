@@ -1,12 +1,11 @@
-import numpy as np
-from memory_profiler import profile
-
-# import pymicrovecdb as mvdb_c
-from pymicrovecdb import mvdb
-
 import os
 import shutil
 import struct
+import numpy as np
+from memory_profiler import profile
+
+from pymicrovecdb import mvdb
+
 
 SIFT1M_BASE = "../data/sift1m/sift_base.fvecs"
 SIFT1M_QUERY = "../data/sift1m/sift_query.fvecs"

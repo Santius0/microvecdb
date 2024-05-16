@@ -5,13 +5,8 @@ import psutil
 import platform
 import datetime
 import struct
-import time
-from memory_profiler import profile, memory_usage
-from progress.bar import Bar
-from pymicrovecdb import MVDB, DataType, IndexType
 
 def is_wsl():
-    # Check if the script is running in the Windows Subsystem for Linux
     return 'microsoft' in platform.uname().release.lower()
 def get_cpu_info():
     cpu_info = subprocess.check_output("lscpu", shell=True).decode('utf-8')
@@ -113,7 +108,7 @@ def get_system_load():
     return load_avg
 
 
-def read_vector_file(filename, dtype = np.float32):
+def read_vector_file(filename):
     """
     Read vectors from a file with .fvecs or .ivecs extension.
 
@@ -148,93 +143,3 @@ def read_vector_file(filename, dtype = np.float32):
             vectors.append(vector)
 
     return np.array(vectors, dtype=dtype)
-
-
-def l2_distance(a, b):
-    return np.linalg.norm(a - b)
-
-def top_k_measurement_wrapper(db_, q, k):
-    results = db_.topk(1, q, k)
-    return results
-
-def run_single_query(db_, query, ground_truth):
-    start_time = time.time()
-    topk_res = memory_usage((top_k_measurement_wrapper, (db_, query, len(ground_truth))), retval=True, max_usage=True)
-    query_time = time.time() - start_time
-    found = 0
-    for id in topk_res[1][0]:
-        if id in ground_truth:
-            found += 1
-    recall = found / len(ground_truth)
-    row_dict = cpu_env
-    row_dict['dataset'] = 'sift1m'
-    row_dict['dims'] = len(query)
-    row_dict['index_size'] = 1000000
-    row_dict['k'] = len(ground_truth)
-    row_dict['distance_metric'] = 'L2'
-    # row_dict['energy_usage'] = ''
-    row_dict['peak_dram_(MB)'] = topk_res[0]
-    row_dict['index'] = IndexType.FAISS_FLAT.value
-    row_dict['latency_(s)'] = query_time
-    row_dict['recall'] = recall
-    return row_dict
-
-# Gather information
-cpu_info = get_cpu_info()
-ram_info = get_ram_info()
-storage_info = get_storage_info()
-battery_info = get_battery_info()
-# Gather information
-uptime = get_system_uptime()
-processes_df = get_concurrent_processes()
-load_average = get_system_load()
-
-# Print the system information
-print(f"System Uptime: {uptime}")
-print(f"System Load Average: {load_average}")
-print("Processes running concurrently:")
-print(processes_df.head())  # Print first few processes for brevity
-
-# Create a DataFrame
-cpu_env = {**cpu_info, **ram_info, **storage_info, **battery_info}
-# cpu_end_df = pd.DataFrame([cpu_env])
-
-db_ = MVDB(DataType.FLOAT)
-
-# delete_directory("./test_faiss_flat_db")
-# db_.create(IndexType.FAISS_FLAT, 128, "./test_faiss_flat_db", "../SPTAG/datasets/sift/sift_base.fvecs")
-db_.open("./test_faiss_flat_db")
-
-queries = read_vector_file("../SPTAG/datasets/sift/sift_query.fvecs")
-ground_truth = read_vector_file("../SPTAG/datasets/sift/sift_groundtruth.ivecs")
-
-
-rows = []
-
-bar = Bar(f"{IndexType.FAISS_FLAT}_{cpu_info['cpu_architecture']}: ", max=1000)
-for i, q in enumerate(queries):
-    if i > 1000:
-        break
-    rows.append(run_single_query(db_, q, ground_truth[i]))
-    bar.next()
-bar.finish()
-
-# start_time = time.time()
-    # ids, distances = db_.topk(1, q, len(q))
-    # query_time = time.time() - start_time
-    #
-    # found = 0
-    # for id in ids:
-    #     if id in ground_truth[i]:
-    #         found += 1
-    # recall = found / len(ground_truth[i])
-    # row_dict = cpu_env
-    # row_dict['index'] = IndexType.FAISS_FLAT.value
-    # row_dict['latency'] = query_time
-    # row_dict['recall'] = recall
-    # rows.append(row_dict)
-
-
-df = pd.DataFrame(rows)
-df.to_csv('faissflat_x86_64_12c_8gb.csv')
-print(df)

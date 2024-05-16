@@ -4,42 +4,6 @@ from enum import Enum, unique
 import warnings
 import struct
 
-def read_vector_file(filename):
-    """
-    Read vectors from a file with .fvecs or .ivecs extension.
-
-    Parameters:
-    - filename (str): Path to the file to read.
-
-    Returns:
-    - numpy.ndarray: Array of vectors stored in the file.
-    """
-    # determine the type based on file extension
-    file_type = 'f' if filename.endswith('.fvecs') else 'i'
-    dtype = np.float32 if file_type == 'f' else np.int32
-
-    vectors = []
-    with open(filename, 'rb') as file:
-        while True:
-            # Read the dimensionality of the vector (first 4 bytes)
-            dim_bytes = file.read(4)
-            if not dim_bytes:
-                break
-            dimension = struct.unpack('i', dim_bytes)[0]
-
-            # Read the vector data
-            count = dimension
-            if file_type == 'f':
-                vector_bytes = file.read(4 * count)  # Each float takes 4 bytes
-                vector = struct.unpack(f'{count}f', vector_bytes)
-            else:
-                vector_bytes = file.read(4 * count)  # Each int takes 4 bytes
-                vector = struct.unpack(f'{count}i', vector_bytes)
-
-            vectors.append(vector)
-
-    return np.array(vectors, dtype=dtype)
-
 @unique
 class DataType(Enum):
     INT8 = 0
@@ -146,19 +110,36 @@ class MVDB:
     def open(self, path: str):
         mvdb_c.MVDB_open(self.data_type.value, self.mvdb_obj, path)
 
-    def topk(self, query: np.array = np.array([]), query_file = "", k: np.uint64 = 5, num_queries: np.uint64 = 0,
+    def topk(self, query: np.array = None, query_file = None, k: np.uint64 = 5,
              metric: DistanceMetric = DistanceMetric.L2_DISTANCE, c: np.float32 = 10000.0, **kwargs):
         assert mvdb_c.MVDB_get_built, "cannot search index. db not built"
-        # assert (len(query) == 0 and query_file == "") != True, "either a query or a query_file must be specified"
-        # assert (len(query) > 0 and query_file != "") != True, "only exactly one of either a query or a query_file must be specified"
-        # assert (num_queries == 0), "invalid value 0 for num_queries"
-        if len(query) > 0:
-            if num_queries > -1:
-                warnings.warn("num_queries is automatically calculated using query and quer.dims. "
-                              "num_queries value entered is unnecessary and will be ignored")
-            num_queries = int(len(query)/self.dims)
+        if len(query) > 0 and query_file != "":
+            raise ValueError("Specify only one of query or query_file")
+        if len(query) == 0 and query_file == "":
+            raise ValueError("Either query or query_file must be specified")
+
+        if query is not None:
+            if query.size % self.dims != 0:
+                raise ValueError("The total size of initial_data must be a multiple of dims")
+            num_queries = query.shape[0]
+            if query.shape[0] > 1:
+                query = query.flatten(order='C')
+        else:
+            num_queries = 0
+
         print(f"num_queries={num_queries}")
-        return mvdb_c.MVDB_topk(self.data_type.value, self.mvdb_obj, num_queries, query, k, metric.value, c)
+
+        return mvdb_c.MVDB_topk(
+            self.data_type.value,
+            self.mvdb_obj,
+            num_queries,
+            query if query is not None else np.array([]),
+            query_file if query_file else "",
+            k,
+            metric.value,
+            c
+        )
+
 
     def num_items(self):
         assert mvdb_c.MVDB_get_built, "can't get num_items db not built"

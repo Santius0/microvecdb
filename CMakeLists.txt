@@ -2,19 +2,20 @@ cmake_minimum_required(VERSION 3.27)
 project(microvecdb)
 set(CMAKE_CXX_STANDARD 17)
 
-#set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -fPIC -march=armv8-a -O3" CACHE STRING "" FORCE) # neon is included by default in the armv8-a architecture
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -fPIC -march=armv8-a -O3" CACHE STRING "" FORCE)
 else ()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3 -fPIC")
-    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -O3 -fPIC")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -O3 -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -O3 -fPIC")
     find_package(OpenMP REQUIRED)
 endif ()
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -latomic")
 
-add_definitions(-DANNOYLIB_MULTITHREADED_BUILD)
+add_definitions(-DANNOYLIB_MULTITHREADED_BUILD) # enable annoy multithreaded build
 
 # Disable warnings
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -23,26 +24,33 @@ elseif(MSVC)
     add_compile_options(/W0)
 endif()
 
-#find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-#find_package(CUDAToolkit REQUIRED)
-#include(FetchContent)
+if (NOT CMAKE_BUILD_TYPE)
+    set (CMAKE_BUILD_TYPE release CACHE STRING "Build types: release debug" FORCE)
+endif()
 
-set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     message(STATUS "Build type: Release")
-#    set(LIB_DIR ${PROJECT_SOURCE_DIR}/release/lib)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Build type: Debug")
-#    set(LIB_DIR ${PROJECT_SOURCE_DIR}/debug/lib)
 else()
     message(FATAL_ERROR "Unsupported build type: ${CMAKE_BUILD_TYPE}")
 endif()
 
-# making sure output directory exists
+set(LIB_DIR "${PROJECT_SOURCE_DIR}/${CMAKE_BUILD_TYPE}/${CMAKE_SYSTEM_PROCESSOR}/lib/")
+set(BIN_DIR "${PROJECT_SOURCE_DIR}/${CMAKE_BUILD_TYPE}/${CMAKE_SYSTEM_PROCESSOR}/bin/")
+
+# making sure output directories exists
 file(MAKE_DIRECTORY "${LIB_DIR}")
+file(MAKE_DIRECTORY "${BIN_DIR}")
+
+set(LIBRARY_OUTPUT_PATH ${LIB_DIR})
+set(EXECUTABLE_OUTPUT_PATH ${BIN_DIR})
+
+message(STATUS "LIBRARY_OUTPUT_PATH: ${LIBRARY_OUTPUT_PATH}")
+message(STATUS "EXECUTABLE_OUTPUT_PATH: ${EXECUTABLE_OUTPUT_PATH}")
+
 
 # Constructing Platform Tag >>>> ----------------------------------------------------------
-set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(OS "linux-gnu")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
@@ -52,7 +60,7 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 else()
     set(OS ${CMAKE_SYSTEM_NAME})
 endif()
-set(PLATFORM_TAG "${ARCHITECTURE}-${OS}")
+set(PLATFORM_TAG "${CMAKE_SYSTEM_PROCESSOR}-${OS}")
 message(STATUS "Platform Tag: ${PLATFORM_TAG}")
 # <<<< Constructing Platform Tag  ----------------------------------------------------------
 
@@ -67,7 +75,7 @@ message(STATUS "CPython Version: ${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}
 # Configuring sources headers and link directories >>>> ----------------------------------------------------------
 function(include_sub_directories_recursively root_dir)
     if (IS_DIRECTORY ${root_dir})
-        message("Including directory: ${root_dir}")
+#        message("Including directory: ${root_dir}")
         include_directories(${root_dir})
         file(GLOB sub_dirs LIST_DIRECTORIES true RELATIVE ${root_dir} ${root_dir}/*)
         foreach(sub_dir ${sub_dirs})
@@ -140,7 +148,6 @@ else ()
             stdc++fs
     )
 endif ()
-set_target_properties(microvecdb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
 
 # microvecdb.cpython
 set(PYTHON_EXTENSION_TARGET "microvecdb.cpython-${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}-${PLATFORM_TAG}")
@@ -148,13 +155,12 @@ add_library(${PYTHON_EXTENSION_TARGET} MODULE python/pymicrovecdb.cpp)
 target_include_directories(${PYTHON_EXTENSION_TARGET} PUBLIC ${Python3_INCLUDE_DIRS})
 target_link_libraries(${PYTHON_EXTENSION_TARGET} ${Python3_LIBRARIES} microvecdb)
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
-set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
 
 # main:
-if(NOT (CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64"))
-    add_executable(microvecdb_main main.cpp)
-    target_link_libraries(microvecdb_main PUBLIC microvecdb DistanceUtils SPTAGLibStatic pthread)
-endif ()
+#if(NOT (CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64"))
+add_executable(microvecdb_main main.cpp)
+target_link_libraries(microvecdb_main PUBLIC microvecdb DistanceUtils SPTAGLibStatic pthread)
+#endif ()
 # <<<< Configuring targets ----------------------------------------------------------
 
 

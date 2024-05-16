@@ -69,13 +69,6 @@ namespace mvdb {
         _storage->deserialize_(in);
     }
 
-//    template <typename T>
-//    DB_<T>::~DB_(){
-//         delete[] _add_ids;
-//         delete[] _search_ids;
-//         delete[] _search_distances;
-//    }
-
     template <typename T>
     Status* DB_<T>::status() const {
         return status_.get();

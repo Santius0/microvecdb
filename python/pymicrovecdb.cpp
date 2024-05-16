@@ -88,13 +88,13 @@ static PyObject* MVDB_get_dims(PyObject* self, PyObject* args) {
         auto *mvdb_ = static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
         return PyLong_FromLong((long)mvdb_->get_db_()->index()->dims());
     } else if (data_type == INT16) {
-        auto *mvdb_ = static_cast<mvdb::MVDB<int16_t >*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int16_t));
+        auto *mvdb_ = static_cast<mvdb::MVDB<int16_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int16_t));
         return PyLong_FromLong((long)mvdb_->get_db_()->index()->dims());
     } else if (data_type == UINT8) {
         auto *mvdb_ = static_cast<mvdb::MVDB<uint8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint8_t));
         return PyLong_FromLong((long)mvdb_->get_db_()->index()->dims());
     } else if (data_type == FLOAT) {
-        auto *mvdb_ = static_cast<mvdb::MVDB<int64_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
+        auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
         return PyLong_FromLong((long)mvdb_->get_db_()->index()->dims());
     } else {
         PyErr_SetString(PyExc_ValueError, "Unsupported data type");
@@ -286,7 +286,7 @@ static PyObject* MVDB_get_built(PyObject* self, PyObject* args) {
             return PyLong_FromLong((long)mvdb_->get_db_()->index()->built());
         return PyLong_FromLong(false);
     } else if (data_type == FLOAT) {
-        auto *mvdb_ = static_cast<mvdb::MVDB<int64_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
+        auto *mvdb_ = static_cast<mvdb::MVDB<float> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
         if(mvdb_ == nullptr) std::cout << "DONE\n";
         if(mvdb_ != nullptr && mvdb_->get_db_() != nullptr && mvdb_->get_db_()->index() != nullptr)
             return PyLong_FromLong((long)mvdb_->get_db_()->index()->built());
@@ -311,7 +311,7 @@ static PyObject* MVDB_get_num_items(PyObject* self, PyObject* args) {
         auto *mvdb_ = static_cast<mvdb::MVDB<uint8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint8_t));
         return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
     } else if (data_type == FLOAT) {
-        auto *mvdb_ = static_cast<mvdb::MVDB<int64_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
+        auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
         return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
     } else {
         PyErr_SetString(PyExc_ValueError, "Unsupported data type");
