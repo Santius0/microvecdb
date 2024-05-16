@@ -87,13 +87,13 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch
     link_directories(
             ${LIB_DIR}/lib
             ${PROJECT_SOURCE_DIR}/jetson/lib/faiss_aarch64/usr/lib/aarch64-linux-gnu
-            ${PROJECT_SOURCE_DIR}/jetson/lib/SPTAG_aarch64
+            ${PROJECT_SOURCE_DIR}/SPTAG/Release/arm/lib
     )
 else ()
     link_directories(
             ${LIB_DIR}/lib
             ${PROJECT_SOURCE_DIR}/faiss/lib
-            ${PROJECT_SOURCE_DIR}/SPTAG/Release
+            ${PROJECT_SOURCE_DIR}/SPTAG/Release/x86_64/lib
     )
 endif ()
 

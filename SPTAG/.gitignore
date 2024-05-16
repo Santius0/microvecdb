@@ -20,24 +20,24 @@
 *.pch
 
 # Libraries
-*.lib
-*.a
-*.la
-*.lo
+#*.lib
+#*.a
+#*.la
+#*.lo
 
 # Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+#*.dll
+#*.so
+#*.so.*
+#*.dylib
 
 # Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+#*.exe
+#*.out
+#*.app
+#*.i*86
+#*.x86_64
+#*.hex
 
 # Debug files
 *.dSYM/
@@ -83,17 +83,18 @@ dkms.conf
 mono_crash.*
 
 # Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Ww][Ii][Nn]32/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
+#[Dd]ebug/
+#[Dd]ebugPublic/
+#[Rr]elease/
+#[Rr]eleases/
+#x64/
+#x86/
+#[Ww][Ii][Nn]32/
+#[Aa][Rr][Mm]/
+#[Aa][Rr][Mm]64/
 bld/
-[Bb]in/
+#[Ll]ib/
+#[Bb]in/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
