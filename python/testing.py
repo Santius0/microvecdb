@@ -1,8 +1,4 @@
-import os
-import shutil
-import struct
 import numpy as np
-from memory_profiler import profile
 
 from pymicrovecdb import mvdb
 
@@ -30,10 +26,20 @@ def test_create_function(db_):
     db_.create(mvdb.IndexType.SPANN, 128, "./indexes/spann_128_sift1m_file_index", initial_data_path=SIFT1M_BASE)
     db_.create(mvdb.IndexType.SPANN, 128, "./indexes/spann_128_sift1m_direct_index", initial_data=vecs)
 
+def test_topk_function(db_):
+    rand_queries = np.random.rand(10, 64).astype(np.float32)  # 10 random vectors of dimension 64
+    queries = mvdb.read_vector_file(SIFT1M_QUERY)
+
+    # FAISS_FLAT
+    db_.open("./indexes/faissflat_64_rand_direct_index")
+    db_.topk(query=rand_queries, k = 10)
+    db_.topk(query=queries, k = 10)
+    db_.topk(query_file=SIFT1M_QUERY, k = 10)
 
 def main():
     db = mvdb.MVDB()
     test_create_function(db)
+    test_topk_function(db)
 
 if __name__ == '__main__':
     main()
