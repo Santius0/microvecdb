@@ -31,7 +31,9 @@
       <file path="$PROJECT_DIR$/jetson/lib/openblas_aarch64" />
       <file path="$PROJECT_DIR$/jetson/lib/zstd_aarch64" />
       <file path="$PROJECT_DIR$/jetson/linario" />
+      <file path="$PROJECT_DIR$/jetson/sysroot" />
       <file path="$PROJECT_DIR$/jetson/tegra_fs" />
+      <file path="$PROJECT_DIR$/jetson/toolchain" />
       <file path="$PROJECT_DIR$/numpy" />
       <file path="$PROJECT_DIR$/rocksdb" />
       <file path="$PROJECT_DIR$/spdlog" />

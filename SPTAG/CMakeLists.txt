@@ -23,16 +23,28 @@ if (CROSS_COMPILE)
 #    set(CMAKE_CXX_COMPILER /home/santius/x-tools/aarch64-unknown-linux-gnu/bin/aarch64-unknown-linux-gnu-g++)
 #    set(CMAKE_SYSROOT /home/santius/x-tools/aarch64-unknown-linux-gnu/aarch64-unknown-linux-gnu/sysroot)
 
-    set(CMAKE_C_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc")
-    set(CMAKE_CXX_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++")
-    set(CMAKE_SYSROOT "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/jetson-nano-sysroot")
+#    set(CMAKE_C_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/toolchain/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc")
+#    set(CMAKE_CXX_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/toolchain/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++")
+#    set(CMAKE_SYSROOT "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/toolchain/sysroot")
+
+    set(CMAKE_C_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/toolchain/aarch64--glibc--stable-final/bin/aarch64-buildroot-linux-gnu-gcc")
+    set(CMAKE_CXX_COMPILER "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/toolchain/aarch64--glibc--stable-final/bin/aarch64-buildroot-linux-gnu-g++")
+    set(CMAKE_SYSROOT "${CMAKE_CURRENT_SOURCE_DIR}/../jetson/toolchain/aarch64--glibc--stable-final/aarch64-buildroot-linux-gnu/sysroot")
 
     message(STATUS "sysroot=${CMAKE_SYSROOT}")
     set(CMAKE_STAGING_PREFIX "${CMAKE_SYSROOT}")
     set(CMAKE_FIND_ROOT_PATH "${CMAKE_SYSROOT}")
 
-    include_directories(${CMAKE_SYSROOT}/usr/include ${CMAKE_SYSROOT}/usr/include/aarch64-linux-gnu)
-    link_directories(${CMAKE_SYSROOT}/usr/lib ${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu)
+    include_directories(
+            ${CMAKE_SYSROOT}/usr/include
+            ${CMAKE_SYSROOT}/usr/include/aarch64-linux-gnu
+            ${PROJECT_SOURCE_DIR}/../jetson/lib/zstd_aarch64
+    )
+    link_directories(
+            ${CMAKE_SYSROOT}/usr/lib
+            ${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu
+            ${PROJECT_SOURCE_DIR}/../jetson/lib/zstd_aarch64
+    )
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --sysroot=${CMAKE_SYSROOT}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --sysroot=${CMAKE_SYSROOT}")

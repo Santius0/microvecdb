@@ -78,34 +78,34 @@ install(TARGETS SPTAGLibStatic
 
 if (NOT LIBRARYONLY)
     file(GLOB BUILDER_FILES ${AnnService}/src/IndexBuilder/*.cpp)
-#    add_executable (indexbuilder ${BUILDER_FILES})
-#    target_link_libraries(indexbuilder ${Boost_LIBRARIES} SPTAGLibStatic)
+    add_executable (indexbuilder ${BUILDER_FILES})
+    target_link_libraries(indexbuilder ${Boost_LIBRARIES} SPTAGLibStatic)
 
     file(GLOB SEARCHER_FILES ${AnnService}/src/IndexSearcher/*.cpp)
-#    add_executable (indexsearcher ${SEARCHER_FILES})
-#    target_link_libraries(indexsearcher ${Boost_LIBRARIES} SPTAGLibStatic)
+    add_executable (indexsearcher ${SEARCHER_FILES})
+    target_link_libraries(indexsearcher ${Boost_LIBRARIES} SPTAGLibStatic)
 
     file(GLOB QUANTIZER_HDR_FILES ${AnnService}/inc/Quantizer/*.h)
     file(GLOB QUANTIZER_FILES ${AnnService}/src/Quantizer/*.cpp)
-#    add_executable (quantizer ${QUANTIZER_FILES} ${QUANTIZER_HDR_FILES})
-#    target_link_libraries(quantizer ${Boost_LIBRARIES} SPTAGLibStatic)
+    add_executable (quantizer ${QUANTIZER_FILES} ${QUANTIZER_HDR_FILES})
+    target_link_libraries(quantizer ${Boost_LIBRARIES} SPTAGLibStatic)
 
-#    install(TARGETS indexbuilder indexsearcher quantizer
-#            RUNTIME DESTINATION bin
-#            ARCHIVE DESTINATION lib
-#            LIBRARY DESTINATION lib)
+    install(TARGETS indexbuilder indexsearcher quantizer
+            RUNTIME DESTINATION bin
+            ARCHIVE DESTINATION lib
+            LIBRARY DESTINATION lib)
 endif()
 
 file(GLOB_RECURSE SSD_SERVING_HDR_FILES ${AnnService}/inc/SSDServing/*.h)
 file(GLOB_RECURSE SSD_SERVING_FILES ${AnnService}/src/SSDServing/*.cpp)
 
-#add_executable(ssdserving ${SSD_SERVING_HDR_FILES} ${SSD_SERVING_FILES})
-#target_link_libraries(ssdserving SPTAGLibStatic ${Boost_LIBRARIES})
-#target_compile_definitions(ssdserving PRIVATE _exe)
+add_executable(ssdserving ${SSD_SERVING_HDR_FILES} ${SSD_SERVING_FILES})
+target_link_libraries(ssdserving SPTAGLibStatic ${Boost_LIBRARIES})
+target_compile_definitions(ssdserving PRIVATE _exe)
 
 # for Test
-#add_library(ssdservingLib ${SSD_SERVING_HDR_FILES} ${SSD_SERVING_FILES})
-#target_link_libraries(ssdservingLib SPTAGLibStatic ${Boost_LIBRARIES})
+add_library(ssdservingLib ${SSD_SERVING_HDR_FILES} ${SSD_SERVING_FILES})
+target_link_libraries(ssdservingLib SPTAGLibStatic ${Boost_LIBRARIES})
 
 find_package(MPI)
 if (MPI_FOUND)
@@ -118,7 +118,7 @@ if (MPI_FOUND)
     target_link_libraries(balanceddatapartition SPTAGLibStatic ${Boost_LIBRARIES} ${MPI_CXX_LIBRARIES})
 endif()
 
-#install(TARGETS ssdservingLib ssdserving
-#        RUNTIME DESTINATION bin
-#        ARCHIVE DESTINATION lib
-#        LIBRARY DESTINATION lib)
+install(TARGETS ssdservingLib ssdserving
+        RUNTIME DESTINATION bin
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib)
