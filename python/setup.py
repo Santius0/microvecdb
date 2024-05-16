@@ -35,15 +35,16 @@ setup(
     packages=['pymicrovecdb'],
     include_package_data=True,
     package_data={'pymicrovecdb': [
-        os.path.join(BASE_DIR, 'lib', 'libmicrovecdb.so'),
+        os.path.join(BASE_DIR, 'lib', 'libmicrovecdb_x86_64.so'),
         os.path.join(BASE_DIR, 'lib', 'microvecdb.cpython-38-x86_64-linux-gnu.so'),
+        os.path.join(BASE_DIR, 'lib', 'libmicrovecdb_aarch64.so'),
         os.path.join(BASE_DIR, 'lib', 'microvecdb.cpython-38-aarch64-linux-gnu.so'),
         # os.path.join(BASE_DIR, 'faiss', 'lib', 'libfaiss.so'),
         # os.path.join(BASE_DIR, 'faiss', 'lib', 'libfaiss_c.so')
     ]},
     # data_files=[('lib', ['lib/libmicrovecdb.so', 'lib/libfaiss.so', 'lib/libfaiss_c.so'])]
     install_requires=[
-        'numpy>=1.24.4'
+        'numpy>=1.19'
     ],
     zip_safe=True
 )

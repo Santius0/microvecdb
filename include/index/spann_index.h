@@ -403,9 +403,8 @@ namespace mvdb::index {
         return 0;
     }
 
-
     struct SPANNIndexNamedArgs final : NamedArgs {
-            std::string build_config_path = "../SPTAG/Release/buildconfig.ini";
+            std::string build_config_path;
             std::string quantizer_path;
             bool meta_mapping = false;
             bool normalized = false;

@@ -99,6 +99,8 @@ namespace mvdb::index {
         if (!spann_args)
             throw std::runtime_error("Failed to dynamic_cast from NamedArgs to SPANNIndexNamedArgs");
 
+        if(spann_args->build_config_path.empty())
+            throw std::runtime_error("At this time build_config_path is required!");
 
         this->dims_ = dims;
         builder_options_->m_dimension = static_cast<SPTAG::DimensionType>(dims);

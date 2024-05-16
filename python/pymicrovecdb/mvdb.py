@@ -42,6 +42,16 @@ def _create_spann_named_args(**kwargs):
     meta_mapping = False
     normalized = False
     thread_num = 0
+    if 'build_config_path' in kwargs:
+        build_config_path = kwargs['build_config_path']
+    if 'quantizer_path' in kwargs:
+        quantizer_path = kwargs['quantizer_path']
+    if 'meta_mapping' in kwargs:
+        meta_mapping = kwargs['meta_mapping']
+    if 'normalized' in kwargs:
+        normalized = kwargs['normalized']
+    if 'thread_num' in kwargs:
+        thread_num = kwargs['thread_num']
     return mvdb_c.SPANNIndexNamedArgs_init(build_config_path, quantizer_path, meta_mapping, normalized, thread_num)
 
 def create_named_args(index_type: IndexType, **kwargs):

@@ -36,8 +36,8 @@ else()
     message(FATAL_ERROR "Unsupported build type: ${CMAKE_BUILD_TYPE}")
 endif()
 
-set(LIB_DIR "${PROJECT_SOURCE_DIR}/${CMAKE_BUILD_TYPE}/${CMAKE_SYSTEM_PROCESSOR}/lib/")
-set(BIN_DIR "${PROJECT_SOURCE_DIR}/${CMAKE_BUILD_TYPE}/${CMAKE_SYSTEM_PROCESSOR}/bin/")
+set(LIB_DIR "${PROJECT_SOURCE_DIR}/lib/")
+set(BIN_DIR "${PROJECT_SOURCE_DIR}/bin/")
 
 # making sure output directories exists
 file(MAKE_DIRECTORY "${LIB_DIR}")
@@ -120,11 +120,14 @@ file(GLOB_RECURSE SRC_FILES
         src/storage/*.cpp
 )
 
+
 # microvecdb:
-add_library(microvecdb SHARED ${SRC_FILES})
+set(MICROVECDB_SHARED_LIB "microvecdb_${CMAKE_SYSTEM_PROCESSOR}")
+add_library(${MICROVECDB_SHARED_LIB} SHARED ${SRC_FILES})
 #target_include_directories(microvecdb PUBLIC "${MKL_LIBRARY_DIR}")
+
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
-target_link_libraries(microvecdb PUBLIC
+    target_link_libraries(${MICROVECDB_SHARED_LIB} PUBLIC
         faiss
         DistanceUtils
         SPTAGLibStatic
@@ -133,9 +136,9 @@ target_link_libraries(microvecdb PUBLIC
         zstd
         openblas
         stdc++fs
-)
+    )
 else ()
-    target_link_libraries(microvecdb PUBLIC
+    target_link_libraries(${MICROVECDB_SHARED_LIB} PUBLIC
             OpenMP::OpenMP_CXX OpenMP::OpenMP_C
             # ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
             faiss
@@ -153,13 +156,13 @@ endif ()
 set(PYTHON_EXTENSION_TARGET "microvecdb.cpython-${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}-${PLATFORM_TAG}")
 add_library(${PYTHON_EXTENSION_TARGET} MODULE python/pymicrovecdb.cpp)
 target_include_directories(${PYTHON_EXTENSION_TARGET} PUBLIC ${Python3_INCLUDE_DIRS})
-target_link_libraries(${PYTHON_EXTENSION_TARGET} ${Python3_LIBRARIES} microvecdb)
+target_link_libraries(${PYTHON_EXTENSION_TARGET} ${Python3_LIBRARIES} ${MICROVECDB_SHARED_LIB})
 set_target_properties(${PYTHON_EXTENSION_TARGET} PROPERTIES PREFIX "")
 
 # main:
 #if(NOT (CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64"))
 add_executable(microvecdb_main main.cpp)
-target_link_libraries(microvecdb_main PUBLIC microvecdb DistanceUtils SPTAGLibStatic pthread)
+target_link_libraries(microvecdb_main PUBLIC ${MICROVECDB_SHARED_LIB} DistanceUtils SPTAGLibStatic pthread)
 #endif ()
 # <<<< Configuring targets ----------------------------------------------------------
 
