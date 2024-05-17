@@ -16,11 +16,12 @@ namespace mvdb {
     template <typename T>
     void DB_<T>::index_make(const index::IndexType& index_type){
         _index_type = index_type;
-        if(index_type == index::IndexType::FAISS_FLAT)
-            _index = std::make_unique<index::FaissFlatIndex<T>>();
+//        if(index_type == index::IndexType::FAISS_FLAT)
+//            _index = std::make_unique<index::FaissFlatIndex<T>>();
 //        else if(index_type == index::IndexType::SPANN)
 //            _index = std::make_unique<index::SPANNIndex<T>>();
-        else if(index_type == index::IndexType::ANNOY)
+//        else if(index_type == index::IndexType::ANNOY)
+        if(index_type == index::IndexType::ANNOY)
             _index = std::make_unique<index::MVDBAnnoyIndex<T>>();
         else
             throw std::runtime_error("_index creation failed. invalid index_type, '" + std::to_string(index_type) + "'");

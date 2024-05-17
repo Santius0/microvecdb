@@ -128,7 +128,7 @@ add_library(${MICROVECDB_SHARED_LIB} SHARED ${SRC_FILES})
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
     target_link_libraries(${MICROVECDB_SHARED_LIB} PUBLIC
-        faiss
+#        faiss
         DistanceUtils
 #        SPTAGLibStatic
         rocksdb
@@ -141,7 +141,7 @@ else ()
     target_link_libraries(${MICROVECDB_SHARED_LIB} PUBLIC
             OpenMP::OpenMP_CXX OpenMP::OpenMP_C
             # ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
-            faiss
+#            faiss
             DistanceUtils
 #            SPTAGLibStatic
             rocksdb
