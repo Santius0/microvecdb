@@ -130,7 +130,7 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch
     target_link_libraries(${MICROVECDB_SHARED_LIB} PUBLIC
         faiss
         DistanceUtils
-        SPTAGLibStatic
+#        SPTAGLibStatic
         rocksdb
         pthread m dl
         zstd
@@ -143,7 +143,7 @@ else ()
             # ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
             faiss
             DistanceUtils
-            SPTAGLibStatic
+#            SPTAGLibStatic
             rocksdb
             pthread m dl
             zstd
