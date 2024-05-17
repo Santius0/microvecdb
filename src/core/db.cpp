@@ -18,8 +18,8 @@ namespace mvdb {
         _index_type = index_type;
         if(index_type == index::IndexType::FAISS_FLAT)
             _index = std::make_unique<index::FaissFlatIndex<T>>();
-        else if(index_type == index::IndexType::SPANN)
-            _index = std::make_unique<index::SPANNIndex<T>>();
+//        else if(index_type == index::IndexType::SPANN)
+//            _index = std::make_unique<index::SPANNIndex<T>>();
         else if(index_type == index::IndexType::ANNOY)
             _index = std::make_unique<index::MVDBAnnoyIndex<T>>();
         else
