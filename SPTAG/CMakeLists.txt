@@ -176,7 +176,7 @@ option(LIBRARYONLY "LIBRARYONLY" OFF)
 
 #if(NOT CROSS_COMPILE)
 #    message(STATUS "Building zstd from source")
-#    add_subdirectory (ThirdParty/zstd/build/cmake)
+    add_subdirectory (ThirdParty/zstd/build/cmake)
 #endif()
 
 add_subdirectory (AnnService)
