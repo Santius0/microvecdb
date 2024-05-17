@@ -25,7 +25,7 @@ elseif(MSVC)
 endif()
 
 if (NOT CMAKE_BUILD_TYPE)
-    set (CMAKE_BUILD_TYPE release CACHE STRING "Build types: release debug" FORCE)
+    set (CMAKE_BUILD_TYPE Release CACHE STRING "Build types: Release Debug" FORCE)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
