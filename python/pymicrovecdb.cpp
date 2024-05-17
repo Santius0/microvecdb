@@ -160,12 +160,13 @@ float* extract_float_arr(PyObject* arr) {
 
 
 mvdb::NamedArgs* extract_named_args(unsigned char index_type, PyObject* args_capsule) {
-    if(index_type == mvdb::index::IndexType::FAISS_FLAT)
-        return static_cast<mvdb::index::FaissFlatIndexNamedArgs*>(PyCapsule_GetPointer(args_capsule, FAISS_FLAT_INDEX_NAMED_ARGS));
-    else if(index_type == mvdb::index::IndexType::ANNOY)
+//    if(index_type == mvdb::index::IndexType::FAISS_FLAT)
+//        return static_cast<mvdb::index::FaissFlatIndexNamedArgs*>(PyCapsule_GetPointer(args_capsule, FAISS_FLAT_INDEX_NAMED_ARGS));
+//    else if(index_type == mvdb::index::IndexType::ANNOY)
+    if(index_type == mvdb::index::IndexType::ANNOY)
         return static_cast<mvdb::index::AnnoyIndexNamedArgs*>(PyCapsule_GetPointer(args_capsule, ANNOY_INDEX_NAMED_ARGS));
-//    else if(index_type == mvdb::index::IndexType::SPANN)
-//        return static_cast<mvdb::index::SPANNIndexNamedArgs*>(PyCapsule_GetPointer(args_capsule, SPANN_INDEX_NAMED_ARGS));
+    else if(index_type == mvdb::index::IndexType::SPANN)
+        return static_cast<mvdb::index::SPANNIndexNamedArgs*>(PyCapsule_GetPointer(args_capsule, SPANN_INDEX_NAMED_ARGS));
     return nullptr;
 }
 
@@ -472,15 +473,15 @@ static PyObject* MVDB_add(PyObject *self, PyObject *args) {
 //    return keys_npArray;
     Py_RETURN_NONE;
 }
-
-static void FaissFlatIndexNamedArgs_delete(PyObject* capsule) {
-    delete static_cast<mvdb::index::FaissFlatIndexNamedArgs*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAMED_ARGS));
-}
-
-static PyObject* FaissFlatIndexNamedArgs_init(PyObject* self, PyObject* args) {
-    auto * na_ = new mvdb::index::FaissFlatIndexNamedArgs();
-    return PyCapsule_New(na_, FAISS_FLAT_INDEX_NAMED_ARGS, FaissFlatIndexNamedArgs_delete);
-}
+//
+//static void FaissFlatIndexNamedArgs_delete(PyObject* capsule) {
+//    delete static_cast<mvdb::index::FaissFlatIndexNamedArgs*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAMED_ARGS));
+//}
+//
+//static PyObject* FaissFlatIndexNamedArgs_init(PyObject* self, PyObject* args) {
+//    auto * na_ = new mvdb::index::FaissFlatIndexNamedArgs();
+//    return PyCapsule_New(na_, FAISS_FLAT_INDEX_NAMED_ARGS, FaissFlatIndexNamedArgs_delete);
+//}
 
 static void AnnoyIndexNamedArgs_delete(PyObject* capsule) {
     delete static_cast<mvdb::index::AnnoyIndexNamedArgs*>(PyCapsule_GetPointer(capsule, ANNOY_INDEX_NAMED_ARGS));
@@ -495,24 +496,24 @@ static PyObject* AnnoyIndexNamedArgs_init(PyObject* self, PyObject* args) {
     return PyCapsule_New(na_, ANNOY_INDEX_NAMED_ARGS, AnnoyIndexNamedArgs_delete);
 }
 
-//static void SPANNIndexNamedArgs_delete(PyObject* capsule) {
-//    delete static_cast<mvdb::index::SPANNIndexNamedArgs*>(PyCapsule_GetPointer(capsule, SPANN_INDEX_NAMED_ARGS));
-//}
-//
-//static PyObject* SPANNIndexNamedArgs_init(PyObject* self, PyObject* args) {
-//    const char *build_config_path, *quantizer_path;
-//    PyObject *meta_mapping, *normalized;
-//    unsigned int thread_num;
-//    if (!PyArg_ParseTuple(args, "ssOOp", &build_config_path, &quantizer_path, &meta_mapping, &normalized, &thread_num)) return nullptr;
-//    auto * na_ = new mvdb::index::SPANNIndexNamedArgs();
-//    std::string build_config_path_str = std::string(build_config_path);
-//    if(!build_config_path_str.empty()) na_->build_config_path = build_config_path_str;
-//    na_->quantizer_path = std::string(quantizer_path);
-//    na_->meta_mapping = PyObject_IsTrue(meta_mapping);
-//    na_->normalized = PyObject_IsTrue(normalized);
-//    if(thread_num > 0) na_->thread_num = thread_num;
-//    return PyCapsule_New(na_, SPANN_INDEX_NAMED_ARGS, SPANNIndexNamedArgs_delete);
-//}
+static void SPANNIndexNamedArgs_delete(PyObject* capsule) {
+    delete static_cast<mvdb::index::SPANNIndexNamedArgs*>(PyCapsule_GetPointer(capsule, SPANN_INDEX_NAMED_ARGS));
+}
+
+static PyObject* SPANNIndexNamedArgs_init(PyObject* self, PyObject* args) {
+    const char *build_config_path, *quantizer_path;
+    PyObject *meta_mapping, *normalized;
+    unsigned int thread_num;
+    if (!PyArg_ParseTuple(args, "ssOOp", &build_config_path, &quantizer_path, &meta_mapping, &normalized, &thread_num)) return nullptr;
+    auto * na_ = new mvdb::index::SPANNIndexNamedArgs();
+    std::string build_config_path_str = std::string(build_config_path);
+    if(!build_config_path_str.empty()) na_->build_config_path = build_config_path_str;
+    na_->quantizer_path = std::string(quantizer_path);
+    na_->meta_mapping = PyObject_IsTrue(meta_mapping);
+    na_->normalized = PyObject_IsTrue(normalized);
+    if(thread_num > 0) na_->thread_num = thread_num;
+    return PyCapsule_New(na_, SPANN_INDEX_NAMED_ARGS, SPANNIndexNamedArgs_delete);
+}
 
 static PyMethodDef ExtensionMethods[] = {
 //        { Python method name, C function to be called, arguments for this function, Docstring for this function },
@@ -525,9 +526,9 @@ static PyMethodDef ExtensionMethods[] = {
         { "MVDB_get_dims", MVDB_get_dims, METH_VARARGS, "Returns number of dimensions in db index" },
         { "MVDB_get_built", MVDB_get_built, METH_VARARGS, "Returns built flag for db index" },
         { "MVDB_num_items", MVDB_get_num_items, METH_VARARGS, "Returns number of items in db index" },
-        { "FaissFlatIndexNamedArgs_init", FaissFlatIndexNamedArgs_init, METH_VARARGS, "Return new named args obj for faiss flat index" },
+//        { "FaissFlatIndexNamedArgs_init", FaissFlatIndexNamedArgs_init, METH_VARARGS, "Return new named args obj for faiss flat index" },
         { "AnnoyIndexNamedArgs_init", AnnoyIndexNamedArgs_init, METH_VARARGS, "Return new named args obj for ANNOY index" },
-//        { "SPANNIndexNamedArgs_init", SPANNIndexNamedArgs_init, METH_VARARGS, "Return new named args obj for SPANN index" },
+        { "SPANNIndexNamedArgs_init", SPANNIndexNamedArgs_init, METH_VARARGS, "Return new named args obj for SPANN index" },
         { NULL, NULL, 0, NULL }  // Sentinel value ending the array
 };
 
