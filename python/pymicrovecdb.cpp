@@ -328,7 +328,7 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
     const char *query_path = "", *result_path = "";
     mvdb::index::DISTANCE_METRIC metric;
 
-    if (!PyArg_ParseTuple(args, "BO!lO!ssBl", &data_type, &PyCapsule_Type, &mvdb_capsule, &nq, &PyArray_Type, &query_array_obj, &query_path, &result_path, &k, &metric, &c)) return nullptr;
+    if (!PyArg_ParseTuple(args, "BOO!KssKBd", &data_type, &mvdb_capsule, &PyArray_Type, &query_array_obj, &nq, &query_path, &result_path, &k, &metric, &c)) return nullptr;
 
     if (query_path && strlen(query_path) > 0) {
         nq = mvdb::xvecs_num_vecs<float>(query_path);

@@ -31,15 +31,24 @@ def test_topk_function(db_):
     queries = utils.read_vector_file(SIFT1M_QUERY)
 
     # FAISS_FLAT
-    db_.open("./indexes/faissflat_64_rand_direct_index")
-    db_.topk(query=rand_queries, k = 10)
-    db_.topk(query=queries, k = 10)
-    db_.topk(query_file=SIFT1M_QUERY, k = 10)
+    # db_.open("./indexes/faissflat_64_rand_direct_index")
+    # db_.topk(query=rand_queries, k = 10)
+    # db_.topk(query=queries, k = 10)
+    # db_.topk(query_file=SIFT1M_QUERY, k = 10)
+
+    # SPANN
+    db_.open("./indexes/spann_128_sift1m_file_index")
+    res = db_.topk(query=rand_queries, k = 10)
+    # print(res)
+    # res = db_.topk(query=queries, k = 100)
+    # print(res)
+    # res = db_.topk(query_file=SIFT1M_QUERY, k = 100)
+    # print(res)
 
 def main():
     db = mvdb.MVDB()
-    test_create_function(db)
-    # test_topk_function(db)
+    # test_create_function(db)
+    test_topk_function(db)
 
 if __name__ == '__main__':
     main()
