@@ -25,6 +25,7 @@
       <file path="$PROJECT_DIR$/jetson/build" />
       <file path="$PROJECT_DIR$/jetson/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu" />
       <file path="$PROJECT_DIR$/jetson/jetson-nano-sysroot" />
+      <file path="$PROJECT_DIR$/jetson/lib" />
       <file path="$PROJECT_DIR$/jetson/lib/SPTAG_aarch64" />
       <file path="$PROJECT_DIR$/jetson/lib/faiss_aarch64" />
       <file path="$PROJECT_DIR$/jetson/lib/libm_aarch64" />

@@ -94,18 +94,18 @@ include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/storage)
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
     link_directories(
             ${LIB_DIR}/lib
-#            ${PROJECT_SOURCE_DIR}/jetson/lib/faiss_aarch64/usr/lib/aarch64-linux-gnu
+            ${PROJECT_SOURCE_DIR}/faiss/lib/aarch64
             ${PROJECT_SOURCE_DIR}/SPTAG/Release/arm/lib
     )
 else ()
     link_directories(
             ${LIB_DIR}/lib
-#            ${PROJECT_SOURCE_DIR}/faiss/lib
+            ${PROJECT_SOURCE_DIR}/faiss/lib
             ${PROJECT_SOURCE_DIR}/SPTAG/Release/x86_64/lib
     )
 endif ()
 
-#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
+include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/annoy)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/SPTAG/AnnService)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/numpy/include)
@@ -128,7 +128,7 @@ add_library(${MICROVECDB_SHARED_LIB} SHARED ${SRC_FILES})
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
     target_link_libraries(${MICROVECDB_SHARED_LIB} PUBLIC
-#        faiss
+        faiss
         DistanceUtils
 #        SPTAGLibStatic
         rocksdb
@@ -141,7 +141,7 @@ else ()
     target_link_libraries(${MICROVECDB_SHARED_LIB} PUBLIC
             OpenMP::OpenMP_CXX OpenMP::OpenMP_C
             # ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
-#            faiss
+            faiss
             DistanceUtils
 #            SPTAGLibStatic
             rocksdb
