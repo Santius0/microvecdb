@@ -143,3 +143,42 @@ def read_vector_file(filename):
             vectors.append(vector)
 
     return np.array(vectors, dtype=dtype)
+
+def save_ivecs(filename, data):
+    """
+    Save an array of integers in the .ivecs format.
+
+    Parameters:
+    - filename: The name of the file to save.
+    - data: A numpy array of shape (n, d) containing the integer vectors.
+    """
+    with open(filename, 'wb') as f:
+        for vec in data:
+            # Write the dimension (d) as a 4-byte integer
+            f.write(np.int32(len(vec)).tobytes())
+            # Write the vector data as 4-byte integers
+            f.write(np.int32(vec).tobytes())
+
+def generate_groundtruth(query_set, topk_function, k=100, save_path='groundtruth.ivecs'):
+    """
+    Generate and save ground truth vectors for a given query set in the .ivecs format.
+
+    Parameters:
+    - query_set: A numpy array of shape (nq, d) containing the query vectors.
+    - topk_function: A function that takes a query set and returns a tuple containing:
+                     - an np.array of shape (nq * k,) with the IDs of the top k vectors.
+                     - an np.array of shape (nq * k,) with the corresponding distances.
+    - k: The number of top results to return for each query vector.
+    - save_path: The file path to save the ground truth vectors.
+    """
+
+    query_set = np.array(query_set, dtype=np.float32)
+    ids, distances = topk_function(query_set, k)
+    ids = np.array(ids, dtype=np.int32)
+    distances = np.array(distances, dtype=np.float32)
+
+    nq = query_set.shape[0]
+    ids = ids.reshape(nq, k)
+
+    save_ivecs(save_path, ids)
+    print(f"Ground truth vectors saved to {save_path}")

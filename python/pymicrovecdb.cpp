@@ -164,9 +164,11 @@ float* extract_float_arr(PyObject* arr) {
 
 
 mvdb::NamedArgs* extract_named_args(unsigned char index_type, PyObject* args_capsule) {
-//    if(index_type == mvdb::index::IndexType::FAISS_FLAT)
-//        return static_cast<mvdb::index::FaissFlatIndexNamedArgs*>(PyCapsule_GetPointer(args_capsule, FAISS_FLAT_INDEX_NAMED_ARGS));
-//    else if(index_type == mvdb::index::IndexType::ANNOY)
+    #ifdef FAISS
+    if(index_type == mvdb::index::IndexType::FAISS_FLAT)
+        return static_cast<mvdb::index::FaissFlatIndexNamedArgs*>(PyCapsule_GetPointer(args_capsule, FAISS_FLAT_INDEX_NAMED_ARGS));
+    else
+    #endif
     if(index_type == mvdb::index::IndexType::ANNOY)
         return static_cast<mvdb::index::AnnoyIndexNamedArgs*>(PyCapsule_GetPointer(args_capsule, ANNOY_INDEX_NAMED_ARGS));
     else if(index_type == mvdb::index::IndexType::SPANN)
@@ -500,15 +502,19 @@ static PyObject* MVDB_add(PyObject *self, PyObject *args) {
 //    return keys_npArray;
     Py_RETURN_NONE;
 }
-//
-//static void FaissFlatIndexNamedArgs_delete(PyObject* capsule) {
-//    delete static_cast<mvdb::index::FaissFlatIndexNamedArgs*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAMED_ARGS));
-//}
-//
-//static PyObject* FaissFlatIndexNamedArgs_init(PyObject* self, PyObject* args) {
-//    auto * na_ = new mvdb::index::FaissFlatIndexNamedArgs();
-//    return PyCapsule_New(na_, FAISS_FLAT_INDEX_NAMED_ARGS, FaissFlatIndexNamedArgs_delete);
-//}
+
+#ifdef FAISS
+
+static void FaissFlatIndexNamedArgs_delete(PyObject* capsule) {
+    delete static_cast<mvdb::index::FaissFlatIndexNamedArgs*>(PyCapsule_GetPointer(capsule, FAISS_FLAT_INDEX_NAMED_ARGS));
+}
+
+static PyObject* FaissFlatIndexNamedArgs_init(PyObject* self, PyObject* args) {
+    auto * na_ = new mvdb::index::FaissFlatIndexNamedArgs();
+    return PyCapsule_New(na_, FAISS_FLAT_INDEX_NAMED_ARGS, FaissFlatIndexNamedArgs_delete);
+}
+
+#endif
 
 static void AnnoyIndexNamedArgs_delete(PyObject* capsule) {
     delete static_cast<mvdb::index::AnnoyIndexNamedArgs*>(PyCapsule_GetPointer(capsule, ANNOY_INDEX_NAMED_ARGS));
@@ -553,7 +559,9 @@ static PyMethodDef ExtensionMethods[] = {
         { "MVDB_get_dims", MVDB_get_dims, METH_VARARGS, "Returns number of dimensions in db index" },
         { "MVDB_get_built", MVDB_get_built, METH_VARARGS, "Returns built flag for db index" },
         { "MVDB_num_items", MVDB_get_num_items, METH_VARARGS, "Returns number of items in db index" },
-//        { "FaissFlatIndexNamedArgs_init", FaissFlatIndexNamedArgs_init, METH_VARARGS, "Return new named args obj for faiss flat index" },
+        #ifdef FAISS
+        { "FaissFlatIndexNamedArgs_init", FaissFlatIndexNamedArgs_init, METH_VARARGS, "Return new named args obj for faiss flat index" },
+        #endif
         { "AnnoyIndexNamedArgs_init", AnnoyIndexNamedArgs_init, METH_VARARGS, "Return new named args obj for ANNOY index" },
         { "SPANNIndexNamedArgs_init", SPANNIndexNamedArgs_init, METH_VARARGS, "Return new named args obj for SPANN index" },
         { NULL, NULL, 0, NULL }  // Sentinel value ending the array

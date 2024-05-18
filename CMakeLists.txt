@@ -12,6 +12,8 @@ else ()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -O3 -fPIC")
     set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -O3 -fPIC")
     find_package(OpenMP REQUIRED)
+    add_definitions(-DFAISS)
+    set(FAISS ON)
 endif ()
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -latomic")
 
@@ -94,18 +96,21 @@ include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/include/storage)
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
     link_directories(
             ${LIB_DIR}/lib
-#            ${PROJECT_SOURCE_DIR}/faiss/lib/aarch64
             ${PROJECT_SOURCE_DIR}/SPTAG/Release/arm/lib
     )
 else ()
     link_directories(
             ${LIB_DIR}/lib
-#            ${PROJECT_SOURCE_DIR}/faiss/lib
             ${PROJECT_SOURCE_DIR}/SPTAG/Release/x86_64/lib
     )
 endif ()
 
-#include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
+if(FAISS) # this will only be true for arm/aarch64
+    message(STATUS "FAISS Active")
+    link_directories(${PROJECT_SOURCE_DIR}/faiss/lib)
+    include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/faiss/include)
+endif ()
+
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/annoy)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/SPTAG/AnnService)
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR}/numpy/include)
@@ -128,7 +133,6 @@ add_library(${MICROVECDB_SHARED_LIB} SHARED ${SRC_FILES})
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
     target_link_libraries(${MICROVECDB_SHARED_LIB} PUBLIC
-#        faiss
         DistanceUtils
         SPTAGLibStatic
         rocksdb
@@ -141,7 +145,6 @@ else ()
     target_link_libraries(${MICROVECDB_SHARED_LIB} PUBLIC
             OpenMP::OpenMP_CXX OpenMP::OpenMP_C
             # ${MKL_INTEL_LP64} ${MKL_CORE} ${MKL_SEQUENTIAL}
-#            faiss
             DistanceUtils
             SPTAGLibStatic
             rocksdb
@@ -150,6 +153,10 @@ else ()
             openblas
             stdc++fs
     )
+endif ()
+
+if(FAISS)
+    target_link_libraries(${MICROVECDB_SHARED_LIB} PUBLIC faiss)
 endif ()
 
 # microvecdb.cpython

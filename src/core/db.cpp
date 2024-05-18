@@ -16,8 +16,11 @@ namespace mvdb {
     template <typename T>
     void DB_<T>::index_make(const index::IndexType& index_type){
         _index_type = index_type;
-//        if(index_type == index::IndexType::FAISS_FLAT)
-//            _index = std::make_unique<index::FaissFlatIndex<T>>();
+        #ifdef FAISS
+        if(index_type == index::IndexType::FAISS_FLAT)
+            _index = std::make_unique<index::FaissFlatIndex<T>>();
+        else
+        #endif
         if(index_type == index::IndexType::SPANN)
             _index = std::make_unique<index::SPANNIndex<T>>();
         else if(index_type == index::IndexType::ANNOY)
