@@ -22,9 +22,9 @@ def test_create_function(db_):
     # db_.create(mvdb.IndexType.ANNOY, 128, "./indexes/annoy_128_sift1m_direct_index", initial_data=vecs, n_trees=25, n_threads = 6)
 
     # SPANN
-    db_.create(mvdb.IndexType.SPANN, 64, "./indexes/spann_64_rand_direct_index", initial_data=initial_data, build_config_path="/home/santius/microvecdb/SPTAG/buildconfig.ini")
+    # db_.create(mvdb.IndexType.SPANN, 64, "./indexes/spann_64_rand_direct_index", initial_data=initial_data, build_config_path="/home/santius/microvecdb/SPTAG/buildconfig.ini")
     db_.create(mvdb.IndexType.SPANN, 128, "./indexes/spann_128_sift1m_file_index", initial_data_path=SIFT1M_BASE, build_config_path="/home/santius/microvecdb/SPTAG/buildconfig.ini")
-    db_.create(mvdb.IndexType.SPANN, 128, "./indexes/spann_128_sift1m_direct_index", initial_data=vecs, build_config_path="/home/santius/microvecdb/SPTAG/buildconfig.ini")
+    # db_.create(mvdb.IndexType.SPANN, 128, "./indexes/spann_128_sift1m_direct_index", initial_data=vecs, build_config_path="/home/santius/microvecdb/SPTAG/buildconfig.ini")
 
 def test_topk_function(db_):
     rand_queries = np.random.rand(10, 64).astype(np.float32)  # 10 random vectors of dimension 64
@@ -38,11 +38,15 @@ def test_topk_function(db_):
 
     # SPANN
     db_.open("./indexes/spann_128_sift1m_file_index")
-    res = db_.topk(query=rand_queries, k = 10)
+    # print(db_.dims)
+    # res = db_.topk(query=rand_queries, k = 10)
     # print(res)
     # res = db_.topk(query=queries, k = 100)
     # print(res)
-    # res = db_.topk(query_file=SIFT1M_QUERY, k = 100)
+    res = db_.topk(query_file=SIFT1M_QUERY, k = 100)
+    print(res)
+    print(res[0].shape)
+    print(res[1].shape)
     # print(res)
 
 def main():

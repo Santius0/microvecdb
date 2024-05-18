@@ -103,6 +103,7 @@ static PyObject* MVDB_get_dims(PyObject* self, PyObject* args) {
 }
 
 int8_t* extract_int8_arr(PyObject* arr) {
+    if(arr == nullptr) return nullptr;
     auto* pyarray = (PyArrayObject*)arr;
     if(PyArray_TYPE(pyarray) != NPY_INT8){
         PyErr_SetString(PyExc_TypeError, "input data must be of type np.int8");
@@ -117,6 +118,7 @@ int8_t* extract_int8_arr(PyObject* arr) {
 }
 
 int16_t* extract_int16_arr(PyObject* arr) {
+    if(arr == nullptr) return nullptr;
     auto* pyarray = (PyArrayObject*)arr;
     if (PyArray_TYPE(pyarray) != NPY_INT16) {
         PyErr_SetString(PyExc_TypeError, "input data must be of type np.int16");
@@ -131,6 +133,7 @@ int16_t* extract_int16_arr(PyObject* arr) {
 }
 
 uint8_t* extract_uint8_arr(PyObject* arr) {
+    if(arr == nullptr) return nullptr;
     auto* pyarray = (PyArrayObject*)arr;
     if (PyArray_TYPE(pyarray) != NPY_UINT8) {
         PyErr_SetString(PyExc_TypeError, "input data must be of type np.uint8");
@@ -145,6 +148,7 @@ uint8_t* extract_uint8_arr(PyObject* arr) {
 }
 
 float* extract_float_arr(PyObject* arr) {
+    if(arr == nullptr) return nullptr;
     auto* pyarray = (PyArrayObject*)arr;
     if (PyArray_TYPE(pyarray) != NPY_FLOAT) {
         PyErr_SetString(PyExc_TypeError, "input data must be of type np.float");
@@ -288,7 +292,6 @@ static PyObject* MVDB_get_built(PyObject* self, PyObject* args) {
         return PyLong_FromLong(false);
     } else if (data_type == FLOAT) {
         auto *mvdb_ = static_cast<mvdb::MVDB<float> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
-        if(mvdb_ == nullptr) std::cout << "DONE\n";
         if(mvdb_ != nullptr && mvdb_->get_db_() != nullptr && mvdb_->get_db_()->index() != nullptr)
             return PyLong_FromLong((long)mvdb_->get_db_()->index()->built());
         return PyLong_FromLong(false);
@@ -337,17 +340,19 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
 
     mvdb::idx_t *ids = nullptr;
     void *distances = nullptr;
-    npy_intp return_arr_dims[2] = {static_cast<npy_intp>(nq), static_cast<npy_intp>(k)};
+    npy_intp return_arr_dims[1] = {static_cast<npy_intp>(nq) * static_cast<npy_intp>(k)};
 
     if (result_path == nullptr || strlen(result_path) == 0) {
         ids = (mvdb::idx_t*)malloc(nq * k * sizeof(mvdb::idx_t));
         switch (data_type) {
             case INT8:
-            case UINT8:
-                distances = malloc(nq * k * sizeof(uint8_t));
+                distances = malloc(nq * k * sizeof(int8_t));
                 break;
             case INT16:
                 distances = malloc(nq * k * sizeof(int16_t));
+                break;
+            case UINT8:
+                distances = malloc(nq * k * sizeof(uint8_t));
                 break;
             case FLOAT:
                 distances = malloc(nq * k * sizeof(float));
@@ -365,46 +370,68 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
         }
     }
 
-    switch (data_type) {
-        case INT8:
-            ((mvdb::MVDB<int8_t>*)mvdb_capsule)->topk(nq, extract_int8_arr(query_array_obj), std::string(query_path), std::string(result_path), ids, (int8_t*)distances, k, metric, (float)c);
-            break;
-        case UINT8:
-            ((mvdb::MVDB<uint8_t>*)mvdb_capsule)->topk(nq, extract_uint8_arr(query_array_obj), std::string(query_path), std::string(result_path), ids, (uint8_t*)distances, k, metric, (float)c);
-            break;
-        case INT16:
-            ((mvdb::MVDB<int16_t>*)mvdb_capsule)->topk(nq, extract_int16_arr(query_array_obj), std::string(query_path), std::string(result_path), ids, (int16_t*)distances, k, metric, (float)c);
-            break;
-        case FLOAT:
-            ((mvdb::MVDB<float>*)mvdb_capsule)->topk(nq, extract_float_arr(query_array_obj), std::string(query_path), std::string(result_path), ids, (float*)distances, k, metric, (float)c);
-            break;
-        default:
-            PyErr_SetString(PyExc_ValueError, "Unsupported data type");
-            if (ids) free(ids);
-            if (distances) free(distances);
-            return nullptr;
-    }
+    PyObject *ids_npArray = nullptr, *distances_npArray = nullptr;
+    try {
+        switch (data_type) {
+            case INT8: {
+                auto *mvdb_ = static_cast<mvdb::MVDB<int8_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
+                mvdb_->topk(nq, extract_int8_arr(query_array_obj), std::string(query_path), std::string(result_path),
+                            ids, (int8_t *) distances, k, metric, (float) c);
+                if (distances != nullptr)
+                    distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT8, distances);
+                break;
+            }
+            case INT16: {
+                auto *mvdb_ = static_cast<mvdb::MVDB<int16_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int16_t));
+                mvdb_->topk(nq, extract_int16_arr(query_array_obj), std::string(query_path), std::string(result_path),
+                            ids, (int16_t *) distances, k, metric, (float) c);
+                if (distances != nullptr)
+                    distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT16, distances);
+                break;
+            }
+            case UINT8: {
+                auto *mvdb_ = static_cast<mvdb::MVDB<uint8_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint8_t));
+                mvdb_->topk(nq, extract_uint8_arr(query_array_obj), std::string(query_path), std::string(result_path),
+                            ids, (uint8_t *) distances, k, metric, (float) c);
+                if (distances != nullptr)
+                    distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_UINT8, distances);
+                break;
+            }
+            case FLOAT: {
+                auto *mvdb_ = static_cast<mvdb::MVDB<float> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
+                mvdb_->topk(nq, extract_float_arr(query_array_obj), std::string(query_path), "std::string(result_path)",
+                            ids, (float *) distances, k, metric, (float) c);
+                if (distances != nullptr) distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_FLOAT, distances);
+                break;
+            }
+            default: {
+                PyErr_SetString(PyExc_ValueError, "Unsupported data type");
+                if (ids) free(ids);
+                if (distances) free(distances);
+                return nullptr;
+            }
+        }
 
-//    if (!success) {
-//        PyErr_SetString(PyExc_RuntimeError, "Top-k search failed");
-//        if (ids) free(ids);
-//        if (distances) free(distances);
-//        return nullptr;
-//    }
+        if (result_path == nullptr || strlen(result_path) == 0) {
+            ids_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, ids);
+            if(ids_npArray == nullptr || distances_npArray == nullptr){
+                PyErr_SetString(PyExc_RuntimeError, "Failed to create return NumPy array, 'ids' or 'distances'");
+                if (ids) free(ids);
+                if (distances) free(distances);
+                return nullptr;
+            }
+            PyArray_ENABLEFLAGS((PyArrayObject *) ids_npArray, NPY_ARRAY_OWNDATA);
+            PyArray_ENABLEFLAGS((PyArrayObject *) distances_npArray, NPY_ARRAY_OWNDATA);
 
-    if (result_path && strlen(result_path) > 0) {
-//        std::cout << "Results written to " << result_path << std::endl;
-        Py_RETURN_NONE;
-    } else {
-        PyObject *ids_npArray = PyArray_SimpleNewFromData(2, return_arr_dims, NPY_UINT64, ids);
-        PyObject *distances_npArray = PyArray_SimpleNewFromData(2, return_arr_dims, data_type, distances);
-        PyArray_ENABLEFLAGS((PyArrayObject*)ids_npArray, NPY_ARRAY_OWNDATA);
-        PyArray_ENABLEFLAGS((PyArrayObject*)distances_npArray, NPY_ARRAY_OWNDATA);
-
-        PyObject *result_tuple = PyTuple_Pack(2, ids_npArray, distances_npArray);
-        Py_DECREF(ids_npArray); // PyArray_SimpleNewFromData does not steal reference
-        Py_DECREF(distances_npArray);
-        return result_tuple;
+            PyObject *result_tuple = PyTuple_Pack(2, ids_npArray, distances_npArray);
+            Py_DECREF(ids_npArray); // PyArray_SimpleNewFromData does not steal reference
+            Py_DECREF(distances_npArray);
+            return result_tuple;
+        } else Py_RETURN_NONE;
+    } catch (const std::exception& e) {
+        if (ids) free(ids);
+        if (distances) free(distances);
+        throw e;
     }
 }
 

@@ -211,10 +211,10 @@ namespace mvdb::index {
         options->m_inputValueType = builder_options_->m_inputValueType;
         options->m_inputFileType = SPTAG::VectorFileType::XVEC;
         options->m_queryFile = query_path;
-        options->m_resultFile = result_path;
+        options->m_resultFile = result_path; // results_path return not yet implemented
 //        options->m_outputformat = 0;
         options->m_K = (int)k;
-        options->m_batch = 100;
+        options->m_batch = 10000;
 
         sptag_vector_index_->SetQuantizerADC(options->m_enableADC);
 
@@ -228,27 +228,109 @@ namespace mvdb::index {
         }
         sptag_vector_index_->UpdateIndex();
 
-        std::shared_ptr<SPTAG::VectorSet> vec_set = nullptr;
-        std::shared_ptr<SPTAG::MetadataSet> meta_set(nullptr);
+        std::shared_ptr<SPTAG::VectorSet> query_vector_set = nullptr;
+        std::shared_ptr<SPTAG::MetadataSet> query_meta_set(nullptr);
+
         if(options->m_queryFile.empty()) {
             uint64_t query_size_bytes = sizeof(T) * this->dims_ * nq;
-            SPTAG::ByteArray vec_set_byte_arr = SPTAG::ByteArray::Alloc(query_size_bytes);
-            char *vecBuf = reinterpret_cast<char *>(vec_set_byte_arr.Data());
+            SPTAG::ByteArray query_vector_set_byte_arr = SPTAG::ByteArray::Alloc(query_size_bytes);
+            char *vecBuf = reinterpret_cast<char *>(query_vector_set_byte_arr.Data());
             memcpy(vecBuf, query, query_size_bytes);
-            vec_set.reset(new SPTAG::BasicVectorSet(vec_set_byte_arr, builder_options_->m_inputValueType, this->dims_, nq));
+            query_vector_set.reset(new SPTAG::BasicVectorSet(query_vector_set_byte_arr, builder_options_->m_inputValueType, this->dims_, nq));
+        } else {
+            auto vector_reader = SPTAG::Helper::VectorSetReader::CreateInstance(options);
+            if (SPTAG::ErrorCode::Success != vector_reader->LoadFile(options->m_queryFile)) {
+                SPTAG::SPTAGLIB_LOG(SPTAG::Helper::LogLevel::LL_Error, "Failed to read query file.\n");
+                exit(1);
+            }
+            query_vector_set = vector_reader->GetVectorSet(0, options->m_debugQuery);
+            query_meta_set = vector_reader->GetMetadataSet();
         }
 
-        switch (options->m_inputValueType) {
-            #define DefineVectorValueType(Name, Type) \
-            case SPTAG::VectorValueType::Name: \
-            Process<Type>(options, *(sptag_vector_index_.get()), ids, distances, vec_set, meta_set); \
-            break; \
-
-            #include <inc/Core/DefinitionList.h>
-            #undef DefineVectorValueType
-
-            default: break;
+        int internalResultNum = options->m_K;
+        if (sptag_vector_index_->GetIndexAlgoType() == SPTAG::IndexAlgoType::SPANN) {
+            int SPANNInternalResultNum;
+            if (SPTAG::Helper::Convert::ConvertStringTo<int>(sptag_vector_index_->GetParameter("SearchInternalResultNum", "BuildSSDIndex").c_str(), SPANNInternalResultNum))
+                internalResultNum = max(internalResultNum, SPANNInternalResultNum);
         }
+
+        std::vector<SPTAG::QueryResult> results(options->m_batch, SPTAG::QueryResult(nullptr, internalResultNum, options->m_withMeta != 0));
+        std::vector<float> latencies(options->m_batch, 0);
+        int baseSquare = SPTAG::COMMON::Utils::GetBase<T>() * SPTAG::COMMON::Utils::GetBase<T>();
+
+        std::vector<std::string> maxCheck = SPTAG::Helper::StrUtils::SplitString(options->m_maxCheck, "#");
+
+        for (int startQuery = 0; startQuery < query_vector_set->Count(); startQuery += options->m_batch) {
+            int numQuerys = min(options->m_batch, query_vector_set->Count() - startQuery);
+            for (SPTAG::SizeType i = 0; i < numQuerys; i++) results[i].SetTarget(query_vector_set->GetVector(startQuery + i));
+            for (int mc = 0; mc < maxCheck.size(); mc++) {
+                sptag_vector_index_->SetParameter("MaxCheck", maxCheck[mc].c_str());
+
+                for (SPTAG::SizeType i = 0; i < numQuerys; i++) results[i].Reset();
+
+                std::atomic_size_t queriesSent(0);
+                std::vector<std::thread> threads;
+                threads.reserve(options->m_threadNum);
+
+                for (std::uint32_t i = 0; i < options->m_threadNum; i++) {
+                    threads.emplace_back([&, i] {
+                        SPTAG::NumaStrategy ns = (sptag_vector_index_->GetIndexAlgoType() == SPTAG::IndexAlgoType::SPANN) ? SPTAG::NumaStrategy::SCATTER: SPTAG::NumaStrategy::LOCAL; // Only for SPANN, we need to avoid IO threads overlap with search threads.
+                        SPTAG::Helper::SetThreadAffinity(i, threads[i], ns, SPTAG::OrderStrategy::ASC);
+
+                        size_t qid = 0;
+                        while (true) {
+                            qid = queriesSent.fetch_add(1);
+                            if (qid < numQuerys) sptag_vector_index_->SearchIndex(results[qid]);
+                            else return;
+                        }
+                    });
+                }
+                for (auto& thread : threads) { thread.join(); }
+
+                #ifndef _MSC_VER
+                struct rusage rusage;
+                getrusage(RUSAGE_SELF, &rusage);
+                unsigned long long peakWSS = rusage.ru_maxrss * 1024 / 1000000000;
+                #else
+                PROCESS_MEMORY_COUNTERS pmc;
+                GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
+                unsigned long long peakWSS = pmc.PeakWorkingSetSize / 1000000000;
+                #endif
+            }
+
+            for (SPTAG::SizeType i = 0; i < numQuerys; i++) {
+                for (int j = 0; j < options->m_K; j++) {
+                    if constexpr (std::is_same_v<T, int8_t>)
+                        *((int8_t*)distances + startQuery * options->m_K + i * options->m_K + j) = (T)results[i].GetResult(j)->Dist / baseSquare;
+                    else if constexpr (std::is_same_v<T, int16_t>)
+                        *((int16_t*)distances + startQuery * options->m_K + i * options->m_K + j) = (T)results[i].GetResult(j)->Dist / baseSquare;
+                    else if constexpr (std::is_same_v<T, uint8_t>)
+                        *((uint8_t*)distances + startQuery * options->m_K + i * options->m_K + j) = (T)results[i].GetResult(j)->Dist / baseSquare;
+                    else if constexpr (std::is_same_v<T, float>) {
+                        *((float*)distances + startQuery * options->m_K + i * options->m_K + j) = (T) results[i].GetResult(j)->Dist / baseSquare;
+                    }
+                    else throw std::runtime_error("invalid type T in search process");
+                    if (results[i].GetResult(j)->VID < 0) {
+                        ids[startQuery * options->m_K + i * options->m_K + j] = -1;
+                        continue;
+                    }
+                    ids[startQuery * options->m_K + i * options->m_K + j] = results[i].GetResult(j)->VID;
+                }
+            }
+        }
+
+
+//        switch (options->m_inputValueType) {
+//            #define DefineVectorValueType(Name, Type) \
+//            case SPTAG::VectorValueType::Name: \
+//            Process<Type>(options, *(sptag_vector_index_.get()), ids, distances, vec_set, meta_set); \
+//            break; \
+//
+//            #include <inc/Core/DefinitionList.h>
+//            #undef DefineVectorValueType
+//
+//            default: break;
+//        }
     }
 
     template<typename T>

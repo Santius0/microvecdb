@@ -223,6 +223,7 @@ namespace mvdb::index {
         int baseSquare = SPTAG::COMMON::Utils::GetBase<T>() * SPTAG::COMMON::Utils::GetBase<T>();
 
         SPTAG::SPTAGLIB_LOG(SPTAG::Helper::LogLevel::LL_Info, "[query]\t\t[maxcheck]\t[avg] \t[99%] \t[95%] \t[recall] \t[qps] \t[mem]\n");
+
         std::vector<float> totalAvg(maxCheck.size(), 0.0), total99(maxCheck.size(), 0.0), total95(maxCheck.size(), 0.0), totalRecall(maxCheck.size(), 0.0), totalLatency(maxCheck.size(), 0.0);
 
         for (int startQuery = 0; startQuery < queryVectors->Count(); startQuery += options->m_batch) {
