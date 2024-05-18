@@ -123,9 +123,9 @@ class MVDB:
     def topk(self, query: np.array = None, query_file: str = None, k: np.uint64 = 5,
              metric: DistanceMetric = DistanceMetric.L2_DISTANCE, c: np.float32 = 10000.0, **kwargs):
         assert mvdb_c.MVDB_get_built, "cannot search index. db not built"
-        if query is not None and (query_file != "" and query_file is not None):
+        if (query is not None and len(query) > 0) and (query_file != "" and query_file is not None):
             raise ValueError("Specify only one of query or query_file")
-        if query is not None and (query_file == "" or query_file is None):
+        if (query is None or len(query) == 0) and (query_file == "" or query_file is None):
             raise ValueError("Either query or query_file must be specified")
 
         if query is not None:
