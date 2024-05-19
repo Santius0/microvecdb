@@ -127,7 +127,6 @@ def read_vector_file(filename, n = -1):
     with open(filename, 'rb') as file:
         while True:
             if 0 < n <= i:
-                print("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD")
                 break
             # Read the dimensionality of the vector (first 4 bytes)
             dim_bytes = file.read(4)
@@ -145,23 +144,27 @@ def read_vector_file(filename, n = -1):
                 vector = struct.unpack(f'{count}i', vector_bytes)
             vectors.append(vector)
             i += 1
-    print(len(vectors))
     return np.array(vectors, dtype=dtype)
 
-def save_ivecs(filename, data):
+
+def write_vector_file(arr, filename):
     """
-    Save an array of integers in the .ivecs format.
+    Write a NumPy array to a file in fvecs or ivecs format.
 
     Parameters:
-    - filename: The name of the file to save.
-    - data: A numpy array of shape (n, d) containing the integer vectors.
+    arr (np.array): Input array of shape (n_vectors, vector_dim)
+    filename (str): Output filename, should end with .fvecs or .ivecs
     """
+    assert filename.endswith(('.fvecs', '.ivecs')), "Filename must end with .fvecs or .ivecs"
+
+    dtype = np.float32 if filename.endswith('.fvecs') else np.int32
+    arr = arr.astype(dtype)
+
     with open(filename, 'wb') as f:
-        for vec in data:
-            # Write the dimension (d) as a 4-byte integer
-            f.write(np.int32(len(vec)).tobytes())
-            # Write the vector data as 4-byte integers
-            f.write(np.int32(vec).tobytes())
+        for vec in arr:
+            length = np.int32(len(vec)).tobytes()
+            f.write(length)
+            f.write(vec.tobytes())
 
 def generate_groundtruth(query_set, topk_function, k=100, save_path='groundtruth.ivecs'):
     """
@@ -186,3 +189,22 @@ def generate_groundtruth(query_set, topk_function, k=100, save_path='groundtruth
 
     save_ivecs(save_path, ids)
     print(f"Ground truth vectors saved to {save_path}")
+
+
+def get_fvecs_dim_size(filename):
+    """
+    Get the dimension size of the first vector in an fvecs file.
+
+    Parameters:
+    filename (str): The path to the fvecs file.
+
+    Returns:
+    int: The dimension size of the vectors in the fvecs file.
+    """
+    with open(filename, 'rb') as f:
+        # Read the first 4 bytes which contain the dimension of the first vector
+        dim_size_bytes = f.read(4)
+        # Convert the bytes to an integer
+        dim_size = np.frombuffer(dim_size_bytes, dtype=np.int32)[0]
+
+    return dim_size

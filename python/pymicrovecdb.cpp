@@ -341,8 +341,6 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
     }
 
     npy_intp return_arr_dims[1] = {static_cast<npy_intp>(nq * k)};
-    std::cout << return_arr_dims[0] << std::endl;
-
 
     auto *ids = (mvdb::idx_t*)malloc(nq * k * sizeof(mvdb::idx_t));
     if(ids == nullptr) {
