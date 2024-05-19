@@ -1,8 +1,9 @@
 import numpy as np
 import time
-from memory_profiler import profile, memory_usage
+# from memory_profiler import profile, memory_usage
 
 from pymicrovecdb import mvdb, utils
+import nano_utils
 
 indices = {
     'spann_128_sift1m_file_index': {'type': mvdb.IndexType.SPANN, 'path': './indexes/spann_128_sift1m_file_index', 'dims': 128, 'misc.': ['n_threads=12'], 'dtype': mvdb.DataType.FLOAT},
@@ -89,6 +90,7 @@ def q_copy(arr: np.array, flat: bool = False):
     return external
 
 def main():
+    is_nano = nano_utils.is_jetson_nano()
     db = mvdb.MVDB(mvdb.DataType.FLOAT)
     db.open('./indexes/spann_128_sift1m_file_index')
     queries = utils.read_vector_file('../data/sift1M/sift/sift_query.fvecs')
@@ -110,12 +112,11 @@ def main():
                 gt = ground[:q_size]
                 for k in k_values:
                     print(f'running: {dataset_key} => {index_key} => q_size = {q_size} => k = {k}')
-                    # mvdb.tk(db.mvdb_obj, q.flatten(), q_size, k)
+                    if is_nano:
+                        nano_utils.start_tegrastats(f'./tegrastats/{dataset_key}_{index_key}_{q_size}_{k}')
                     results = db.topk(query=q, k=k)
-                    # peak_dram, res = memory_usage((topk_wrapper, (db, q, k)), retval=True, max_usage=True)
-                    # print(peak_dram)
-                    # topk_wrapper(db, q, k)
-                    # res = run_query(db_=db, query=q, ground=gt, dataset=dataset, index=index, k=k)
+                    if is_nano:
+                        nano_utils.stop_tegrastats()
                     print(f'complete')
     print("**DONE**")
 
