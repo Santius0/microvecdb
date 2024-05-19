@@ -195,7 +195,8 @@ namespace mvdb::index {
 
     template<typename T>
     void SPANNIndex<T>::topk(const idx_t &nq, T *query, const std::string& query_path,
-                             const std::string& result_path, idx_t *ids, T *distances, const idx_t &k,
+                             const std::string& result_path, idx_t *ids, T *distances,
+                             double& peak_wss_mb, const idx_t &k,
                              const DISTANCE_METRIC &distance_metric, const float& c) const {
 //  ./indexsearcher -x sift1m_index_dir_Saved/ -d 128 -v Float -f XVEC -i sift1M/sift_query.fvecs -o outputSearch.txt -k 100
 
@@ -268,36 +269,53 @@ namespace mvdb::index {
 
                 for (SPTAG::SizeType i = 0; i < numQuerys; i++) results[i].Reset();
 
-                std::atomic_size_t queriesSent(0);
-                std::vector<std::thread> threads;
-                threads.reserve(options->m_threadNum);
+//                std::atomic_size_t queriesSent(0);
+//                std::vector<std::thread> threads;
+//                threads.reserve(options->m_threadNum);
+//
+//                for (std::uint32_t i = 0; i < options->m_threadNum; i++) {
+//                    threads.emplace_back([&, i] {
+//                        SPTAG::NumaStrategy ns = (sptag_vector_index_->GetIndexAlgoType() == SPTAG::IndexAlgoType::SPANN) ? SPTAG::NumaStrategy::SCATTER: SPTAG::NumaStrategy::LOCAL; // Only for SPANN, we need to avoid IO threads overlap with search threads.
+//                        SPTAG::Helper::SetThreadAffinity(i, threads[i], ns, SPTAG::OrderStrategy::ASC);
+//
+//                        size_t qid = 0;
+//                        while (true) {
+//                            qid = queriesSent.fetch_add(1);
+//                            if (qid < numQuerys)
+//                                sptag_vector_index_->SearchIndex(results[qid]); // this line causes memory_profiler to fail horribly, can't be removed though
+//                            else return;
+//                        }
+//                    });
+//                }
+//                for (auto& thread : threads) { thread.join(); }
 
-                for (std::uint32_t i = 0; i < options->m_threadNum; i++) {
-                    threads.emplace_back([&, i] {
-                        SPTAG::NumaStrategy ns = (sptag_vector_index_->GetIndexAlgoType() == SPTAG::IndexAlgoType::SPANN) ? SPTAG::NumaStrategy::SCATTER: SPTAG::NumaStrategy::LOCAL; // Only for SPANN, we need to avoid IO threads overlap with search threads.
-                        SPTAG::Helper::SetThreadAffinity(i, threads[i], ns, SPTAG::OrderStrategy::ASC);
-
-                        size_t qid = 0;
-                        while (true) {
-                            qid = queriesSent.fetch_add(1);
-                            if (qid < numQuerys)
-                                sptag_vector_index_->SearchIndex(results[qid]); // this line causes memory_profiler to fail horribly, can't be removed though
-                            else return;
+                size_t queriesSent = 0;
+                #pragma omp parallel
+                {
+                    size_t qid = 0;
+                    while (true) {
+                        #pragma omp atomic capture
+                        qid = queriesSent++;
+                        if (qid < numQuerys) {
+                            sptag_vector_index_->SearchIndex(results[qid]); // this line causes memory_profiler to fail horribly, can't be removed though
+                        } else {
+                            break;
                         }
-                    });
+                    }
                 }
-                for (auto& thread : threads) { thread.join(); }
 
                 #ifndef _MSC_VER
                 struct rusage rusage;
                 getrusage(RUSAGE_SELF, &rusage);
-                double peakWSS = (double)(rusage.ru_maxrss * 1024) / (double)1000000000;
+//                double peakWSS = (double)(rusage.ru_maxrss * 1024) / (double)1000000000;
+                double peakWSS = (double)(rusage.ru_maxrss) / (double)1024;
                 #else
                 PROCESS_MEMORY_COUNTERS pmc;
                 GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
                 unsigned long long peakWSS = pmc.PeakWorkingSetSize / 1000000000;
                 #endif
-                std::cout << "peakWSS = " << peakWSS << "GB" << std::endl;
+                peak_wss_mb = peakWSS;
+                std::cout << "peakWSS = " << peakWSS << " MB" << std::endl;
             }
 
             for (SPTAG::SizeType i = 0; i < numQuerys; i++) {

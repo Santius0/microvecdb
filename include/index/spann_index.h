@@ -435,8 +435,8 @@ namespace mvdb::index {
         [[nodiscard]] bool add(const idx_t& n, T* data, idx_t* ids) override;
         [[nodiscard]] bool remove(const idx_t& n, const idx_t* ids) override;
         void topk(const idx_t& nq, T* query, const std::string& query_path,
-                  const std::string& result_path, idx_t* ids, T* distances, const idx_t& k,
-                  const DISTANCE_METRIC& distance_metric, const float& c) const override;
+                  const std::string& result_path, idx_t* ids, T* distances, double& peak_wss_mb,
+                  const idx_t& k, const DISTANCE_METRIC& distance_metric, const float& c) const override;
         T* get(idx_t& n, idx_t* keys) const override;
         [[nodiscard]] T* get_all() const override;
         [[nodiscard]] idx_t dims() const override;

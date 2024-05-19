@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <type_traits>
+#include <sys/resource.h>
 
 namespace mvdb::index {
 
@@ -132,8 +133,8 @@ namespace mvdb::index {
 
     template <typename T>
     void FaissFlatIndex<T>::topk(const idx_t& nq, T* query, const std::string& query_path,
-                                 const std::string& result_path, idx_t* ids, T* distances, const idx_t& k,
-                                 const DISTANCE_METRIC& distance_metric, const float& c) const{
+                                 const std::string& result_path, idx_t* ids, T* distances, double& peak_wss_mb,
+                                 const idx_t& k, const DISTANCE_METRIC& distance_metric, const float& c) const{
         if(!query_path.empty())
             throw std::runtime_error("Query file with FaissFlatIndex topk not supported...yet");
 
@@ -142,7 +143,16 @@ namespace mvdb::index {
 
         faiss_index_->search(static_cast<long>(nq), (float*)(query), k, (float*)(distances),
                              reinterpret_cast<faiss::idx_t*>(ids));
-
+        #ifndef _MSC_VER
+        struct rusage rusage{};
+        getrusage(RUSAGE_SELF, &rusage);
+        double peakWSS = (double)(rusage.ru_maxrss) / (double)1048576;
+        #else
+        PROCESS_MEMORY_COUNTERS pmc;
+        GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
+        unsigned long long peakWSS = pmc.PeakWorkingSetSize / 1000000000;
+        #endif
+        peak_wss_mb = peakWSS;
     }
 
     template <typename T>

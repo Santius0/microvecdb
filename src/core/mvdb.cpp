@@ -51,11 +51,11 @@ namespace mvdb {
 
     template <typename T>
     void MVDB<T>::topk(const idx_t& nq, T* query, std::string query_path, std::string result_path,
-                       idx_t* ids, T* distances, const idx_t& k,
+                       idx_t* ids, T* distances, double& peak_wss_mb, const idx_t& k,
                        const index::DISTANCE_METRIC& distance_metric, const float& c) {
         remove_trailing_slashes(query_path);
         remove_trailing_slashes(result_path);
-        db_->index()->topk(nq, query, query_path, result_path, ids, distances, k, distance_metric, c);
+        db_->index()->topk(nq, query, query_path, result_path, ids, distances, peak_wss_mb, k, distance_metric, c);
     }
 
     template class MVDB<int8_t>;

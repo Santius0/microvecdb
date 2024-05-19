@@ -70,7 +70,7 @@ namespace mvdb::index {
         virtual void topk(const idx_t& nq, T* query,                      // perform searches for nq queries in parallel
                           const std::string& query_path,
                           const std::string& result_path,
-                          idx_t* ids, T* distances,
+                          idx_t* ids, T* distances, double& peak_wss_mb,
                           const idx_t& k,
                           const DISTANCE_METRIC& distance_metric,
                           const float& c) const = 0;
