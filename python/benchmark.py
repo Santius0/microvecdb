@@ -1,6 +1,6 @@
 import numpy as np
 import time
-# from memory_profiler import profile, memory_usage
+from memory_profiler import profile, memory_usage
 
 from pymicrovecdb import mvdb, utils
 import nano_utils
@@ -35,7 +35,7 @@ datasets = {
 }
 
 def topk_wrapper(db_, q, k):
-    results = mvdb.tk(db_.mvdb_obj, q.flatten(), len(q), k)
+    results = db_.topk(query=q, k=k)
     print('DONE')
     return results
 
@@ -114,7 +114,10 @@ def main():
                     print(f'running: {dataset_key} => {index_key} => q_size = {q_size} => k = {k}')
                     if is_nano:
                         nano_utils.start_tegrastats(f'./tegrastats/{dataset_key}_{index_key}_{q_size}_{k}')
-                    results = db.topk(query=q, k=k)
+                    # results = db.topk(query=q, k=k)
+                    peak_dram, results = memory_usage((topk_wrapper, (db, q, k)), retval=True, max_usage=True)
+                    print(peak_dram)
+                    print(results)
                     if is_nano:
                         nano_utils.stop_tegrastats()
                     print(f'complete')

@@ -327,6 +327,8 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
 
     if (!PyArg_ParseTuple(args, "BOO!KssKBd", &data_type, &mvdb_capsule, &PyArray_Type, &query_array_obj, &nq, &query_path, &result_path, &k, &metric, &c)) return nullptr;
 
+    double peak_wss_mb = -1.0;
+
     auto* pyarray = (PyArrayObject*)query_array_obj;
     if (PyArray_TYPE(pyarray) != NPY_FLOAT) {
         PyErr_SetString(PyExc_TypeError, "input data must be of type np.float");
@@ -356,7 +358,7 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
     }
 
     auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
-    mvdb_->topk(nq, data_arr, "", "", ids, distances, k, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, (float)c);
+    mvdb_->topk(nq, data_arr, "", "", ids, distances, peak_wss_mb, k, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, (float)c);
 
     PyObject *ids_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, ids);
     if(ids_npArray == nullptr){
@@ -378,7 +380,7 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
     PyArray_ENABLEFLAGS((PyArrayObject *) ids_npArray, NPY_ARRAY_OWNDATA);
     PyArray_ENABLEFLAGS((PyArrayObject *) distances_npArray, NPY_ARRAY_OWNDATA);
 
-    PyObject* tuple = PyTuple_New(2);
+    PyObject* tuple = PyTuple_New(3);
     if (!tuple) {
         Py_DECREF(ids_npArray);
         Py_DECREF(distances_npArray);
@@ -386,8 +388,11 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
         return nullptr;
     }
 
+    PyObject *peak_wss_mb_py_obj = Py_BuildValue("d", peak_wss_mb);
+
     PyTuple_SetItem(tuple, 0, ids_npArray);
     PyTuple_SetItem(tuple, 1, distances_npArray);
+    PyTuple_SetItem(tuple, 2, peak_wss_mb_py_obj);
 
     return tuple;
 }

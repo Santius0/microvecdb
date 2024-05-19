@@ -170,7 +170,7 @@ class MVDB:
             c
         )
         if result_path == "" or result_path is None:
-            return res[0].reshape(num_queries, k), res[1].reshape(num_queries, k)
+            return res[0].reshape(num_queries, k), res[1].reshape(num_queries, k), res[2]
         return None
 
 
