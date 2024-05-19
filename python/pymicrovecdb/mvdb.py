@@ -11,6 +11,18 @@ class DataType(Enum):
     UINT8 = 2
     FLOAT = 3
 
+def np_dtype(data_type: DataType):
+    if data_type == DataType.INT8:
+        return np.int8
+    elif data_type == DataType.INT16:
+        return np.int16
+    elif data_type == DataType.UINT8:
+        return np.uint8
+    elif data_type == DataType.FLOAT:
+        return np.float32
+    else:
+        raise ValueError("Unsupported data type")
+
 @unique
 class IndexType(Enum):
     DISKANN = 0
@@ -23,6 +35,11 @@ class IndexType(Enum):
 class DistanceMetric(Enum):
     L2_DISTANCE = 0
     COSINE = 2
+
+# def tk(db, arr, q_size, k):
+#     # initial_data = np.random.rand(100, 64).astype(np.float32)
+#     # d2 = initial_data[:50]
+#     mvdb_c.topk(db, arr, q_size, k)
 
 def _create_faiss_flat_named_args(**kwargs):
     return mvdb_c.FaissFlatIndexNamedArgs_init()
@@ -131,14 +148,17 @@ class MVDB:
         if query is not None:
             if query.size % self.dims != 0:
                 raise ValueError("The total size of initial_data must be a multiple of dims")
-            num_queries = query.shape[0]
-            if query.shape[0] > 1:
+            if query.ndim > 1:
+                num_queries = query.shape[0]
                 query = query.flatten(order='C')
+            else:
+                num_queries = int(query.shape[0]/self.dims)
         else:
             num_queries = 0
 
         result_path = None
-        return mvdb_c.MVDB_topk(
+
+        res = mvdb_c.MVDB_topk(
             self.data_type.value,
             self.mvdb_obj,
             query if query is not None else np.array([], dtype=np.float32),
@@ -149,6 +169,9 @@ class MVDB:
             metric.value,
             c
         )
+        if result_path == "" or result_path is None:
+            return res[0].reshape(num_queries, k), res[1].reshape(num_queries, k)
+        return None
 
 
     def num_items(self):

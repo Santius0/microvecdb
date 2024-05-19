@@ -65,7 +65,7 @@ namespace mvdb::index {
     void SPANNIndex<T>::build(const idx_t &dims, const std::string& path, const std::string& initial_data_path,
                               const T* initial_data, const uint64_t& initial_data_size, const NamedArgs* args) {
 
-//        ./indexbuilder -c buildconfig.ini -d 128 -v Float -f XVEC -i sift1m/sift_base.fvecs -o sift1m_index_dir_Saved -a SPANN
+//        ./indexbuilder -c buildconfig.ini -d 128 -v Float -f XVEC -i sift1M/sift_base.fvecs -o sift1m_index_dir_Saved -a SPANN
 
         if(path.empty()) throw std::runtime_error("output path cannot be empty");
 
@@ -197,7 +197,7 @@ namespace mvdb::index {
     void SPANNIndex<T>::topk(const idx_t &nq, T *query, const std::string& query_path,
                              const std::string& result_path, idx_t *ids, T *distances, const idx_t &k,
                              const DISTANCE_METRIC &distance_metric, const float& c) const {
-//  ./indexsearcher -x sift1m_index_dir_Saved/ -d 128 -v Float -f XVEC -i sift1m/sift_query.fvecs -o outputSearch.txt -k 100
+//  ./indexsearcher -x sift1m_index_dir_Saved/ -d 128 -v Float -f XVEC -i sift1M/sift_query.fvecs -o outputSearch.txt -k 100
 
         if(query_path.empty() && query == nullptr)
             throw std::runtime_error("either query or query_path is required");
@@ -255,7 +255,6 @@ namespace mvdb::index {
         }
 
         std::vector<SPTAG::QueryResult> results(options->m_batch, SPTAG::QueryResult(nullptr, internalResultNum, options->m_withMeta != 0));
-        std::vector<float> latencies(options->m_batch, 0);
         int baseSquare = SPTAG::COMMON::Utils::GetBase<T>() * SPTAG::COMMON::Utils::GetBase<T>();
 
         std::vector<std::string> maxCheck = SPTAG::Helper::StrUtils::SplitString(options->m_maxCheck, "#");
@@ -263,6 +262,7 @@ namespace mvdb::index {
         for (int startQuery = 0; startQuery < query_vector_set->Count(); startQuery += options->m_batch) {
             int numQuerys = min(options->m_batch, query_vector_set->Count() - startQuery);
             for (SPTAG::SizeType i = 0; i < numQuerys; i++) results[i].SetTarget(query_vector_set->GetVector(startQuery + i));
+
             for (int mc = 0; mc < maxCheck.size(); mc++) {
                 sptag_vector_index_->SetParameter("MaxCheck", maxCheck[mc].c_str());
 
@@ -280,7 +280,8 @@ namespace mvdb::index {
                         size_t qid = 0;
                         while (true) {
                             qid = queriesSent.fetch_add(1);
-                            if (qid < numQuerys) sptag_vector_index_->SearchIndex(results[qid]);
+                            if (qid < numQuerys)
+                                sptag_vector_index_->SearchIndex(results[qid]); // this line causes memory_profiler to fail horribly, can't be removed though
                             else return;
                         }
                     });
@@ -290,12 +291,13 @@ namespace mvdb::index {
                 #ifndef _MSC_VER
                 struct rusage rusage;
                 getrusage(RUSAGE_SELF, &rusage);
-                unsigned long long peakWSS = rusage.ru_maxrss * 1024 / 1000000000;
+                double peakWSS = (double)(rusage.ru_maxrss * 1024) / (double)1000000000;
                 #else
                 PROCESS_MEMORY_COUNTERS pmc;
                 GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
                 unsigned long long peakWSS = pmc.PeakWorkingSetSize / 1000000000;
                 #endif
+                std::cout << "peakWSS = " << peakWSS << "GB" << std::endl;
             }
 
             for (SPTAG::SizeType i = 0; i < numQuerys; i++) {

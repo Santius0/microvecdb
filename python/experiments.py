@@ -167,7 +167,7 @@ def run_single_query(db_, query, ground_truth):
             found += 1
     recall = found / len(ground_truth)
     row_dict = cpu_env
-    row_dict['dataset'] = 'sift1m'
+    row_dict['dataset'] = 'sift1M'
     row_dict['dims'] = len(query)
     row_dict['index_size'] = 1000000
     row_dict['k'] = len(ground_truth)

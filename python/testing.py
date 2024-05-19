@@ -1,11 +1,12 @@
 import numpy as np
+from memory_profiler import profile
 
 from pymicrovecdb import mvdb, utils
 
 
-SIFT1M_BASE = "../data/sift1m/sift/sift_base.fvecs"
-SIFT1M_QUERY = "../data/sift1m/sift/sift_query.fvecs"
-SIFT1M_TRUTH = "../data/sift1m/sift/sift_groundtruth.ivecs"
+SIFT1M_BASE = "../data/sift1M/sift/sift_base.fvecs"
+SIFT1M_QUERY = "../data/sift1M/sift/sift_query.fvecs"
+SIFT1M_TRUTH = "../data/sift1M/sift/sift_groundtruth.ivecs"
 
 def test_create_function(db_):
     initial_data = np.random.rand(100, 64).astype(np.float32)  # 100 random vectors of dimension 64
@@ -49,10 +50,16 @@ def test_topk_function(db_):
     print(res[1].shape)
     # print(res)
 
+queries = utils.read_vector_file(SIFT1M_QUERY)
+
+@profile
 def main():
-    db = mvdb.MVDB()
-    # test_create_function(db)
-    test_topk_function(db)
+    db_ = mvdb.MVDB()
+    db_.open("./indexes/spann_128_sift1m_file_index")
+    res = db_.topk(query=queries, k = 100)
+    print(res)
+# test_create_function(db)
+    # test_topk_function(db)
 
 if __name__ == '__main__':
     main()

@@ -108,7 +108,7 @@ def get_system_load():
     return load_avg
 
 
-def read_vector_file(filename):
+def read_vector_file(filename, n = -1):
     """
     Read vectors from a file with .fvecs or .ivecs extension.
 
@@ -123,8 +123,12 @@ def read_vector_file(filename):
     dtype = np.float32 if file_type == 'f' else np.int32
 
     vectors = []
+    i = 0
     with open(filename, 'rb') as file:
         while True:
+            if 0 < n <= i:
+                print("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD")
+                break
             # Read the dimensionality of the vector (first 4 bytes)
             dim_bytes = file.read(4)
             if not dim_bytes:
@@ -139,9 +143,9 @@ def read_vector_file(filename):
             else:
                 vector_bytes = file.read(4 * count)  # Each int takes 4 bytes
                 vector = struct.unpack(f'{count}i', vector_bytes)
-
             vectors.append(vector)
-
+            i += 1
+    print(len(vectors))
     return np.array(vectors, dtype=dtype)
 
 def save_ivecs(filename, data):
