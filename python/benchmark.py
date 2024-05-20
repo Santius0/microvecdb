@@ -1,18 +1,14 @@
 import gc
-
 import csv
 import os
+import time
 
 import numpy as np
-import time
-from memory_profiler import profile, memory_usage
+from memory_profiler import memory_usage
 
 from pymicrovecdb import mvdb, utils as mv_utils
 import nano_utils
 
-indices = {
-    'spann_sift10K_float32': {'type': mvdb.IndexType.SPANN, 'path': './indices/spann_sift10K_float32', 'dims': 128, 'misc.': ['n_threads=12'], 'dtype': mvdb.DataType.FLOAT32},
-}
 
 query_sizes = [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 3840, 5120, 6400, 7680, 8960, 10000]
 
@@ -86,50 +82,50 @@ cpu_env = {**cpu_info, **ram_info, **storage_info, **battery_info}
 def main():
     os.makedirs('./benchmark_results', exist_ok=True)
     is_nano = nano_utils.is_jetson_nano()
-    for dataset_key in datasets:
-        print(f'Processing: {dataset_key}...')
-        dataset = datasets[dataset_key]
-        queries = mv_utils.read_vector_file(dataset['query_path'])
-        ground = mv_utils.read_vector_file(dataset['ground_path'])
-        for index_key in indices:
+    for conf_key in configs:
+        gc.collect()
+        config = configs[conf_key]
+        conf_key_list = conf_key.split('_')
+        index_type, dataset, dtype = mvdb.str_to_index_type(conf_key_list[0]), conf_key_list[1], mvdb.str_to_data_type(conf_key_list[2])
+        db = mvdb.MVDB(dtype=dtype)
+        db.open(config['index'])
+        queries = mv_utils.read_vector_file(config['query'])
+        ground = mv_utils.read_vector_file(config['ground'])
+        for q_size in query_sizes:
             gc.collect()
-            index = indices[index_key]
-            db = mvdb.MVDB(index['dtype'])
-            db.open(index['path'])
-            for q_size in query_sizes:
-                q = queries[:q_size]
-                gt = ground[:q_size]
-                for k in k_values:
-                    gc.collect()
-                    print(f'running: {dataset_key} => {index_key} => q_size = {q_size} => k = {k}')
-                    if is_nano:
-                        nano_utils.start_tegrastats(f'./tegrastats/{dataset_key}_{index_key}_{q_size}_{k}')
-                    start_time = time.time()
-                    peak_dram, results = memory_usage((topk_wrapper, (db, q, k)), retval=True, max_usage=True)
-                    query_time = time.time() - start_time
-                    if is_nano:
-                        nano_utils.stop_tegrastats()
-                    row = cpu_env
-                    row['dataset'] = dataset_key
-                    row['dims'] = dataset['dims']
-                    row['index_size'] = dataset['size']
-                    row['k'] = k
-                    row['distance_metric'] = 'L2'
-                    row['peak_dram_(MB)'] = peak_dram
-                    row['peak_WSS_(MB)'] = results[2]
-                    row['index'] = index_key
-                    row['index_type'] = str(index['type'])
-                    row['latency_(s)'] = query_time
-                    row['recall1'] = recall1(results[0], gt, k)
-                    row['recall2'] = recall2(results[0], gt, k)
-                    file_exists = os.path.isfile(f"./benchmark_results/res.csv")
-                    with open(f"./benchmark_results/res.csv", mode='a', newline='') as file:
-                        fieldnames = row.keys()
-                        writer = csv.DictWriter(file, fieldnames=fieldnames)
-                        if not file_exists:
-                            writer.writeheader()
-                        writer.writerow(row)
-                    print(f'complete')
+            q = queries[:q_size]
+            gt = ground[:q_size]
+            for k in k_values:
+                internal_config = f"{conf_key}_{q_size}_{k}"
+                print(f"processing: {internal_config}...")
+                if is_nano:
+                    nano_utils.start_tegrastats(f"./tegrastats/{internal_config}")
+                start_time = time.time()
+                peak_dram, results = memory_usage((topk_wrapper, (db, q, k)), retval=True, max_usage=True)
+                query_time = time.time() - start_time
+                if is_nano:
+                    nano_utils.stop_tegrastats()
+                row = cpu_env
+                row['dataset'] = dataset
+                row['dims'] = db.dims
+                row['index_size'] = db.num_items
+                row['k'] = k
+                row['distance_metric'] = 'L2'
+                row['peak_dram_(MB)'] = peak_dram
+                row['peak_WSS_(MB)'] = results[2]
+                row['index'] = conf_key
+                row['index_type'] = str(index_type)
+                row['latency_(s)'] = query_time
+                row['recall1'] = recall1(results[0], gt, k)
+                row['recall2'] = recall2(results[0], gt, k)
+                print(f"{internal_config} completed in {query_time} seconds")
+                file_exists = os.path.isfile(f"./benchmark_results/res.csv")
+                with open(f"./benchmark_results/res.csv", mode='a', newline='') as file:
+                    fieldnames = row.keys()
+                    writer = csv.DictWriter(file, fieldnames=fieldnames)
+                    if not file_exists:
+                        writer.writeheader()
+                    writer.writerow(row)
     print("**DONE**")
 
 if __name__ == '__main__':

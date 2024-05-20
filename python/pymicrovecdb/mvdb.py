@@ -13,6 +13,14 @@ class DataType(Enum):
     def __str__(self):
         return f"{self.name.lower()}"
 
+def str_to_data_type(type_str: str):
+    if type_str == str(DataType.INT8):
+        return DataType.INT8
+    elif type_str == str(DataType.FLOAT32):
+        return DataType.FLOAT32
+    else:
+        raise ValueError(f"Unsupported index type '{type_str}'")
+
 def np_dtype(data_type: DataType):
     if data_type == DataType.INT8:
         return np.int8
@@ -35,15 +43,24 @@ class IndexType(Enum):
     def __str__(self):
         return f"{self.name.lower()}"
 
+def str_to_index_type(type_str: str):
+    if type_str == str(IndexType.DISKANN):
+        return IndexType.DISKANN
+    elif type_str == str(IndexType.FAISS_FLAT):
+        return IndexType.FAISS_FLAT
+    elif type_str == str(IndexType.FLAT):
+        return IndexType.FLAT
+    elif type_str == str(IndexType.SPANN):
+        return IndexType.SPANN
+    elif type_str == str(IndexType.ANNOY):
+        return IndexType.ANNOY
+    else:
+        raise ValueError("Unsupported index type")
+
 @unique
 class DistanceMetric(Enum):
     L2_DISTANCE = 0
     COSINE = 2
-
-# def tk(db, arr, q_size, k):
-#     # initial_data = np.random.rand(100, 64).astype(np.float32)
-#     # d2 = initial_data[:50]
-#     mvdb_c.topk(db, arr, q_size, k)
 
 def _create_faiss_flat_named_args(**kwargs):
     return mvdb_c.FaissFlatIndexNamedArgs_init()
@@ -85,20 +102,20 @@ def create_named_args(index_type: IndexType, **kwargs):
     else:
         raise RuntimeError(f"Unknown IndexType {index_type}")
 class MVDB:
-    def __init__(self, data_type: DataType = DataType.FLOAT32):
+    def __init__(self, dtype: DataType = DataType.FLOAT32):
         self.index_type = None
         self.named_args = None
-        self.data_type = data_type
-        self.mvdb_obj = mvdb_c.MVDB_init(data_type.value)
+        self.dtype = dtype
+        self.mvdb_obj = mvdb_c.MVDB_init(dtype.value)
 
     @property
     def built(self):
-        return mvdb_c.MVDB_get_built(self.data_type.value, self.mvdb_obj)
+        return mvdb_c.MVDB_get_built(self.dtype.value, self.mvdb_obj)
 
     @property
     def dims(self):
         assert mvdb_c.MVDB_get_built, "can't get dims db not built"
-        return mvdb_c.MVDB_get_dims(self.data_type.value, self.mvdb_obj)
+        return mvdb_c.MVDB_get_dims(self.dtype.value, self.mvdb_obj)
 
     def create(self, index_type: IndexType, dims: int, path: str,
                initial_data: np.array = None, initial_data_path: str = None, **kwargs):
@@ -127,7 +144,7 @@ class MVDB:
         self.named_args = create_named_args(index_type, **kwargs)
 
         mvdb_c.MVDB_create(
-            self.data_type.value,
+            self.dtype.value,
             self.mvdb_obj,
             index_type.value,
             dims,
@@ -139,7 +156,7 @@ class MVDB:
         )
 
     def open(self, path: str):
-        mvdb_c.MVDB_open(self.data_type.value, self.mvdb_obj, path)
+        mvdb_c.MVDB_open(self.dtype.value, self.mvdb_obj, path)
 
     def topk(self, query: np.array = None, query_file: str = None, k: np.uint64 = 5,
              metric: DistanceMetric = DistanceMetric.L2_DISTANCE, c: np.float32 = 10000.0, **kwargs):
@@ -163,7 +180,7 @@ class MVDB:
         result_path = None
 
         res = mvdb_c.MVDB_topk(
-            self.data_type.value,
+            self.dtype.value,
             self.mvdb_obj,
             query if query is not None else np.array([], dtype=np.float32),
             num_queries,
@@ -181,4 +198,4 @@ class MVDB:
     @property
     def num_items(self):
         assert mvdb_c.MVDB_get_built, "can't get num_items. db not built"
-        return mvdb_c.MVDB_get_num_items(self.data_type.value, self.mvdb_obj)
+        return mvdb_c.MVDB_get_num_items(self.dtype.value, self.mvdb_obj)
