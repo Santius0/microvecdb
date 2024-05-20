@@ -274,16 +274,6 @@ static PyObject* MVDB_get_built(PyObject* self, PyObject* args) {
         if(mvdb_ != nullptr && mvdb_->get_db_() != nullptr && mvdb_->get_db_()->index() != nullptr)
             return PyLong_FromLong((long)mvdb_->get_db_()->index()->built());
         return PyLong_FromLong(false);
-    } else if (data_type == INT16) {
-        auto *mvdb_ = static_cast<mvdb::MVDB<int16_t >*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int16_t));
-        if(mvdb_ != nullptr && mvdb_->get_db_() != nullptr && mvdb_->get_db_()->index() != nullptr)
-            return PyLong_FromLong((long)mvdb_->get_db_()->index()->built());
-        return PyLong_FromLong(false);
-    } else if (data_type == UINT8) {
-        auto *mvdb_ = static_cast<mvdb::MVDB<uint8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint8_t));
-        if(mvdb_ != nullptr && mvdb_->get_db_() != nullptr && mvdb_->get_db_()->index() != nullptr)
-            return PyLong_FromLong((long)mvdb_->get_db_()->index()->built());
-        return PyLong_FromLong(false);
     } else if (data_type == FLOAT) {
         auto *mvdb_ = static_cast<mvdb::MVDB<float> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
         if(mvdb_ != nullptr && mvdb_->get_db_() != nullptr && mvdb_->get_db_()->index() != nullptr)
@@ -301,12 +291,6 @@ static PyObject* MVDB_get_num_items(PyObject* self, PyObject* args) {
     if (!PyArg_ParseTuple(args, "BO", &data_type, &mvdb_capsule)) return nullptr;
     if(data_type == INT8){
         auto *mvdb_ = static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
-        return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
-    } else if (data_type == INT16) {
-        auto *mvdb_ = static_cast<mvdb::MVDB<int16_t >*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int16_t));
-        return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
-    } else if (data_type == UINT8) {
-        auto *mvdb_ = static_cast<mvdb::MVDB<uint8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint8_t));
         return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
     } else if (data_type == FLOAT) {
         auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
@@ -645,7 +629,7 @@ static PyMethodDef ExtensionMethods[] = {
         { "MVDB_add", MVDB_add, METH_VARARGS, "Add vectors to the vector database" },
         { "MVDB_get_dims", MVDB_get_dims, METH_VARARGS, "Returns number of dimensions in db index" },
         { "MVDB_get_built", MVDB_get_built, METH_VARARGS, "Returns built flag for db index" },
-        { "MVDB_num_items", MVDB_get_num_items, METH_VARARGS, "Returns number of items in db index" },
+        { "MVDB_get_num_items", MVDB_get_num_items, METH_VARARGS, "Returns number of items in db index" },
         #ifdef FAISS
         { "FaissFlatIndexNamedArgs_init", FaissFlatIndexNamedArgs_init, METH_VARARGS, "Return new named args obj for faiss flat index" },
         #endif

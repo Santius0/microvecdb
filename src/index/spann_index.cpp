@@ -370,8 +370,7 @@ namespace mvdb::index {
 
     template<typename T>
     idx_t SPANNIndex<T>::ntotal() const {
-//        sptag_vector_index_->
-        return 0;
+        return sptag_vector_index_->GetNumSamples();
     }
 
     template <typename T>

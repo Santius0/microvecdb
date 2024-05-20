@@ -197,7 +197,7 @@ namespace mvdb::index {
 
     template <typename T>
     idx_t FaissFlatIndex<T>::ntotal() const {
-        return this->ntotal_;
+        return faiss_index_->ntotal;
     }
 
     template <typename T>

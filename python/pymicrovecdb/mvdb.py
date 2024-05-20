@@ -9,7 +9,9 @@ class DataType(Enum):
     INT8 = 0
     INT16 = 1
     UINT8 = 2
-    FLOAT = 3
+    FLOAT32 = 3
+    def __str__(self):
+        return f"{self.name.lower()}"
 
 def np_dtype(data_type: DataType):
     if data_type == DataType.INT8:
@@ -18,7 +20,7 @@ def np_dtype(data_type: DataType):
         return np.int16
     elif data_type == DataType.UINT8:
         return np.uint8
-    elif data_type == DataType.FLOAT:
+    elif data_type == DataType.FLOAT32:
         return np.float32
     else:
         raise ValueError("Unsupported data type")
@@ -30,6 +32,8 @@ class IndexType(Enum):
     FLAT = 2
     SPANN = 3
     ANNOY = 4
+    def __str__(self):
+        return f"{self.name.lower()}"
 
 @unique
 class DistanceMetric(Enum):
@@ -81,7 +85,7 @@ def create_named_args(index_type: IndexType, **kwargs):
     else:
         raise RuntimeError(f"Unknown IndexType {index_type}")
 class MVDB:
-    def __init__(self, data_type: DataType = DataType.FLOAT):
+    def __init__(self, data_type: DataType = DataType.FLOAT32):
         self.index_type = None
         self.named_args = None
         self.data_type = data_type
@@ -174,6 +178,7 @@ class MVDB:
         return None
 
 
+    @property
     def num_items(self):
-        assert mvdb_c.MVDB_get_built, "can't get num_items db not built"
+        assert mvdb_c.MVDB_get_built, "can't get num_items. db not built"
         return mvdb_c.MVDB_get_num_items(self.data_type.value, self.mvdb_obj)
