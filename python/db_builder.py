@@ -30,26 +30,26 @@ def short_code(num):
 
     return f"{short_num}{suffix}"
 
-def build_dataset(base_path, n, output_name):
-    print(base_path)
+def dataset_make(base_path, n, output_name):
+    print(f"Building {base_path} variant")
     vecs = mv_utils.read_vector_file(base_path, n)
     mv_utils.write_vector_file(vecs, f'{output_name}_base.fvecs')
     print(f'{output_name}_base.fvecs successfully built')
 
-def build_all():
+def build_datasets():
     for conf_key in dataset_configs:
         dataset_config = dataset_configs[conf_key]
         for size in dataset_config['sizes']:
             name = f'{conf_key}{short_code(size)}'
             path = f'/home/santius/ann_data/{name}'
             os.makedirs(path, exist_ok=True)
-            build_dataset(dataset_config['base_path'], size, f'{path}/{name}')
+            dataset_make(dataset_config['base_path'], size, f'{path}/{name}')
             gc.collect()
             db = mvdb.MVDB()
             db.create(
                 index_type=mvdb.IndexType.FAISS_FLAT,
                 dims=mv_utils.get_fvecs_dim_size(f'{path}/{name}_base.fvecs'),
-                path=f'./indices/{name}',
+                path=f'./indices/faissflat_{name}',
                 initial_data_path=f'{path}/{name}_base.fvecs'
             )
             print(f'./indices/{name} successfully built')
@@ -60,8 +60,18 @@ def build_all():
             print(f'{path}/{name}_groundtruth_dists.fvecs successfully built')
             gc.collect()
 
-def main():
-    build_all()
+# def build_indices():
+#     for dirpath, dirnames, filenames in os.walk('../../ann_data'):
+#         for dirname in dirnames:
+#             current_path = os.path.join(dirpath, dirname)
+#             new_dirname = f"faissflat_{dirname}"
+#             new_path = os.path.join(dirpath, new_dirname)
+#             os.rename(current_path, new_path)
+
+# def main():
+    # build_datasets()
+    # build_indices()
+
 
 if __name__ == '__main__':
     main()

@@ -50,14 +50,18 @@ def test_topk_function(db_):
     print(res[1].shape)
     # print(res)
 
-queries = utils.read_vector_file(SIFT1M_QUERY)
+queries = utils.read_vector_file("../../ann_data/deep10M/deep1B_queries.fvecs")
 
 @profile
 def main():
+    # print(queries)
+    # print(len(queries))
+    # print(len(queries[33]))
     db_ = mvdb.MVDB()
-    db_.open("./indexes/spann_128_sift1m_file_index")
+    db_.open("./indices/faissflat_deep1M")
     res = db_.topk(query=queries, k = 100)
-    print(res)
+    print(res[0])
+    print(utils.read_vector_file("../../ann_data/deep1M/deep1M_groundtruth.ivecs"))
 # test_create_function(db)
     # test_topk_function(db)
 
