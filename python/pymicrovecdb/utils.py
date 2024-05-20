@@ -5,6 +5,7 @@ import psutil
 import platform
 import datetime
 import struct
+import mmap
 
 def is_wsl():
     return 'microsoft' in platform.uname().release.lower()
@@ -108,43 +109,41 @@ def get_system_load():
     return load_avg
 
 
-def read_vector_file(filename, n = -1):
-    """
-    Read vectors from a file with .fvecs or .ivecs extension.
-
-    Parameters:
-    - filename (str): Path to the file to read.
-
-    Returns:
-    - numpy.ndarray: Array of vectors stored in the file.
-    """
+def read_vector_file(filename, n=-1):
     # Determine the type based on file extension
     file_type = 'f' if filename.endswith('.fvecs') else 'i'
     dtype = np.float32 if file_type == 'f' else np.int32
+    element_size = np.dtype(dtype).itemsize  # 4 bytes for both float32 and int32
 
     vectors = []
-    i = 0
+
     with open(filename, 'rb') as file:
-        while True:
-            if 0 < n <= i:
-                break
+        mmapped_file = mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ)
+        offset = 0
+        i = 0
+        while offset < mmapped_file.size() and (n < 0 or i < n):
             # Read the dimensionality of the vector (first 4 bytes)
-            dim_bytes = file.read(4)
+            dim_bytes = mmapped_file[offset:offset + 4]
             if not dim_bytes:
                 break
             dimension = struct.unpack('i', dim_bytes)[0]
+            offset += 4
 
             # Read the vector data
-            count = dimension
+            vector_bytes = mmapped_file[offset:offset + element_size * dimension]
+            offset += element_size * dimension
+
             if file_type == 'f':
-                vector_bytes = file.read(4 * count)  # Each float takes 4 bytes
-                vector = struct.unpack(f'{count}f', vector_bytes)
+                vector = np.frombuffer(vector_bytes, dtype=np.float32)
             else:
-                vector_bytes = file.read(4 * count)  # Each int takes 4 bytes
-                vector = struct.unpack(f'{count}i', vector_bytes)
+                vector = np.frombuffer(vector_bytes, dtype=np.int32)
+
             vectors.append(vector)
             i += 1
-    return np.array(vectors, dtype=dtype)
+
+        mmapped_file.close()
+
+    return np.array(vectors)
 
 
 def write_vector_file(arr, filename):
@@ -165,30 +164,6 @@ def write_vector_file(arr, filename):
             length = np.int32(len(vec)).tobytes()
             f.write(length)
             f.write(vec.tobytes())
-
-def generate_groundtruth(query_set, topk_function, k=100, save_path='groundtruth.ivecs'):
-    """
-    Generate and save ground truth vectors for a given query set in the .ivecs format.
-
-    Parameters:
-    - query_set: A numpy array of shape (nq, d) containing the query vectors.
-    - topk_function: A function that takes a query set and returns a tuple containing:
-                     - an np.array of shape (nq * k,) with the IDs of the top k vectors.
-                     - an np.array of shape (nq * k,) with the corresponding distances.
-    - k: The number of top results to return for each query vector.
-    - save_path: The file path to save the ground truth vectors.
-    """
-
-    query_set = np.array(query_set, dtype=np.float32)
-    ids, distances = topk_function(query_set, k)
-    ids = np.array(ids, dtype=np.int32)
-    distances = np.array(distances, dtype=np.float32)
-
-    nq = query_set.shape[0]
-    ids = ids.reshape(nq, k)
-
-    save_ivecs(save_path, ids)
-    print(f"Ground truth vectors saved to {save_path}")
 
 
 def get_fvecs_dim_size(filename):
