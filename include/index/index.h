@@ -21,27 +21,23 @@
 namespace mvdb::index {
 
     enum IndexType : unsigned char {
-        DISKANN = 0,
-        FAISS_FLAT = 1,
-        FLAT = 2,
-        SPANN = 3,
-        ANNOY = 4
+        FAISS_FLAT = 0,
+        ANNOY = 1,
+        SPANN = 2
     };
 
     inline std::ostream& operator<<(std::ostream& os, const IndexType& obj) {
         switch (obj) {
-            case IndexType::DISKANN:        return os << "DISKANN";
             case IndexType::FAISS_FLAT:     return os << "FAISS_FLAT";
-            case IndexType::FLAT:           return os << "FLAT";
-            case IndexType::SPANN:           return os << "SPANN";
-            case IndexType::ANNOY:           return os << "ANNOY";
+            case IndexType::ANNOY:          return os << "ANNOY";
+            case IndexType::SPANN:          return os << "SPANN";
             default:                        return os << "invalid index type";
         }
     }
+
     inline std::ostream& operator<<(std::ostream& os, const IndexType* obj) {
         return os << "*(" << *obj << ")";
     }
-
 
     // Note: This class did not have to be an abstract class with all functions being pure virtual as
     //       many of these functions will have the same functionality across the board for all index types,

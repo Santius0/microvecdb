@@ -7,9 +7,7 @@ import struct
 @unique
 class DataType(Enum):
     INT8 = 0
-    INT16 = 1
-    UINT8 = 2
-    FLOAT32 = 3
+    FLOAT32 = 1
     def __str__(self):
         return f"{self.name.lower()}"
 
@@ -35,25 +33,19 @@ def np_dtype(data_type: DataType):
 
 @unique
 class IndexType(Enum):
-    DISKANN = 0
-    FAISS_FLAT = 1
-    FLAT = 2
-    SPANN = 3
-    ANNOY = 4
+    FAISS_FLAT = 0
+    ANNOY = 1
+    SPANN = 2
     def __str__(self):
         return f"{self.name.lower()}"
 
 def str_to_index_type(type_str: str):
-    if type_str == str(IndexType.DISKANN):
-        return IndexType.DISKANN
-    elif type_str == str(IndexType.FAISS_FLAT):
+    if type_str == str(IndexType.FAISS_FLAT):
         return IndexType.FAISS_FLAT
-    elif type_str == str(IndexType.FLAT):
-        return IndexType.FLAT
-    elif type_str == str(IndexType.SPANN):
-        return IndexType.SPANN
     elif type_str == str(IndexType.ANNOY):
         return IndexType.ANNOY
+    elif type_str == str(IndexType.SPANN):
+        return IndexType.SPANN
     else:
         raise ValueError("Unsupported index type")
 

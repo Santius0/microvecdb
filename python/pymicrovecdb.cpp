@@ -23,9 +23,7 @@
 
 enum DATA_TYPES : unsigned char {
     INT8 = 0,
-    INT16 = 1,
-    UINT8 = 2,
-    FLOAT = 3,
+    FLOAT32 = 1,
 };
 
 static PyObject* hello(PyObject* self, PyObject* args) {
@@ -62,7 +60,7 @@ static PyObject* MVDB_init(PyObject* self, PyObject* args) {
         auto* mvdb_ = new mvdb::MVDB<int8_t>();
         return PyCapsule_New(mvdb_, MVDB_NAME_int8_t, MVDB_delete_int8_t);
     }
-    else if(data_type == FLOAT) {
+    else if(data_type == FLOAT32) {
         auto* mvdb_ = new mvdb::MVDB<float>();
         return PyCapsule_New(mvdb_, MVDB_NAME_float, MVDB_delete_float);
     }
@@ -79,13 +77,7 @@ static PyObject* MVDB_get_dims(PyObject* self, PyObject* args) {
     if(data_type == INT8){
         auto *mvdb_ = static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
         return PyLong_FromLong((long)mvdb_->get_db_()->index()->dims());
-    } else if (data_type == INT16) {
-        auto *mvdb_ = static_cast<mvdb::MVDB<int16_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int16_t));
-        return PyLong_FromLong((long)mvdb_->get_db_()->index()->dims());
-    } else if (data_type == UINT8) {
-        auto *mvdb_ = static_cast<mvdb::MVDB<uint8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint8_t));
-        return PyLong_FromLong((long)mvdb_->get_db_()->index()->dims());
-    } else if (data_type == FLOAT) {
+    } else if (data_type == FLOAT32) {
         auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
         return PyLong_FromLong((long)mvdb_->get_db_()->index()->dims());
     } else {
@@ -192,27 +184,7 @@ static PyObject* MVDB_create(PyObject* self, PyObject* args) {
             mvdb_->create(static_cast<mvdb::index::IndexType>(index_type), dims, std::string(path), std::string(initial_data_path), (int8_t*)extracted_data, initial_data_size, c_args);
             Py_RETURN_TRUE;
         }
-        case INT16: {
-            auto *mvdb_ = static_cast<mvdb::MVDB<int16_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int16_t));
-            if (initial_data_size > 0) extracted_data = extract_int16_arr(initial_data);
-            if (initial_data_size > 0 && !extracted_data) {
-                PyErr_SetString(PyExc_TypeError, "Failed to extract initial data");
-                return nullptr;
-            }
-            mvdb_->create(static_cast<mvdb::index::IndexType>(index_type), dims, std::string(path), std::string(initial_data_path), (int16_t*)extracted_data, initial_data_size, c_args);
-            Py_RETURN_TRUE;
-        }
-        case UINT8: {
-            auto *mvdb_ = static_cast<mvdb::MVDB<uint8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint8_t));
-            if (initial_data_size > 0) extracted_data = extract_uint8_arr(initial_data);
-            if (initial_data_size > 0 && !extracted_data) {
-                PyErr_SetString(PyExc_TypeError, "Failed to extract initial data");
-                return nullptr;
-            }
-            mvdb_->create(static_cast<mvdb::index::IndexType>(index_type), dims, std::string(path), std::string(initial_data_path), (uint8_t*)extracted_data, initial_data_size, c_args);
-            Py_RETURN_TRUE;
-        }
-        case FLOAT: {
+        case FLOAT32: {
             auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
             if (initial_data_size > 0) extracted_data = extract_float_arr(initial_data);
             if (initial_data_size > 0 && !extracted_data) {
@@ -242,17 +214,7 @@ static PyObject* MVDB_open(PyObject* self, PyObject* args) {
             mvdb_->open(path);
             break;
         }
-        case INT16: {
-            auto * mvdb_ = static_cast<mvdb::MVDB<int16_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int16_t));
-            mvdb_->open(path);
-            break;
-        }
-        case UINT8: {
-            auto *mvdb_ = static_cast<mvdb::MVDB<uint8_t> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint8_t));
-            mvdb_->open(path);
-            break;
-        }
-        case FLOAT: {
+        case FLOAT32: {
             auto *mvdb_ = static_cast<mvdb::MVDB<float> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
             mvdb_->open(path);
             break;
@@ -274,7 +236,7 @@ static PyObject* MVDB_get_built(PyObject* self, PyObject* args) {
         if(mvdb_ != nullptr && mvdb_->get_db_() != nullptr && mvdb_->get_db_()->index() != nullptr)
             return PyLong_FromLong((long)mvdb_->get_db_()->index()->built());
         return PyLong_FromLong(false);
-    } else if (data_type == FLOAT) {
+    } else if (data_type == FLOAT32) {
         auto *mvdb_ = static_cast<mvdb::MVDB<float> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
         if(mvdb_ != nullptr && mvdb_->get_db_() != nullptr && mvdb_->get_db_()->index() != nullptr)
             return PyLong_FromLong((long)mvdb_->get_db_()->index()->built());
@@ -292,7 +254,7 @@ static PyObject* MVDB_get_num_items(PyObject* self, PyObject* args) {
     if(data_type == INT8){
         auto *mvdb_ = static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
         return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
-    } else if (data_type == FLOAT) {
+    } else if (data_type == FLOAT32) {
         auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
         return PyLong_FromLong((long)mvdb_->get_db_()->index()->ntotal());
     } else {
@@ -425,7 +387,7 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
 ////                distances = (void*)malloc(nq * k * sizeof(int8_t));
 ////                break;
 ////            }
-////            case FLOAT: {
+////            case FLOAT32: {
 ////                distances = (void*)malloc(nq * k * sizeof(float));
 ////                std::cout << "float..." << nq << "     -----     "  << k << std::endl;
 ////                break;
@@ -464,7 +426,7 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
 ////                    distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT8, distances);
 ////                break;
 ////            }
-////            case FLOAT: {
+////            case FLOAT32: {
 ////                auto *mvdb_ = static_cast<mvdb::MVDB<float> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
 ////                std::cout << "A--\n";
 ////                mvdb_->topk(nq, extract_float_arr(query_array_obj), std::string(query_path), std::string(result_path),
@@ -528,15 +490,7 @@ static PyObject* MVDB_add(PyObject *self, PyObject *args) {
             auto *mvdb_ = static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
             break;
         }
-        case INT16: {
-            auto *mvdb_ = static_cast<mvdb::MVDB<int16_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int16_t));
-            break;
-        }
-        case UINT8: {
-            auto *mvdb_ = static_cast<mvdb::MVDB<uint8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_uint8_t));
-            break;
-        }
-        case FLOAT: {
+        case FLOAT32: {
             auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
             float *input = extract_float_arr(input_array);
 //            idx_t* keys = mvdb_->insert();

@@ -9,15 +9,19 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -fPIC -march=armv8-a -O3" CACHE STRING "" FORCE) # neon is included by default in the armv8-a architecture
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -fPIC -march=armv8-a -O3" CACHE STRING "" FORCE)
 else ()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -O3 -fPIC")
-    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -O3 -fPIC")
+#    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -O3 -fPIC")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -mavx -msse -msse2 -mavx512f -mavx512bw -mavx512dq -O3 -fPIC")
+    # note: removed avx512 flags cuz compiling with them made ANNOY think my laptop had access to them which caused
+    #       an illegal Instruction error
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -mavx -msse -msse2 -O3 -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mavx2 -mavx -msse -msse2 -O3 -fPIC")
     find_package(OpenMP REQUIRED)
     add_definitions(-DFAISS)
     set(FAISS ON)
 endif ()
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -latomic")
 
-add_definitions(-DANNOYLIB_MULTITHREADED_BUILD) # enable annoy multithreaded build
+#add_definitions(-DANNOYLIB_MULTITHREADED_BUILD) # enable annoy multithreaded build => for some reason enabling this causes an Illegal Instruction error when calling the add method to add another vector
 
 # Disable warnings
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")

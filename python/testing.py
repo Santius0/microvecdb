@@ -1,3 +1,5 @@
+import os
+import shutil
 import numpy as np
 from memory_profiler import profile
 
@@ -54,16 +56,28 @@ queries = utils.read_vector_file("../../ann_data/deep10M/deep1B_queries.fvecs")
 
 # @profile
 def main():
+    if os.path.exists("./test_annoy_idx"):
+        shutil.rmtree("./test_annoy_idx")
+
+    annoy_db = mvdb.MVDB()
+    annoy_db.create(
+      index_type=mvdb.IndexType.ANNOY,
+      dims=128,
+      path="./test_annoy_idx",
+      initial_data=utils.read_vector_file("../../ann_data/sift10K/sift10K_base.fvecs")
+    )
+    print(annoy_db.num_items)
+    print(annoy_db.dims)
     # print(queries)
     # print(len(queries))
     # print(len(queries[33]))
-    db1 = mvdb.MVDB()
-    db1.open("./indices/spann_sift10K_float32")
-    print(f'python num items {db1.num_items}')
+    # db1 = mvdb.MVDB()
+    # db1.open("./indices/spann_sift10K_float32")
+    # print(f'python num items {db1.num_items}')
 
-    db2 = mvdb.MVDB()
-    db2.open("./indices/spann_sift1M_float32")
-    print(f'python num items {db2.num_items}')
+    # db2 = mvdb.MVDB()
+    # db2.open("./indices/spann_sift1M_float32")
+    # print(f'python num items {db2.num_items}')
     # res = db_.topk(query=queries, k = 100)
     # print(res[0])
     # print(utils.read_vector_file("../../ann_data/deep1M/deep1M_groundtruth.ivecs"))
