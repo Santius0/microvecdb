@@ -109,8 +109,6 @@ namespace mvdb::index {
         #else
                 annoy_index_ = std::make_unique<Annoy::AnnoyIndex<int, T, Annoy::Euclidean, Annoy::Kiss32Random, Annoy::AnnoyIndexSingleThreadedBuildPolicy>>(this->dims_);
         #endif
-//        annoy_index_ = std::make_unique<AnnoyIndex<int, T, Euclidean, Kiss32Random>>(this->dims_);
-        std::cout << path << std::endl;
         if (!annoy_index_->load(path.c_str()))
             throw std::runtime_error("Failed to load index file, '" + path +"'\n");
     }

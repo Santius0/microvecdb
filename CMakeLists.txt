@@ -21,7 +21,7 @@ else ()
 endif ()
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -latomic")
 
-#add_definitions(-DANNOYLIB_MULTITHREADED_BUILD) # enable annoy multithreaded build => for some reason enabling this causes an Illegal Instruction error when calling the add method to add another vector
+add_definitions(-DANNOYLIB_MULTITHREADED_BUILD) # enable annoy multithreaded build
 
 # Disable warnings
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
