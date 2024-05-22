@@ -79,9 +79,7 @@ def evaluate_annoy(n_trees):
             print(f"normalised_men_usage: {normalised_peak_dram}")
             print(f"recall: {recall}")
             print(f"perf[i_d + i_k]: {perf[i_d + i_k]}")
-            break
         delete_directory(index_path, verbose=True)
-        break
     return np.mean(perf)
 
 
