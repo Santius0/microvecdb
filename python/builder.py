@@ -3,6 +3,25 @@ import gc
 import shutil
 from pymicrovecdb import mvdb, utils as mv_utils
 
+
+SIFT10K = '../../ann_data/sift10K/sift10K_base.fvecs'
+SIFT100K = '../../ann_data/sift100K/sift100K_base.fvecs'
+SIFT500K = '../../ann_data/sift500K/sift500K_base.fvecs'
+SIFT1M = '../../ann_data/sift1M/sift/sift_base.fvecs'
+
+GIST10K = '../../ann_data/gist10K/gist10K_base.fvecs'
+GIST100K = '../../ann_data/gist100K/gist100K_base.fvecs'
+GIST500K = '../../ann_data/gist500K/gist500K_base.fvecs'
+GIST1M = '../../ann_data/gist1M/gist/gist_base.fvecs'
+
+DEEP10K = '../../ann_data/deep10K/deep10K_base.fvecs'
+DEEP100K = '../../ann_data/deep100K/deep100K_base.fvecs'
+DEEP500K = '../../ann_data/deep500K/deep500K_base.fvecs'
+DEEP1M = '../../ann_data/deep1M/deep1M_base.fvecs'
+DEEP5M = '../../ann_data/deep5M/deep5M_base.fvecs'
+DEEP10M = '../../ann_data/deep10M/deep10M_base.fvecs'
+
+
 dataset_configs = {
     'sift': {'base_path': '../../ann_data/sift1M/sift/sift_base.fvecs', 'query_path': '/../../ann_data/sift1M/sift/sift_query.fvecs' , 'sizes': [10000, 100000, 500000]},
     'gist': {'base_path': '../../ann_data/gist1M/gist/gist_base.fvecs', 'query_path': '/../../ann_data/gist1M/gist/gist_query.fvecs', 'sizes': [10000, 100000, 500000]},
@@ -11,22 +30,43 @@ dataset_configs = {
 
 index_configs = [
     # FAISS_FLAT
-    # {'dataset_name': 'sift10K', 'initial_data_path': '../../ann_data/sift10K/sift10K_base.fvecs', 'index_type': mvdb.IndexType.FAISS_FLAT, 'data_type': mvdb.DataType.FLOAT32, 'params': {}, 'extra_labels': ""},
-    # {'dataset_name': 'sift100K', 'initial_data_path': '../../ann_data/sift100K/sift100K_base.fvecs', 'index_type': mvdb.IndexType.FAISS_FLAT, 'data_type': mvdb.DataType.FLOAT32, 'params': {}, 'extra_labels': ""},
-    # {'dataset_name': 'sift500K', 'initial_data_path': '../../ann_data/sift500K/sift500K_base.fvecs', 'index_type': mvdb.IndexType.FAISS_FLAT, 'data_type': mvdb.DataType.FLOAT32, 'params': {}, 'extra_labels': ""},
-    # {'dataset_name': 'sift1M', 'initial_data_path': '../../ann_data/sift1M/sift/sift_base.fvecs', 'index_type': mvdb.IndexType.FAISS_FLAT, 'data_type': mvdb.DataType.FLOAT32, 'params': {}, 'extra_labels': ""},
+    # {'dataset_name': 'sift10K', 'initial_data_path': SIFT10K, 'index_type': mvdb.IndexType.FAISS_FLAT, 'data_type': mvdb.DataType.FLOAT32, 'params': {}, 'extra_labels': ""},
+    # {'dataset_name': 'sift100K', 'initial_data_path': SIFT100K, 'index_type': mvdb.IndexType.FAISS_FLAT, 'data_type': mvdb.DataType.FLOAT32, 'params': {}, 'extra_labels': ""},
+    # {'dataset_name': 'sift500K', 'initial_data_path': SIFT500K, 'index_type': mvdb.IndexType.FAISS_FLAT, 'data_type': mvdb.DataType.FLOAT32, 'params': {}, 'extra_labels': ""},
+    # {'dataset_name': 'sift1M', 'initial_data_path': SIFT1M, 'index_type': mvdb.IndexType.FAISS_FLAT, 'data_type': mvdb.DataType.FLOAT32, 'params': {}, 'extra_labels': ""},
 
     # ANNOY
-    # {'dataset_name': 'sift10K', 'initial_data_path': '../../ann_data/sift10K/sift10K_base.fvecs', 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 100, 'n_threads': 10}, 'extra_labels': 'n_tree=200'},
-    # {'dataset_name': 'sift10K', 'initial_data_path': '../../ann_data/sift10K/sift10K_base.fvecs', 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 100, 'n_threads': 10}, 'extra_labels': 'n_tree=400'},
+    {'dataset_name': 'sift10K', 'initial_data_path': SIFT10K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+    {'dataset_name': 'sift100K', 'initial_data_path': SIFT100K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+    {'dataset_name': 'sift500K', 'initial_data_path': SIFT500K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+    {'dataset_name': 'sift1M', 'initial_data_path': SIFT1M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+    {'dataset_name': 'gist10K', 'initial_data_path': GIST10K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+    {'dataset_name': 'gist100K', 'initial_data_path': GIST100K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+    {'dataset_name': 'gist500K', 'initial_data_path': GIST500K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+    {'dataset_name': 'gist1M', 'initial_data_path': GIST1M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+    {'dataset_name': 'deep10K', 'initial_data_path': DEEP10K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+    {'dataset_name': 'deep100K', 'initial_data_path': DEEP100K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+    {'dataset_name': 'deep500K', 'initial_data_path': DEEP500K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+    {'dataset_name': 'deep1M', 'initial_data_path': DEEP1M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+    {'dataset_name': 'deep5M', 'initial_data_path': DEEP5M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+    {'dataset_name': 'deep10M', 'initial_data_path': DEEP10M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+
 
     # SPANN
-    # {'dataset_name': 'sift10K', 'initial_data_path': '../../ann_data/sift10K/sift10K_base.fvecs', 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
-    # {'dataset_name': 'sift100K', 'initial_data_path': '../../ann_data/sift100K/sift100K_base.fvecs', 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
-    # {'dataset_name': 'sift500K', 'initial_data_path': '../../ann_data/sift500K/sift500K_base.fvecs', 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
-    # {'dataset_name': 'sift1M', 'initial_data_path': '../../ann_data/sift1M/sift/sift_base.fvecs', 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
-
-    # {'dataset_name': 'gist10K', 'initial_data_path': '../../ann_data/gist10K/gist10K_base.fvecs', 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
+    {'dataset_name': 'sift10K', 'initial_data_path': SIFT10K, 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
+    {'dataset_name': 'sift100K', 'initial_data_path': SIFT100K, 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
+    {'dataset_name': 'sift500K', 'initial_data_path': SIFT500K, 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
+    {'dataset_name': 'sift1M', 'initial_data_path': SIFT1M, 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
+    {'dataset_name': 'gist10K', 'initial_data_path': GIST10K, 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
+    {'dataset_name': 'gist100K', 'initial_data_path': GIST100K, 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
+    {'dataset_name': 'gist500K', 'initial_data_path': GIST500K, 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
+    {'dataset_name': 'gist1M', 'initial_data_path': GIST1M, 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
+    {'dataset_name': 'deep10K', 'initial_data_path': DEEP10K, 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
+    {'dataset_name': 'deep100K', 'initial_data_path': DEEP100K, 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
+    {'dataset_name': 'deep500K', 'initial_data_path': DEEP500K, 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
+    {'dataset_name': 'deep1M', 'initial_data_path': DEEP1M, 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
+    {'dataset_name': 'deep5M', 'initial_data_path': DEEP5M, 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
+    {'dataset_name': 'deep10M', 'initial_data_path': DEEP10M, 'index_type': mvdb.IndexType.SPANN, 'data_type': mvdb.DataType.FLOAT32, 'params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}, 'extra_labels': ''},
 ]
 
 def delete_directory(path, verbose=False):
@@ -94,11 +134,11 @@ def build_indices():
     os.makedirs("./indices", exist_ok=True)
     for config in index_configs:
         gc.collect()
-        index_name = f"{str(config['index_type'])}_{config['dataset_name']}_{config['data_type']}"
+        index_name = f"{config['index_type']}_{config['dataset_name']}_{config['data_type']}"
         if config['extra_labels'] != "":
-            index_name = f"_{config['extra_labels']}"
+            index_name += f"_{config['extra_labels']}"
         print(f"Building ./indices/{index_name}")
-        db = mvdb.MVDB(data_type=config['data_type'])
+        db = mvdb.MVDB(dtype=config['data_type'])
         db.create(
             index_type=config['index_type'],
             dims=mv_utils.get_fvecs_dim_size(config['initial_data_path']),

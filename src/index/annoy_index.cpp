@@ -154,7 +154,7 @@ namespace mvdb::index {
         #ifndef _MSC_VER
         struct rusage rusage{};
         getrusage(RUSAGE_SELF, &rusage);
-        double peakWSS = (double)(rusage.ru_maxrss) / (double)1048576;
+        double peakWSS = (double)(rusage.ru_maxrss) / (double)1024;
         #else
         PROCESS_MEMORY_COUNTERS pmc;
         GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));

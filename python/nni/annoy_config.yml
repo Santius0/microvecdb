@@ -1,0 +1,13 @@
+experimentName: Annoy Autotune
+trialConcurrency: 1
+maxExperimentDuration: 20h
+maxTrialNumber: 1
+trainingService:
+  platform: local
+trialCommand: python3 annoy_experiment.py
+trialCodeDirectory: .
+tuner:
+  name: GridSearch
+  classArgs:
+    optimize_mode: maximize
+searchSpaceFile: annoy_search_space.json
