@@ -282,7 +282,7 @@ namespace mvdb::index {
 //                        while (true) {
 //                            qid = queriesSent.fetch_add(1);
 //                            if (qid < numQuerys)
-//                                sptag_vector_index_->SearchIndex(results[qid]); // this line causes memory_profiler to fail horribly, can't be removed though
+//                                sptag_vector_index_->SearchIndex(results[qid]); // this line within this multi-threading code causes memory_profiler to fail horribly, can't be removed though
 //                            else return;
 //                        }
 //                    });
@@ -292,12 +292,12 @@ namespace mvdb::index {
                 size_t queriesSent = 0;
                 #pragma omp parallel
                 {
-                    size_t qid = 0;
+                    size_t qid;
                     while (true) {
                         #pragma omp atomic capture
                         qid = queriesSent++;
                         if (qid < numQuerys) {
-                            sptag_vector_index_->SearchIndex(results[qid]); // this line causes memory_profiler to fail horribly, can't be removed though
+                            sptag_vector_index_->SearchIndex(results[qid]);
                         } else {
                             break;
                         }

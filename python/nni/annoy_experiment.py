@@ -10,7 +10,8 @@ from memory_profiler import memory_usage
 datasets = [
     {'name': 'sift1M', 'base': '../../../ann_data/sift1M/sift/sift_base.fvecs', 'query': '../../../ann_data/sift1M/sift/sift_query.fvecs', 'ground': '../../../ann_data/sift1M/sift/sift_groundtruth.ivecs'},
     {'name': 'gist1M', 'base': '../../../ann_data/gist1M/gist/gist_base.fvecs', 'query': '../../../ann_data/gist1M/gist/gist_query.fvecs', 'ground': '../../../ann_data/gist1M/gist/gist_groundtruth.ivecs'},
-    {'name': 'deep10M', 'base': '../../../ann_data/deep10M/deep10M.fvecs', 'query': '../../../ann_data/deep10M/deep1B_queries.fvecs', 'ground': '../../../ann_data/deep10M/deep1B_groundtruth.ivecs'},
+    {'name': 'deep1M', 'base': '../../../ann_data/deep1M/deep1M_base.fvecs', 'query': '../../../ann_data/deep10M/deep1B_queries.fvecs', 'ground': '../../../ann_data/deep1M/deep1M_groundtruth.ivecs'},
+    {'name': 'deep10M', 'base': '../../../ann_data/deep10M/deep10M_base.fvecs', 'query': '../../../ann_data/deep10M/deep1B_queries.fvecs', 'ground': '../../../ann_data/deep10M/deep10M_groundtruth.ivecs'},
 ]
 
 k_values = [1, 10, 50, 100]
@@ -38,24 +39,32 @@ def delete_directory(path, verbose=False):
 
 def wrapper(db, dataset, k):
     return db.topk(query=mv_utils.read_vector_file(dataset['query']), k=k)
+
+def normalize(value, min_value, max_value):
+    return max(0.0, min(1.0, (value - min_value) / (max_value - min_value)))
+def objective(latency, recall, dram, weight_latency=0.3, weight_recall=0.3, weight_dram=0.4, min_latency=0, max_latency=600, min_dram=0, max_dram=2048):
+    latency_norm = normalize(latency, min_latency, max_latency)
+    dram_norm = normalize(dram, min_dram, max_dram)
+    objective_value = (weight_latency * latency_norm) + (weight_dram * dram_norm) - (weight_recall * recall) # recall is already normalised between 0 and 1
+    print(f"latency_norm: {latency_norm}")
+    print(f"normalised_peak_dram: {dram_norm}")
+    print(f"objective_value: {objective_value}")
+    return objective_value
+
 def evaluate_annoy(n_trees):
     gc.collect()
-    index_path = f"./annoy_nni_{os.getpid()}"
-    delete_directory(index_path, verbose=True)
-    max_dram = 2048 # 2 GB
-    max_latency = 600 # 10 mins
-    weight_latency = 0.3
-    weight_recall = 0.4
-    weight_dram = 0.3
     perf = np.zeros(len(datasets) * len(k_values))
     for i_d, dataset in enumerate(datasets):
+        gc.collect()
+        index_path = f"./annoy_{dataset['name']}_{n_trees}"
+        delete_directory(index_path, verbose=True)
         db = mvdb.MVDB()
         print(f"building for {dataset['name']} ...")
         db.create(
             index_type=mvdb.IndexType.ANNOY,
             dims=mv_utils.get_fvecs_dim_size(dataset['query']),
             path=index_path,
-            initial_data=mv_utils.read_vector_file(dataset['base']),
+            initial_data_path=dataset['base'],
             n_trees = n_trees
         )
         print(f"build for {dataset['name']} @ f{index_path} successful")
@@ -68,16 +77,12 @@ def evaluate_annoy(n_trees):
             # dists = results[1]
             # mem_usage = results[2]
             latency = time.time() - start_time
-            normalised_latency = latency / max_latency
-            normalised_peak_dram = peak_dram / max_dram
             recall = (recall1(dataset['query'], dataset['ground'], k = k_values[i_k])  + recall2(ids, gt=mv_utils.read_vector_file(dataset['ground']), k=k))/2
-            perf[i_d + i_k] = weight_recall * recall - weight_dram * normalised_peak_dram - weight_latency * normalised_latency
             print(f"k: {k}")
             print(f"latency: {latency}")
-            print(f"normalised_latency: {normalised_latency}")
             print(f"peak_dram: {peak_dram}")
-            print(f"normalised_men_usage: {normalised_peak_dram}")
             print(f"recall: {recall}")
+            perf[i_d + i_k] = objective(latency, recall, peak_dram)
             print(f"perf[i_d + i_k]: {perf[i_d + i_k]}")
         delete_directory(index_path, verbose=True)
     return np.mean(perf)

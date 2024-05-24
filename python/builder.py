@@ -25,7 +25,7 @@ DEEP10M = '../../ann_data/deep10M/deep10M_base.fvecs'
 dataset_configs = {
     'sift': {'base_path': '../../ann_data/sift1M/sift/sift_base.fvecs', 'query_path': '/../../ann_data/sift1M/sift/sift_query.fvecs' , 'sizes': [10000, 100000, 500000]},
     'gist': {'base_path': '../../ann_data/gist1M/gist/gist_base.fvecs', 'query_path': '/../../ann_data/gist1M/gist/gist_query.fvecs', 'sizes': [10000, 100000, 500000]},
-    'deep': {'base_path': '../../ann_data/deep10M/deep10M.fvecs', 'query_path': '../../ann_data/deep10M/deep1B_queries.fvecs', 'sizes': [10000, 100000, 500000, 1000000, 5000000]},
+    'deep': {'base_path': '../../ann_data/deep10M/deep10M_base.fvecs', 'query_path': '../../ann_data/deep10M/deep1B_queries.fvecs', 'sizes': [10000, 100000, 500000, 1000000, 5000000, 10000000]},
 }
 
 index_configs = [
@@ -101,12 +101,16 @@ def short_code(num):
     return f"{short_num}{suffix}"
 
 def dataset_make(base_path, n, output_name):
-    print(f"Building {base_path} variant")
-    vecs = mv_utils.read_vector_file(base_path, n)
-    mv_utils.write_vector_file(vecs, f'{output_name}_base.fvecs')
-    print(f'{output_name}_base.fvecs successfully built')
+    if not os.path.exists(f'{output_name}_base.fvecs'):
+        print(f"Building {base_path} variant")
+        vecs = mv_utils.read_vector_file(base_path, n)
+        mv_utils.write_vector_file(vecs, f'{output_name}_base.fvecs')
+        print(f'{output_name}_base.fvecs successfully built')
+    else:
+        print(f'{output_name}_base.fvecs already exists')
 
 def build_datasets():
+    os.makedirs("./indices", exist_ok=True)
     for conf_key in dataset_configs:
         dataset_config = dataset_configs[conf_key]
         for size in dataset_config['sizes']:
@@ -149,8 +153,8 @@ def build_indices():
         print(f"Successfully built ./indices/{index_name}")
 
 def main():
-    # build_datasets()
-    build_indices()
+    build_datasets()
+    # build_indices()
 
 
 if __name__ == '__main__':

@@ -1,7 +1,8 @@
 experimentName: Annoy Autotune
 trialConcurrency: 1
-maxExperimentDuration: 20h
-maxTrialNumber: 100
+maxExperimentDuration: 200h
+maxTrialDuration: 12h
+maxTrialNumber: 15
 trainingService:
   platform: local
 trialCommand: python3 annoy_experiment.py

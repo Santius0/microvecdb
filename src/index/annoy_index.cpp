@@ -45,15 +45,22 @@ namespace mvdb::index {
                 num_vecs = xvecs_num_vecs<float>(initial_data_path);
             else
                 num_vecs = xvecs_num_vecs<int32_t>(initial_data_path);
+            std::cout << "loading file " << initial_data_path << std::endl;
             read_xvecs<T>(initial_data_path, data, start_indexes, num_vecs);
+            std::cout << "adding elements to Annoy index..." << std::endl;
             for (int i = 0; i < num_vecs; i++)
                 annoy_index_->add_item(i, data.data() + i * dims);
+            std::cout << "finished elements to Annoy index" << std::endl;
+            data.clear();
+            data.shrink_to_fit();
         } else if (initial_data_size > 0) {
             if (!initial_data)
                 throw std::invalid_argument("Initial data pointer cannot be null when size is specified.");
+            std::cout << "adding elements to Annoy index..." << std::endl;
             for (size_t i = 0; i < initial_data_size; i++) {
                 annoy_index_->add_item(i, initial_data + i * dims);
             }
+            std::cout << "finished elements to Annoy index" << std::endl;
         }
         annoy_index_->build(this->n_trees, this->n_threads);
         this->save_(path);
