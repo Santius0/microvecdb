@@ -50,7 +50,7 @@ namespace mvdb::index {
             std::cout << "adding elements to Annoy index..." << std::endl;
             for (int i = 0; i < num_vecs; i++)
                 annoy_index_->add_item(i, data.data() + i * dims);
-            std::cout << "finished elements to Annoy index" << std::endl;
+            std::cout << "finished adding elements to Annoy index" << std::endl;
             data.clear();
             data.shrink_to_fit();
         } else if (initial_data_size > 0) {
@@ -60,7 +60,7 @@ namespace mvdb::index {
             for (size_t i = 0; i < initial_data_size; i++) {
                 annoy_index_->add_item(i, initial_data + i * dims);
             }
-            std::cout << "finished elements to Annoy index" << std::endl;
+            std::cout << "finished adding elements to Annoy index" << std::endl;
         }
         annoy_index_->build(this->n_trees, this->n_threads);
         this->save_(path);

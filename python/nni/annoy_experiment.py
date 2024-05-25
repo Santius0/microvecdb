@@ -8,10 +8,10 @@ from pymicrovecdb import mvdb, utils as mv_utils
 from memory_profiler import memory_usage
 
 datasets = [
+    # {'name': 'deep10M', 'base': '../../../ann_data/deep10M/deep10M_base.fvecs', 'query': '../../../ann_data/deep10M/deep1B_queries.fvecs', 'ground': '../../../ann_data/deep10M/deep10M_groundtruth.ivecs'},
     {'name': 'sift1M', 'base': '../../../ann_data/sift1M/sift/sift_base.fvecs', 'query': '../../../ann_data/sift1M/sift/sift_query.fvecs', 'ground': '../../../ann_data/sift1M/sift/sift_groundtruth.ivecs'},
     {'name': 'gist1M', 'base': '../../../ann_data/gist1M/gist/gist_base.fvecs', 'query': '../../../ann_data/gist1M/gist/gist_query.fvecs', 'ground': '../../../ann_data/gist1M/gist/gist_groundtruth.ivecs'},
     {'name': 'deep1M', 'base': '../../../ann_data/deep1M/deep1M_base.fvecs', 'query': '../../../ann_data/deep10M/deep1B_queries.fvecs', 'ground': '../../../ann_data/deep1M/deep1M_groundtruth.ivecs'},
-    {'name': 'deep10M', 'base': '../../../ann_data/deep10M/deep10M_base.fvecs', 'query': '../../../ann_data/deep10M/deep1B_queries.fvecs', 'ground': '../../../ann_data/deep10M/deep10M_groundtruth.ivecs'},
 ]
 
 k_values = [1, 10, 50, 100]
@@ -24,10 +24,14 @@ def recall1(qr, gt, k = 100):
             if id in gt[i][:k]:
                 actual += 1
         recalls[i] = actual
-    return np.mean(recalls) / float(k)
+    r1 = np.mean(recalls) / float(k)
+    print(f"r1 = {r1}")
+    return r1
 
 def recall2(qr, gt, k = 100):
-    return (qr[:, :k] == gt[:, :1]).sum() / float(qr.shape[0])
+    r2 = (qr[:, :k] == gt[:, :1]).sum() / float(qr.shape[0])
+    print(f"r2 = {r2}")
+    return r2
 
 def delete_directory(path, verbose=False):
     if os.path.exists(path):
@@ -65,7 +69,8 @@ def evaluate_annoy(n_trees):
             dims=mv_utils.get_fvecs_dim_size(dataset['query']),
             path=index_path,
             initial_data_path=dataset['base'],
-            n_trees = n_trees
+            n_trees = n_trees,
+            n_threads=1 if dataset['name'] == 'deep10M' else -1
         )
         print(f"build for {dataset['name']} @ f{index_path} successful")
         for i_k, k in enumerate(k_values):
@@ -82,9 +87,10 @@ def evaluate_annoy(n_trees):
             print(f"latency: {latency}")
             print(f"peak_dram: {peak_dram}")
             print(f"recall: {recall}")
-            perf[i_d + i_k] = objective(latency, recall, peak_dram)
-            print(f"perf[i_d + i_k]: {perf[i_d + i_k]}")
+            perf[i_d * len(k_values) + i_k] = objective(latency, recall, peak_dram)
+            print(f"perf[i_d * len(k_values) + i_k] => perf[{i_d * len(k_values) + i_k}]: {perf[i_d * len(k_values) + i_k]}")
         delete_directory(index_path, verbose=True)
+    print(f"perf = {perf}")
     return np.mean(perf)
 
 
