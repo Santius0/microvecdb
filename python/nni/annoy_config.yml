@@ -1,4 +1,4 @@
-experimentName: Annoy Autotune
+experimentName: ANNOY Autotune - 1 Million
 trialConcurrency: 1
 maxExperimentDuration: 200h
 maxTrialDuration: 12h
@@ -10,5 +10,5 @@ trialCodeDirectory: .
 tuner:
   name: GridSearch
   classArgs:
-    optimize_mode: manimize
+    optimize_mode: minimize
 searchSpaceFile: annoy_search_space.json
