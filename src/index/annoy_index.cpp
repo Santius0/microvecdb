@@ -10,6 +10,13 @@
 
 namespace mvdb::index {
 
+    inline const AnnoyIndexNamedArgs* parse_named_args(const NamedArgs* args) {
+        const auto *annoy_args = dynamic_cast<const AnnoyIndexNamedArgs *>(args);
+        if (!annoy_args)
+            throw std::runtime_error("Failed to dynamic_cast from NamedArgs to AnnoyIndexNamedArgs");
+        return annoy_args;
+    }
+
     template <typename T>
     void MVDBAnnoyIndex<T>::build(const idx_t &dims, const std::string& path, const std::string& initial_data_path, const T* initial_data, const uint64_t& initial_data_size, const NamedArgs* args) {
         if (path.empty())
@@ -19,9 +26,11 @@ namespace mvdb::index {
         if (!args)
             throw std::invalid_argument("NamedArgs pointer cannot be null.");
 
-        const auto *annoy_args = dynamic_cast<const AnnoyIndexNamedArgs *>(args);
-        if (!annoy_args)
-            throw std::runtime_error("Failed to dynamic_cast from NamedArgs to AnnoyIndexNamedArgs");
+//        const auto *annoy_args = dynamic_cast<const AnnoyIndexNamedArgs *>(args);
+//        if (!annoy_args)
+//            throw std::runtime_error("Failed to dynamic_cast from NamedArgs to AnnoyIndexNamedArgs");
+
+        const auto *annoy_args = parse_named_args(args);
 
         std::cout << "Building MVDBAnnoyIndex @ " << path << std::endl;
         std::cout << "Dimensions = " << dims << " | Number of Trees = " << annoy_args->n_trees << " | Number of Threads = " << annoy_args->n_threads << std::endl;
@@ -134,7 +143,7 @@ namespace mvdb::index {
     void MVDBAnnoyIndex<T>::topk(const idx_t &nq, T *query, const std::string& query_path,
                                  const std::string& result_path, idx_t *ids, T *distances,
                                  double& peak_wss_mb, const idx_t &k, const DISTANCE_METRIC &distance_metric,
-                                 const float &c) const {
+                                 const float &c, const NamedArgs* args) const {
 
         if(!query_path.empty())
             throw std::runtime_error("Query file with MVDBAnnoyIndex topk not supported...yet");
@@ -142,13 +151,20 @@ namespace mvdb::index {
         if(!result_path.empty())
             throw std::runtime_error("Result file with MVDBAnnoyIndex topk not supported...yet");
 
+        const auto *annoy_args = parse_named_args(args);
+
+        std::cout << "Searching MVDBAnnoyIndex with:" << std::endl
+        << "Dimensions = "
+        << this->dims_ << " | n_trees = " << annoy_args->n_trees << " | search_k = " << annoy_args->search_k
+        << " | Number of Threads = " << annoy_args->n_threads << std::endl;
+
         #pragma omp parallel
         {
-            std::vector<int> closest_ids;           // DO NOT pre-allocate memory for Annoy recepticles!
-            std::vector<T> closest_distances;       // Annoy's search methods will ignore all pre-allcoated memory and allocate it's own memory right after
-            #pragma omp parallel for schedule(dynamic) if (nq >= 10)
+            std::vector<int> closest_ids;           // DO NOT pre-allocate memory for Annoy receptacles!
+            std::vector<T> closest_distances;       // Annoy's search methods will ignore all pre-allocated memory and allocate its own memory right after
+            #pragma omp parallel for schedule(dynamic) if (nq >= 50)
             for (idx_t i = 0; i < nq; i++) {
-                annoy_index_->get_nns_by_vector(query + i * this->dims_, k, -1, &closest_ids, &closest_distances);
+                annoy_index_->get_nns_by_vector(query + i * this->dims_, k, annoy_args->search_k, &closest_ids, &closest_distances);
                 for (int j = 0; j < k; j++) {
                     ids[i * k + j] = closest_ids[j];
                     distances[i * k + j] = closest_distances[j];

@@ -3,6 +3,13 @@
 
 namespace mvdb::index {
 
+    inline const SPANNIndexNamedArgs* parse_named_args(const NamedArgs* args) {
+        const auto *spann_args = dynamic_cast<const SPANNIndexNamedArgs *>(args);
+        if (!spann_args)
+            throw std::runtime_error("Failed to dynamic_cast from NamedArgs to SPANNIndexNamedArgs");
+        return spann_args;
+    }
+
     template <typename T>
     SPANNIndex<T>::SPANNIndex() {
         builder_options_ = std::make_shared<BuilderOptions>();
@@ -95,9 +102,11 @@ namespace mvdb::index {
         else
             throw std::runtime_error("Unsupported data SPANN Index data type");
 
-        const auto *spann_args = dynamic_cast<const SPANNIndexNamedArgs *>(args);
-        if (!spann_args)
-            throw std::runtime_error("Failed to dynamic_cast from NamedArgs to SPANNIndexNamedArgs");
+//        const auto *spann_args = dynamic_cast<const SPANNIndexNamedArgs *>(args);
+//        if (!spann_args)
+//            throw std::runtime_error("Failed to dynamic_cast from NamedArgs to SPANNIndexNamedArgs");
+
+        const auto *spann_args = parse_named_args(args);
 
         if(spann_args->build_config_path.empty())
             throw std::runtime_error("At this time build_config_path is required!");
@@ -197,7 +206,7 @@ namespace mvdb::index {
     void SPANNIndex<T>::topk(const idx_t &nq, T *query, const std::string& query_path,
                              const std::string& result_path, idx_t *ids, T *distances,
                              double& peak_wss_mb, const idx_t &k,
-                             const DISTANCE_METRIC &distance_metric, const float& c) const {
+                             const DISTANCE_METRIC &distance_metric, const float& c, const NamedArgs* args) const {
 //  ./indexsearcher -x sift1m_index_dir_Saved/ -d 128 -v Float -f XVEC -i sift1M/sift_query.fvecs -o outputSearch.txt -k 100
 
         if(query_path.empty() && query == nullptr)
@@ -205,6 +214,8 @@ namespace mvdb::index {
 
         if(!query_path.empty() && query != nullptr)
             throw std::runtime_error("Exactly one of query and query_path accepted");
+
+        const auto * spann_args = parse_named_args(args);
 
         std::shared_ptr<SearcherOptions> options(new SearcherOptions);
         options->m_indexFolder = builder_options_->m_outputFolder;
@@ -264,8 +275,8 @@ namespace mvdb::index {
             int numQuerys = min(options->m_batch, query_vector_set->Count() - startQuery);
             for (SPTAG::SizeType i = 0; i < numQuerys; i++) results[i].SetTarget(query_vector_set->GetVector(startQuery + i));
 
-            for (int mc = 0; mc < maxCheck.size(); mc++) {
-                sptag_vector_index_->SetParameter("MaxCheck", maxCheck[mc].c_str());
+            for (const auto & mc : maxCheck) {
+                sptag_vector_index_->SetParameter("MaxCheck", mc.c_str());
 
                 for (SPTAG::SizeType i = 0; i < numQuerys; i++) results[i].Reset();
 

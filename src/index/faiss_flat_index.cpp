@@ -134,7 +134,8 @@ namespace mvdb::index {
     template <typename T>
     void FaissFlatIndex<T>::topk(const idx_t& nq, T* query, const std::string& query_path,
                                  const std::string& result_path, idx_t* ids, T* distances, double& peak_wss_mb,
-                                 const idx_t& k, const DISTANCE_METRIC& distance_metric, const float& c) const{
+                                 const idx_t& k, const DISTANCE_METRIC& distance_metric, const float& c,
+                                 const NamedArgs* args) const{
         if(!query_path.empty())
             throw std::runtime_error("Query file with FaissFlatIndex topk not supported...yet");
 

@@ -34,7 +34,7 @@ namespace mvdb {
         void topk(const idx_t& nq, T* query, std::string query_path, std::string result_path, idx_t* ids, T* distances,
                   double& peak_wss_mb, const idx_t& k = 5,
                   const index::DISTANCE_METRIC& distance_metric = index::DISTANCE_METRIC::L2_DISTANCE,
-                  const float& c = 100.0f);
+                  const float& c = 100.0f, const NamedArgs* args = nullptr);
 //        void range();
 //        void embed();
 

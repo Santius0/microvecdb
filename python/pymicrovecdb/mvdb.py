@@ -22,10 +22,6 @@ def str_to_data_type(type_str: str):
 def np_dtype(data_type: DataType):
     if data_type == DataType.INT8:
         return np.int8
-    elif data_type == DataType.INT16:
-        return np.int16
-    elif data_type == DataType.UINT8:
-        return np.uint8
     elif data_type == DataType.FLOAT32:
         return np.float32
     else:
@@ -60,11 +56,14 @@ def _create_faiss_flat_named_args(**kwargs):
 def _create_annoy_named_args(**kwargs):
     n_trees = 10
     n_threads = -1
+    search_k = -1
     if 'n_trees' in kwargs:
         n_trees = kwargs['n_trees']
     if 'n_threads' in kwargs:
         n_threads = kwargs['n_threads']
-    return mvdb_c.AnnoyIndexNamedArgs_init(n_trees, n_threads)
+    if 'search_k' in kwargs:
+        search_k = kwargs['search_k']
+    return mvdb_c.AnnoyIndexNamedArgs_init(n_trees, n_threads, search_k)
 
 def _create_spann_named_args(**kwargs):
     build_config_path = ""

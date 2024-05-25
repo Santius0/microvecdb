@@ -16,7 +16,7 @@ datasets = [
 
 k_values = [1, 10, 50, 100]
 
-def recall1(qr, gt, k = 100):
+def recall1(qr, gt, k=100):
     recalls = np.zeros(len(qr))
     for i in range(len(qr)):
         actual = 0
@@ -25,12 +25,12 @@ def recall1(qr, gt, k = 100):
                 actual += 1
         recalls[i] = actual
     r1 = np.mean(recalls) / float(k)
-    print(f"r1 = {r1}")
+    print(f"Recall1 (r1): {r1:.4f}")
     return r1
 
-def recall2(qr, gt, k = 100):
+def recall2(qr, gt, k=100):
     r2 = (qr[:, :k] == gt[:, :1]).sum() / float(qr.shape[0])
-    print(f"r2 = {r2}")
+    print(f"Recall2 (r2): {r2:.4f}")
     return r2
 
 def delete_directory(path, verbose=False):
@@ -46,58 +46,67 @@ def wrapper(db, dataset, k):
 
 def normalize(value, min_value, max_value):
     return max(0.0, min(1.0, (value - min_value) / (max_value - min_value)))
+
 def objective(latency, recall, dram, weight_latency=0.3, weight_recall=0.3, weight_dram=0.4, min_latency=0, max_latency=600, min_dram=0, max_dram=2048):
     latency_norm = normalize(latency, min_latency, max_latency)
     dram_norm = normalize(dram, min_dram, max_dram)
-    objective_value = (weight_latency * latency_norm) + (weight_dram * dram_norm) - (weight_recall * recall) # recall is already normalised between 0 and 1
-    print(f"latency_norm: {latency_norm}")
-    print(f"normalised_peak_dram: {dram_norm}")
-    print(f"objective_value: {objective_value}")
+    objective_value = (weight_latency * latency_norm) + (weight_dram * dram_norm) - (weight_recall * recall)
+    print(f"Latency Normalized: {latency_norm:.4f}")
+    print(f"DRAM Normalized: {dram_norm:.4f}")
+    print(f"Objective Value: {objective_value:.4f}")
     return objective_value
 
-def evaluate_annoy(n_trees):
+def evaluate_annoy(n_trees, search_k):
     gc.collect()
     perf = np.zeros(len(datasets) * len(k_values))
     for i_d, dataset in enumerate(datasets):
         gc.collect()
         index_path = f"./annoy_{dataset['name']}_{n_trees}"
-        delete_directory(index_path, verbose=True)
+        # delete_directory(index_path, verbose=True)  # Commented out code
         db = mvdb.MVDB()
-        print(f"building for {dataset['name']} ...")
-        db.create(
-            index_type=mvdb.IndexType.ANNOY,
-            dims=mv_utils.get_fvecs_dim_size(dataset['query']),
-            path=index_path,
-            initial_data_path=dataset['base'],
-            n_trees = n_trees,
-            n_threads=1 if dataset['name'] == 'deep10M' else -1
-        )
-        print(f"build for {dataset['name']} @ f{index_path} successful")
+        if not os.path.exists(index_path):
+            print(f"Building index for {dataset['name']}...")
+            db.create(
+                index_type=mvdb.IndexType.ANNOY,
+                dims=mv_utils.get_fvecs_dim_size(dataset['query']),
+                path=index_path,
+                initial_data_path=dataset['base'],
+                n_trees=n_trees,
+                n_threads=1 if dataset['name'] == 'deep10M' or (dataset['name'] == 'gist1M' and n_trees == 1000) else -1,
+                search_k=search_k
+            )
+            print(f"Build successful for {dataset['name']} at {index_path}")
+        else:
+            print(f"Index at {index_path} already exists. No build needed.")
+            db.open(index_path)
+
         for i_k, k in enumerate(k_values):
             gc.collect()
             start_time = time.time()
-            # ids, dists, mem_usage = db.topk(query=mv_utils.read_vector_file(dataset['query']), k=k)
+            # ids, dists, mem_usage = db.topk(query=mv_utils.read_vector_file(dataset['query']), k=k)  # Commented out code
             peak_dram, results = memory_usage((wrapper, (db, dataset, k)), retval=True, max_usage=True)
             ids = results[0]
-            # dists = results[1]
-            # mem_usage = results[2]
+            # dists = results[1]  # Commented out code
+            # mem_usage = results[2]  # Commented out code
             latency = time.time() - start_time
-            recall = (recall1(dataset['query'], dataset['ground'], k = k_values[i_k])  + recall2(ids, gt=mv_utils.read_vector_file(dataset['ground']), k=k))/2
+            # recall = (recall1(dataset['query'], dataset['ground'], k=k_values[i_k]) + recall2(ids, gt=mv_utils.read_vector_file(dataset['ground']), k=k)) / 2  # Commented out code
+            recall = recall1(dataset['query'], dataset['ground'], k=k_values[i_k])
             print(f"k: {k}")
-            print(f"latency: {latency}")
-            print(f"peak_dram: {peak_dram}")
-            print(f"recall: {recall}")
+            print(f"Latency: {latency:.4f} seconds")
+            print(f"Peak DRAM: {peak_dram:.4f} MiB")
+            print(f"Recall: {recall:.4f}")
             perf[i_d * len(k_values) + i_k] = objective(latency, recall, peak_dram)
-            print(f"perf[i_d * len(k_values) + i_k] => perf[{i_d * len(k_values) + i_k}]: {perf[i_d * len(k_values) + i_k]}")
-        delete_directory(index_path, verbose=True)
-    print(f"perf = {perf}")
+            print(f"Performance for dataset index {i_d} and k index {i_k}: {perf[i_d * len(k_values) + i_k]:.4f}")
+        # delete_directory(index_path, verbose=True)  # Commented out code
+    print(f"Overall performance: {perf}")
     return np.mean(perf)
 
 
 if __name__ == "__main__":
     params = nni.get_next_parameter()
     n_trees = int(params["n_trees"])
-    print("Running n_trees = {}".format(n_trees))
+    search_k = int(params["n_trees"])
+    print(f"Running with parameters:\n\tn_trees = {n_trees}\n\tsearch_k = {search_k}")
     performance = float(evaluate_annoy(n_trees))
-    print("Performance: {}".format(performance))
+    print(f"Final Performance: {performance:.4f}")
     nni.report_final_result(performance)

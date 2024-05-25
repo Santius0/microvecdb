@@ -162,13 +162,13 @@ mvdb::NamedArgs* extract_named_args(unsigned char index_type, PyObject* args_cap
 
 static PyObject* MVDB_create(PyObject* self, PyObject* args) {
     unsigned char data_type, index_type;
-    PyObject *mvdb_capsule, *initial_data, *create_args_capsule;
+    PyObject *mvdb_capsule, *initial_data, *named_args_capsule;
     uint64_t dims, initial_data_size;
     const char *path, *initial_data_path;
-    if (!PyArg_ParseTuple(args, "BOBlssO!lO", &data_type, &mvdb_capsule, &index_type, &dims, &path, &initial_data_path, &PyArray_Type, &initial_data, &initial_data_size, &create_args_capsule)) return nullptr;
+    if (!PyArg_ParseTuple(args, "BOBlssO!lO", &data_type, &mvdb_capsule, &index_type, &dims, &path, &initial_data_path, &PyArray_Type, &initial_data, &initial_data_size, &named_args_capsule)) return nullptr;
 
     void* extracted_data = nullptr;
-    mvdb::NamedArgs* c_args = extract_named_args(index_type, create_args_capsule);
+    mvdb::NamedArgs* c_args = extract_named_args(index_type, named_args_capsule);
     if (!c_args) {
         PyErr_SetString(PyExc_TypeError, "Failed to extract NamedArgs");
         return nullptr;
@@ -264,14 +264,16 @@ static PyObject* MVDB_get_num_items(PyObject* self, PyObject* args) {
 }
 
 static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
-    uint8_t data_type;
-    PyObject *mvdb_capsule, *query_array_obj;
+    uint8_t data_type, index_type;
+    PyObject *mvdb_capsule, *query_array_obj, *named_args_capsule;
     uint64_t nq, k;
     double c;
     const char *query_path, *result_path;
     mvdb::index::DISTANCE_METRIC metric;
 
-    if (!PyArg_ParseTuple(args, "BOO!KssKBd", &data_type, &mvdb_capsule, &PyArray_Type, &query_array_obj, &nq, &query_path, &result_path, &k, &metric, &c)) return nullptr;
+    if (!PyArg_ParseTuple(args, "BBOO!KssKBdO", &index_type, &data_type, &mvdb_capsule, &PyArray_Type, &query_array_obj, &nq, &query_path, &result_path, &k, &metric, &c, &named_args_capsule)) return nullptr;
+
+    mvdb::NamedArgs* c_args = extract_named_args(index_type, named_args_capsule);
 
     double peak_wss_mb = -1.0;
 
@@ -302,7 +304,7 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
     }
 
     auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
-    mvdb_->topk(nq, data_arr, "", "", ids, distances, peak_wss_mb, k, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, (float)c);
+    mvdb_->topk(nq, data_arr, "", "", ids, distances, peak_wss_mb, k, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, (float)c, c_args);
 
     PyObject *ids_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, ids);
     if(ids_npArray == nullptr){
@@ -545,11 +547,12 @@ static void AnnoyIndexNamedArgs_delete(PyObject* capsule) {
 }
 
 static PyObject* AnnoyIndexNamedArgs_init(PyObject* self, PyObject* args) {
-    int n_trees, n_threads;
-    if (!PyArg_ParseTuple(args, "ii", &n_trees, &n_threads)) return nullptr;
+    int n_trees, n_threads, search_k;
+    if (!PyArg_ParseTuple(args, "iii", &n_trees, &n_threads, &search_k)) return nullptr;
     auto * na_ = new mvdb::index::AnnoyIndexNamedArgs();
     na_->n_trees = n_trees;
     na_->n_threads = n_threads;
+    na_->search_k = search_k;
     return PyCapsule_New(na_, ANNOY_INDEX_NAMED_ARGS, AnnoyIndexNamedArgs_delete);
 }
 
