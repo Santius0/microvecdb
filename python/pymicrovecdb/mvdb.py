@@ -94,8 +94,6 @@ def create_named_args(index_type: IndexType, **kwargs):
         raise RuntimeError(f"Unknown IndexType {index_type}")
 class MVDB:
     def __init__(self, dtype: DataType = DataType.FLOAT32):
-        self.index_type = None
-        self.named_args = None
         self.dtype = dtype
         self.mvdb_obj = mvdb_c.MVDB_init(dtype.value)
 
@@ -131,8 +129,7 @@ class MVDB:
                     and not initial_data_path.endswith('.fvecs') and not initial_data_path.endswith('.ivecs'):
                 raise ValueError("Unsupported file format, only .xvecs (fvecs or ivecs) files are allowed")
 
-        self.index_type = index_type
-        self.named_args = create_named_args(index_type, **kwargs)
+        named_args = create_named_args(index_type, **kwargs)
 
         mvdb_c.MVDB_create(
             self.dtype.value,
@@ -143,7 +140,7 @@ class MVDB:
             initial_data_path if initial_data_path else "",
             initial_data if initial_data is not None else np.array([], dtype=np.float32),
             initial_data_size,
-            self.named_args
+            named_args
         )
 
     def open(self, path: str):
@@ -170,7 +167,10 @@ class MVDB:
 
         result_path = None
 
+        named_args = create_named_args(self.index_type, **kwargs)
+
         res = mvdb_c.MVDB_topk(
+            self.index_type.value,
             self.dtype.value,
             self.mvdb_obj,
             query if query is not None else np.array([], dtype=np.float32),
@@ -179,12 +179,20 @@ class MVDB:
             result_path if result_path else "",
             k,
             metric.value,
-            c
+            c,
+            named_args
         )
         if result_path == "" or result_path is None:
             return res[0].reshape(num_queries, k), res[1].reshape(num_queries, k), res[2]
         return None
 
+    @property
+    def index_type(self):
+        index_type_byte_val = mvdb_c.MVDB_get_index_type(self.dtype.value, self.mvdb_obj)
+        try:
+            return IndexType(index_type_byte_val)
+        except ValueError:
+            raise ValueError(f"Unknown byte value: {index_type_byte_val}")
 
     @property
     def num_items(self):

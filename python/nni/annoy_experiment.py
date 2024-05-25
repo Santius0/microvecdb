@@ -47,10 +47,11 @@ def wrapper(db, dataset, k):
 def normalize(value, min_value, max_value):
     return max(0.0, min(1.0, (value - min_value) / (max_value - min_value)))
 
-def objective(latency, recall, dram, weight_latency=0.3, weight_recall=0.3, weight_dram=0.4, min_latency=0, max_latency=600, min_dram=0, max_dram=2048):
+def objective(latency, recall, dram, weight_latency=0.3, weight_recall=0.6, weight_dram=0.4, min_latency=0, max_latency=600, min_dram=0, max_dram=2048):
     latency_norm = normalize(latency, min_latency, max_latency)
     dram_norm = normalize(dram, min_dram, max_dram)
-    objective_value = (weight_latency * latency_norm) + (weight_dram * dram_norm) - (weight_recall * recall)
+    # objective_value = (weight_latency * latency_norm) + (weight_dram * dram_norm) - (weight_recall * recall)
+    objective_value = (weight_dram * dram_norm) - (weight_recall * recall)
     print(f"Latency Normalized: {latency_norm:.4f}")
     print(f"DRAM Normalized: {dram_norm:.4f}")
     print(f"Objective Value: {objective_value:.4f}")
@@ -58,7 +59,10 @@ def objective(latency, recall, dram, weight_latency=0.3, weight_recall=0.3, weig
 
 def evaluate_annoy(n_trees, search_k):
     gc.collect()
-    perf = np.zeros(len(datasets) * len(k_values))
+    latencies = np.zeros(len(datasets) * len(k_values))
+    drams = np.zeros(len(datasets) * len(k_values))
+    recalls = np.zeros(len(datasets) * len(k_values))
+    objectives = np.zeros(len(datasets) * len(k_values))
     for i_d, dataset in enumerate(datasets):
         gc.collect()
         index_path = f"./annoy_{dataset['name']}_{n_trees}"
@@ -81,7 +85,13 @@ def evaluate_annoy(n_trees, search_k):
             db.open(index_path)
 
         for i_k, k in enumerate(k_values):
+            print("\n")
+
+            pos = i_d * len(k_values) + i_k
+            print(f"pos [{pos}]")
+            print(f"k: {k}")
             gc.collect()
+
             start_time = time.time()
             # ids, dists, mem_usage = db.topk(query=mv_utils.read_vector_file(dataset['query']), k=k)  # Commented out code
             peak_dram, results = memory_usage((wrapper, (db, dataset, k)), retval=True, max_usage=True)
@@ -91,15 +101,22 @@ def evaluate_annoy(n_trees, search_k):
             latency = time.time() - start_time
             # recall = (recall1(dataset['query'], dataset['ground'], k=k_values[i_k]) + recall2(ids, gt=mv_utils.read_vector_file(dataset['ground']), k=k)) / 2  # Commented out code
             recall = recall1(dataset['query'], dataset['ground'], k=k_values[i_k])
-            print(f"k: {k}")
             print(f"Latency: {latency:.4f} seconds")
             print(f"Peak DRAM: {peak_dram:.4f} MiB")
             print(f"Recall: {recall:.4f}")
-            perf[i_d * len(k_values) + i_k] = objective(latency, recall, peak_dram)
-            print(f"Performance for dataset index {i_d} and k index {i_k}: {perf[i_d * len(k_values) + i_k]:.4f}")
+            latencies[pos] = latency
+            drams[pos] = peak_dram
+            recalls[pos] = recall
+            objective_val = objective(latency, recall, peak_dram)
+            objectives[pos] = objective_val
+
+            intermediate = {'latency': latency, 'dram': peak_dram, 'recall': recall, 'default': objective_val}
+            nni.report_intermediate_result(intermediate)
+
+            print("\n")
         # delete_directory(index_path, verbose=True)  # Commented out code
-    print(f"Overall performance: {perf}")
-    return np.mean(perf)
+    return {'latency': np.mean(latencies), 'dram': np.mean(drams), 'recall': np.mean(recalls), 'default': np.mean(objectives)}
+
 
 
 if __name__ == "__main__":
@@ -107,6 +124,7 @@ if __name__ == "__main__":
     n_trees = int(params["n_trees"])
     search_k = int(params["n_trees"])
     print(f"Running with parameters:\n\tn_trees = {n_trees}\n\tsearch_k = {search_k}")
-    performance = float(evaluate_annoy(n_trees))
-    print(f"Final Performance: {performance:.4f}")
+    performance = evaluate_annoy(n_trees=n_trees, search_k=search_k)
+    # print(f"Final Performance: {performance:.4f}")
+    print(f"Final Performance: {performance}")
     nni.report_final_result(performance)

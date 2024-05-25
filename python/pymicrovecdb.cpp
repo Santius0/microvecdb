@@ -227,6 +227,27 @@ static PyObject* MVDB_open(PyObject* self, PyObject* args) {
     Py_RETURN_NONE;
 }
 
+static PyObject* MVDB_get_index_type(PyObject* self, PyObject* args) {
+    unsigned char data_type;
+    PyObject * mvdb_capsule;
+    if (!PyArg_ParseTuple(args, "BO", &data_type, &mvdb_capsule)) return nullptr;
+    if(data_type == INT8){
+        auto *mvdb_ = static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
+        if(mvdb_ != nullptr && mvdb_->get_db_() != nullptr && mvdb_->get_db_()->index() != nullptr)
+            return PyLong_FromUnsignedLong((unsigned long)mvdb_->get_db_()->index()->type());
+        return PyLong_FromLong(false);
+    } else if (data_type == FLOAT32) {
+        auto *mvdb_ = static_cast<mvdb::MVDB<float> *>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
+        if(mvdb_ != nullptr && mvdb_->get_db_() != nullptr && mvdb_->get_db_()->index() != nullptr)
+            return PyLong_FromUnsignedLong((unsigned long)mvdb_->get_db_()->index()->type());
+    } else {
+        PyErr_SetString(PyExc_ValueError, "Unsupported data type");
+        return nullptr;
+    }
+    PyErr_SetString(PyExc_ValueError, "Failed to retrieve index type. Internal index not properly initialized");
+    return nullptr;
+}
+
 static PyObject* MVDB_get_built(PyObject* self, PyObject* args) {
     unsigned char data_type;
     PyObject * mvdb_capsule;
@@ -584,6 +605,7 @@ static PyMethodDef ExtensionMethods[] = {
         { "MVDB_topk", MVDB_topk, METH_VARARGS, "Find topk results" },
 //        { "topk", topk, METH_VARARGS, "Find topk results" },
         { "MVDB_add", MVDB_add, METH_VARARGS, "Add vectors to the vector database" },
+        { "MVDB_get_index_type", MVDB_get_index_type, METH_VARARGS, "Returns number of dimensions in db index" },
         { "MVDB_get_dims", MVDB_get_dims, METH_VARARGS, "Returns number of dimensions in db index" },
         { "MVDB_get_built", MVDB_get_built, METH_VARARGS, "Returns built flag for db index" },
         { "MVDB_get_num_items", MVDB_get_num_items, METH_VARARGS, "Returns number of items in db index" },
