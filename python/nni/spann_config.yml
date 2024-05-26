@@ -1,0 +1,19 @@
+experimentName: SPANN Autotune - 1 Million
+trialConcurrency: 1
+maxExperimentDuration: 168h
+maxTrialDuration: 2h
+maxTrialNumber: 1000
+trainingService:
+  platform: local
+trialCommand: python3 spann_experiment.py
+trialCodeDirectory: .
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: maximize
+assessor:
+  name: Medianstop
+  classArgs:
+    optimize_mode: maximize
+    start_step: 240
+searchSpaceFile: spann_search_space.json
