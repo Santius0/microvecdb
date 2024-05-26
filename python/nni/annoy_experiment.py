@@ -97,7 +97,7 @@ def evaluate_annoy(n_trees_, search_k_):
             gc.collect()
 
             start_time = time.time()
-            peak_dram, results = memory_usage((wrapper, (db, dataset, k, {'search_k': search_k_, 'n_threads': 3})), retval=True, max_usage=True)
+            peak_dram, results = memory_usage((wrapper, (db, dataset, k, {'search_k': search_k_, 'n_threads': 12})), retval=True, max_usage=True)
             ids = results[0]
             latency = time.time() - start_time
             recall1_ = recall1(qr=ids, gt=ground, k=k)
