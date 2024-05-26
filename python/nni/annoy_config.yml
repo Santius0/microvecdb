@@ -11,9 +11,9 @@ tuner:
   name: GridSearch
   classArgs:
     optimize_mode: maximize
-assessor:
-  name: Medianstop
-  classArgs:
-    optimize_mode: maximize
-    start_step: 240
+#assessor:
+#  name: Medianstop
+#  classArgs:
+#    optimize_mode: maximize
+#    start_step: 240
 searchSpaceFile: annoy_search_space.json
