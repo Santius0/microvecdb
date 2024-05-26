@@ -158,17 +158,41 @@ namespace mvdb::index {
         << this->dims_ << " | n_trees = " << annoy_args->n_trees << " | search_k = " << annoy_args->search_k
         << " | Number of Threads = " << annoy_args->n_threads << std::endl;
 
+        std::cout << "dims = " << this->dims_ << std::endl;
+//        annoy_index_->
         #pragma omp parallel
         {
             std::vector<int> closest_ids;           // DO NOT pre-allocate memory for Annoy receptacles!
             std::vector<T> closest_distances;       // Annoy's search methods will ignore all pre-allocated memory and allocate its own memory right after
             #pragma omp parallel for schedule(dynamic) if (nq >= 50)
             for (idx_t i = 0; i < nq; i++) {
+
+//                std::cout << "query " << i << " = [ ";
+//                for(int a = 0; a < this->dims_; a++){
+//                    std::cout << *((query + i * this->dims_) + a) << " ";
+//                }
+//                std::cout << " ]" << std::endl;
+
                 annoy_index_->get_nns_by_vector(query + i * this->dims_, k, annoy_args->search_k, &closest_ids, &closest_distances);
                 for (int j = 0; j < k; j++) {
                     ids[i * k + j] = closest_ids[j];
                     distances[i * k + j] = closest_distances[j];
                 }
+                closest_ids.clear();
+                closest_distances.clear();
+
+//                std::cout << " query " << i << " ids = [ ";
+//                for (int j = 0; j < k; j++) {
+//                    std::cout << ids[i * k + j] << " ";
+//                }
+//                std::cout << " ]" << std::endl;
+//
+//                std::cout << " query " << i << " distances = [ ";
+//                for (int j = 0; j < k; j++) {
+//                    std::cout << distances[i * k + j] << " ";
+//                }
+//                std::cout << " ]" << std::endl;
+
             }
         };
 
