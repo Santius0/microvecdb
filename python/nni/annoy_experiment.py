@@ -17,14 +17,10 @@ datasets = [
 k_values = [1, 10, 50, 100]
 
 def recall1(qr, gt, k=100):
-    # print(f"query result({len(qr)} x {len(qr[0])}): {qr[:, :k]}")
-    # print(f"ground truth({len(gt)} x {len(gt[0, :k])}): {gt[:, :k]}\n")
     recalls_ = np.zeros(len(qr))
     for i in range(len(qr)):
         actual = 0
         for id_ in qr[i, :k]:
-            # print(id_)
-            # print(gt[i, :k])
             if id_ in gt[i, :k]:
                 actual += 1
         recalls_[i] = actual
@@ -53,25 +49,26 @@ def wrapper(db, dataset, k, kwargs=None):
 def normalize(value, min_value, max_value):
     return max(0.0, min(1.0, (value - min_value) / (max_value - min_value)))
 
-def objective(latency, recall, dram, weight_latency=0.3, weight_recall=0.6, weight_dram=0.4, min_latency=0, max_latency=600, min_dram=0, max_dram=2048):
+def objective(latency, recall, dram, weight_latency=0.2, weight_recall=0.4, weight_dram=0.4, min_latency=0, max_latency=30, min_dram=0, max_dram=1536):
     latency_norm = normalize(latency, min_latency, max_latency)
     dram_norm = normalize(dram, min_dram, max_dram)
-    # objective_value = (weight_latency * latency_norm) + (weight_dram * dram_norm) - (weight_recall * recall)
-    objective_value = (weight_dram * dram_norm) - (weight_recall * recall)
+    objective_value = (weight_recall * recall) - (weight_latency * latency_norm) - (weight_dram * dram_norm)
     print(f"Latency Normalized: {latency_norm:.4f}")
     print(f"DRAM Normalized: {dram_norm:.4f}")
     print(f"Objective Value: {objective_value:.4f}")
     return objective_value
 
-def evaluate_annoy(n_trees, search_k):
+def evaluate_annoy(n_trees_, search_k_):
     gc.collect()
     latencies = np.zeros(len(datasets) * len(k_values))
     drams = np.zeros(len(datasets) * len(k_values))
+    recall1s = np.zeros(len(datasets) * len(k_values))
+    recall2s = np.zeros(len(datasets) * len(k_values))
     recalls = np.zeros(len(datasets) * len(k_values))
     objectives = np.zeros(len(datasets) * len(k_values))
     for i_d, dataset in enumerate(datasets):
         gc.collect()
-        index_path = f"./annoy_{dataset['name']}_{n_trees}"
+        index_path = f"./annoy_{dataset['name']}_{n_trees_}"
         # delete_directory(index_path, verbose=True)  # Commented out code
         db = mvdb.MVDB()
         if not os.path.exists(index_path):
@@ -81,13 +78,15 @@ def evaluate_annoy(n_trees, search_k):
                 dims=mv_utils.get_fvecs_dim_size(dataset['query']),
                 path=index_path,
                 initial_data_path=dataset['base'],
-                n_trees=n_trees,
-                n_threads=1 if dataset['name'] == 'deep10M' or (dataset['name'] == 'gist1M' and n_trees == 1000) else -1
+                n_trees=n_trees_,
+                n_threads=1 if dataset['name'] == 'deep10M' or (dataset['name'] == 'gist1M' and n_trees_ == 1000) else -1
             )
             print(f"Build successful for {dataset['name']} at {index_path}")
         else:
             print(f"Index at {index_path} already exists. No build needed.")
             db.open(index_path)
+
+        ground = mv_utils.read_vector_file(dataset['ground'])
 
         for i_k, k in enumerate(k_values):
             print("\n")
@@ -98,27 +97,27 @@ def evaluate_annoy(n_trees, search_k):
             gc.collect()
 
             start_time = time.time()
-            # ids, dists, mem_usage = db.topk(query=mv_utils.read_vector_file(dataset['query']), k=k)  # Commented out code
-            peak_dram, results = memory_usage((wrapper, (db, dataset, k, {'search_k': search_k})), retval=True, max_usage=True)
+            peak_dram, results = memory_usage((wrapper, (db, dataset, k, {'search_k': search_k_, 'n_threads': 3})), retval=True, max_usage=True)
             ids = results[0]
-            # dists = results[1]  # Commented out code
-            # mem_usage = results[2]  # Commented out code
             latency = time.time() - start_time
-            # recall = (recall1(qr=ids, gt=mv_utils.read_vector_file(dataset['ground']), k=k) + recall2(qr=ids, gt=mv_utils.read_vector_file(dataset['ground']), k=k)) / 2  # Commented out code
-            recall = recall1(qr=ids, gt=mv_utils.read_vector_file(dataset['ground']), k=k)
-            latencies[pos] = latency
-            drams[pos] = peak_dram
+            recall1_ = recall1(qr=ids, gt=ground, k=k)
+            recall2_ = recall2(qr=ids, gt=ground, k=k)
+            recall = (recall1_ + recall2_)/2
+            latencies[pos] = -latency
+            drams[pos] = -peak_dram
+            recall1s[pos] = recall1_
+            recall2s[pos] = recall2_
             recalls[pos] = recall
             objective_val = objective(latency, recall, peak_dram)
             objectives[pos] = objective_val
 
-            intermediate = {'latency': latency, 'dram': peak_dram, 'recall': recall, 'default': objective_val}
+            intermediate = {'-latency': -latency, '-dram': -peak_dram, 'reacall1': recall1_, 'reacall2': recall2_, 'recall': recall, 'default': objective_val}
             print(f"Intermediate Performance: {intermediate}")
             nni.report_intermediate_result(intermediate)
 
             print("\n")
-        # delete_directory(index_path, verbose=True)  # Commented out code
-    return {'latency': np.mean(latencies), 'dram': np.mean(drams), 'recall': np.mean(recalls), 'default': np.mean(objectives)}
+        # delete_directory(index_path, verbose=True)
+    return {'-latency': np.mean(latencies), '-dram': np.mean(drams), 'reacall1': np.mean(recall1s), 'reacall2': np.mean(recall2s),'recall': np.mean(recalls), 'default': np.mean(objectives)}
 
 
 
@@ -127,7 +126,7 @@ if __name__ == "__main__":
     n_trees = int(params["n_trees"])
     search_k = int(params["search_k"])
     print(f"Running with parameters:\n\tn_trees = {n_trees}\n\tsearch_k = {search_k}")
-    performance = evaluate_annoy(n_trees=n_trees, search_k=search_k)
+    performance = evaluate_annoy(n_trees_=n_trees, search_k_=search_k)
     print(f"Hyperparameters: n_trees = {n_trees}, search_k = {search_k}")
     print(f"Final Performance: {performance}")
     nni.report_final_result(performance)

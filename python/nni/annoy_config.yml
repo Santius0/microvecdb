@@ -1,14 +1,18 @@
 experimentName: ANNOY Autotune - 1 Million
-trialConcurrency: 1
-maxExperimentDuration: 200h
+trialConcurrency: 2
+maxExperimentDuration: 2000h
 maxTrialDuration: 12h
-maxTrialNumber: 100
+maxTrialNumber: 10000
 trainingService:
   platform: local
 trialCommand: python3 annoy_experiment.py
 trialCodeDirectory: .
 tuner:
-  name: GridSearch
+  name: TPE
   classArgs:
-    optimize_mode: minimize
+    optimize_mode: maximize
+assessor:
+  name: Medianstop
+  classArgs:
+    optimize_mode: maximize
 searchSpaceFile: annoy_search_space.json
