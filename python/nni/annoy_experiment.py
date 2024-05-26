@@ -107,7 +107,7 @@ def evaluate_annoy(n_trees_, search_k_):
             drams[pos] = -peak_dram
             # recall1s[pos] = recall1_
             # recall2s[pos] = recall2_
-            # recalls[pos] = recall
+            recalls[pos] = recall
             objective_val = objective(latency, recall, peak_dram)
             objectives[pos] = objective_val
 
