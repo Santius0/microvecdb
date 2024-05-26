@@ -49,7 +49,7 @@ def wrapper(db, dataset, k, kwargs=None):
 def normalize(value, min_value, max_value):
     return max(0.0, min(1.0, (value - min_value) / (max_value - min_value)))
 
-def objective(latency, recall, dram, weight_latency=0.2, weight_recall=0.4, weight_dram=0.4, min_latency=0, max_latency=30, min_dram=0, max_dram=1536):
+def objective(latency, recall, dram, weight_latency=0.2, weight_recall=0.4, weight_dram=0.4, min_latency=0, max_latency=30, min_dram=0, max_dram=2048):
     latency_norm = normalize(latency, min_latency, max_latency)
     dram_norm = normalize(dram, min_dram, max_dram)
     objective_value = (weight_recall * recall) - (weight_latency * latency_norm) - (weight_dram * dram_norm)
@@ -62,14 +62,13 @@ def evaluate_annoy(n_trees_, search_k_):
     gc.collect()
     latencies = np.zeros(len(datasets) * len(k_values))
     drams = np.zeros(len(datasets) * len(k_values))
-    recall1s = np.zeros(len(datasets) * len(k_values))
-    recall2s = np.zeros(len(datasets) * len(k_values))
+    # recall1s = np.zeros(len(datasets) * len(k_values))
+    # recall2s = np.zeros(len(datasets) * len(k_values))
     recalls = np.zeros(len(datasets) * len(k_values))
     objectives = np.zeros(len(datasets) * len(k_values))
     for i_d, dataset in enumerate(datasets):
         gc.collect()
         index_path = f"./indices/annoy_{dataset['name']}_{n_trees_}"
-        # delete_directory(index_path, verbose=True)  # Commented out code
         db = mvdb.MVDB()
         if not os.path.exists(index_path):
             print(f"Building index for {dataset['name']}_{n_trees_}...")
@@ -97,32 +96,36 @@ def evaluate_annoy(n_trees_, search_k_):
             gc.collect()
 
             start_time = time.time()
-            peak_dram, results = memory_usage((wrapper, (db, dataset, k, {'search_k': search_k_, 'n_threads': 12})), retval=True, max_usage=True)
+            peak_dram, results = memory_usage((wrapper, (db, dataset, k, {'search_k': search_k_, 'n_threads': 3})), retval=True, max_usage=True)
             ids = results[0]
             latency = time.time() - start_time
-            recall1_ = recall1(qr=ids, gt=ground, k=k)
-            recall2_ = recall2(qr=ids, gt=ground, k=k)
-            recall = (recall1_ + recall2_)/2
+            # recall1_ = recall1(qr=ids, gt=ground, k=k)
+            # recall2_ = recall2(qr=ids, gt=ground, k=k)
+            # recall = (recall1_ + recall2_)/2
+            recall = recall2(qr=ids, gt=ground, k=k)
             latencies[pos] = -latency
             drams[pos] = -peak_dram
-            recall1s[pos] = recall1_
-            recall2s[pos] = recall2_
-            recalls[pos] = recall
+            # recall1s[pos] = recall1_
+            # recall2s[pos] = recall2_
+            # recalls[pos] = recall
             objective_val = objective(latency, recall, peak_dram)
             objectives[pos] = objective_val
 
-            current = {'-latency': -latency, '-dram': -peak_dram, 'reacall1': recall1_, 'reacall2': recall2_, 'recall': recall, 'default': objective_val}
+            # current = {'-latency': -latency, '-dram': -peak_dram, 'reacall1': recall1_, 'reacall2': recall2_, 'recall': recall, 'default': objective_val}
+            current = {'-latency': -latency, '-dram': -peak_dram, 'recall': recall, 'default': objective_val}
             print(f"Current Performance: {current}")
 
             mask = objectives != 0
             # print(objectives[mask])
-            intermediate = {'-latency': np.mean(latencies[mask]), '-dram': np.mean(drams[mask]), 'reacall1': np.mean(recall1s[mask]), 'reacall2': np.mean(recall2s[mask]), 'recall': np.mean(recalls[mask]), 'default': np.mean(objectives[mask])}
+            # intermediate = {'-latency': np.mean(latencies[mask]), '-dram': np.mean(drams[mask]), 'reacall1': np.mean(recall1s[mask]), 'reacall2': np.mean(recall2s[mask]), 'recall': np.mean(recalls[mask]), 'default': np.mean(objectives[mask])}
+            intermediate = {'-latency': np.mean(latencies[mask]), '-dram': np.mean(drams[mask]), 'recall': np.mean(recalls[mask]), 'default': np.mean(objectives[mask])}
             print(f"Intermediate Performance: {intermediate}")
             nni.report_intermediate_result(intermediate)
 
             print("\n")
-        # delete_directory(index_path, verbose=True)
-    return {'-latency': np.mean(latencies), '-dram': np.mean(drams), 'reacall1': np.mean(recall1s), 'reacall2': np.mean(recall2s),'recall': np.mean(recalls), 'default': np.mean(objectives)}
+
+    # return {'-latency': np.mean(latencies), '-dram': np.mean(drams), 'reacall1': np.mean(recall1s), 'reacall2': np.mean(recall2s),'recall': np.mean(recalls), 'default': np.mean(objectives)}
+    return {'-latency': np.mean(latencies), '-dram': np.mean(drams), 'recall': np.mean(recalls), 'default': np.mean(objectives)}
 
 
 
