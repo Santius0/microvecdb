@@ -68,11 +68,11 @@ def evaluate_annoy(n_trees_, search_k_):
     objectives = np.zeros(len(datasets) * len(k_values))
     for i_d, dataset in enumerate(datasets):
         gc.collect()
-        index_path = f"./annoy_{dataset['name']}_{n_trees_}"
+        index_path = f"./indices/annoy_{dataset['name']}_{n_trees_}"
         # delete_directory(index_path, verbose=True)  # Commented out code
         db = mvdb.MVDB()
         if not os.path.exists(index_path):
-            print(f"Building index for {dataset['name']}...")
+            print(f"Building index for {dataset['name']}_{n_trees_}...")
             db.create(
                 index_type=mvdb.IndexType.ANNOY,
                 dims=mv_utils.get_fvecs_dim_size(dataset['query']),
@@ -111,7 +111,12 @@ def evaluate_annoy(n_trees_, search_k_):
             objective_val = objective(latency, recall, peak_dram)
             objectives[pos] = objective_val
 
-            intermediate = {'-latency': -latency, '-dram': -peak_dram, 'reacall1': recall1_, 'reacall2': recall2_, 'recall': recall, 'default': objective_val}
+            current = {'-latency': -latency, '-dram': -peak_dram, 'reacall1': recall1_, 'reacall2': recall2_, 'recall': recall, 'default': objective_val}
+            print(f"Current Performance: {current}")
+
+            mask = objectives != 0
+            # print(objectives[mask])
+            intermediate = {'-latency': np.mean(latencies[mask]), '-dram': np.mean(drams[mask]), 'reacall1': np.mean(recall1s[mask]), 'reacall2': np.mean(recall2s[mask]), 'recall': np.mean(recalls[mask]), 'default': np.mean(objectives[mask])}
             print(f"Intermediate Performance: {intermediate}")
             nni.report_intermediate_result(intermediate)
 
