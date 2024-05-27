@@ -138,3 +138,16 @@ if __name__ == "__main__":
     print(f"Hyperparameters: n_trees = {n_trees}, search_k = {search_k}")
     print(f"Final Performance: {performance}")
     nni.report_final_result(performance)
+
+
+# notes: best experiment results obtained. best params are as follows:
+#   1. n_trees = 10, search_k = 6500
+#   2. n_trees = 10, search_k = 5500
+#   3. n_trees = 10, search_k = 7000
+#   4. n_trees = 10, search_k = 4500
+#   5. n_trees = 10, search_k = 7500
+#   6. n_trees = 10, search_k = 6000
+#   7. n_trees = 10, search_k = 3500
+#   8. n_trees = 10, search_k = 4000
+#   9. n_trees = 10, search_k = 5000
+#   10. n_trees = 10, search_k = 8000
