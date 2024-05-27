@@ -35,21 +35,21 @@ index_configs = [
     # {'dataset_name': 'sift500K', 'initial_data_path': SIFT500K, 'index_type': mvdb.IndexType.FAISS_FLAT, 'data_type': mvdb.DataType.FLOAT32, 'params': {}, 'extra_labels': ""},
     # {'dataset_name': 'sift1M', 'initial_data_path': SIFT1M, 'index_type': mvdb.IndexType.FAISS_FLAT, 'data_type': mvdb.DataType.FLOAT32, 'params': {}, 'extra_labels': ""},
 
-    # ANNOY
-    {'dataset_name': 'sift10K', 'initial_data_path': SIFT10K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
-    {'dataset_name': 'sift100K', 'initial_data_path': SIFT100K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
-    {'dataset_name': 'sift500K', 'initial_data_path': SIFT500K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
-    {'dataset_name': 'sift1M', 'initial_data_path': SIFT1M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
-    {'dataset_name': 'gist10K', 'initial_data_path': GIST10K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
-    {'dataset_name': 'gist100K', 'initial_data_path': GIST100K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
-    {'dataset_name': 'gist500K', 'initial_data_path': GIST500K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
-    {'dataset_name': 'gist1M', 'initial_data_path': GIST1M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
-    {'dataset_name': 'deep10K', 'initial_data_path': DEEP10K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
-    {'dataset_name': 'deep100K', 'initial_data_path': DEEP100K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
-    {'dataset_name': 'deep500K', 'initial_data_path': DEEP500K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
-    {'dataset_name': 'deep1M', 'initial_data_path': DEEP1M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
-    {'dataset_name': 'deep5M', 'initial_data_path': DEEP5M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
-    {'dataset_name': 'deep10M', 'initial_data_path': DEEP10M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 400, 'n_threads': 12}, 'extra_labels': 'n_tree=400'},
+    # ANNOY (n_trees = 10, search_k = 6500) => optimal build and search parameters from hyperparameter tuning
+    {'dataset_name': 'sift10K', 'initial_data_path': SIFT10K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 10, 'n_threads': 12}, 'extra_labels': 'n_trees=10'},
+    {'dataset_name': 'sift100K', 'initial_data_path': SIFT100K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 10, 'n_threads': 12}, 'extra_labels': 'n_trees=10'},
+    {'dataset_name': 'sift500K', 'initial_data_path': SIFT500K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 10, 'n_threads': 12}, 'extra_labels': 'n_trees=10'},
+    {'dataset_name': 'sift1M', 'initial_data_path': SIFT1M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 10, 'n_threads': 12}, 'extra_labels': 'n_trees=10'},
+    {'dataset_name': 'gist10K', 'initial_data_path': GIST10K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 10, 'n_threads': 12}, 'extra_labels': 'n_trees=10'},
+    {'dataset_name': 'gist100K', 'initial_data_path': GIST100K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 10, 'n_threads': 12}, 'extra_labels': 'n_trees=10'},
+    {'dataset_name': 'gist500K', 'initial_data_path': GIST500K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 10, 'n_threads': 12}, 'extra_labels': 'n_trees=10'},
+    {'dataset_name': 'gist1M', 'initial_data_path': GIST1M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 10, 'n_threads': 12}, 'extra_labels': 'n_trees=10'},
+    {'dataset_name': 'deep10K', 'initial_data_path': DEEP10K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 10, 'n_threads': 12}, 'extra_labels': 'n_trees=10'},
+    {'dataset_name': 'deep100K', 'initial_data_path': DEEP100K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 10, 'n_threads': 12}, 'extra_labels': 'n_trees=10'},
+    {'dataset_name': 'deep500K', 'initial_data_path': DEEP500K, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 10, 'n_threads': 12}, 'extra_labels': 'n_trees=10'},
+    {'dataset_name': 'deep1M', 'initial_data_path': DEEP1M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 10, 'n_threads': 12}, 'extra_labels': 'n_trees=10'},
+    {'dataset_name': 'deep5M', 'initial_data_path': DEEP5M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 10, 'n_threads': 12}, 'extra_labels': 'n_trees=10'},
+    {'dataset_name': 'deep10M', 'initial_data_path': DEEP10M, 'index_type': mvdb.IndexType.ANNOY, 'data_type': mvdb.DataType.FLOAT32, 'params': {'n_trees': 10, 'n_threads': 12}, 'extra_labels': 'n_trees=10'},
 
 
     # SPANN
