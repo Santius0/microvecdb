@@ -14,7 +14,31 @@ query_sizes = [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 3840, 5120, 6400, 7680
 
 k_values = [1, 10, 50, 100]
 
-configs = {
+BASE_DATA_DIR = '/home/santius/ann_data'
+
+datasets = {
+    'sift10K': {'query':  f'{BASE_DATA_DIR}/sift1M/sift/sift_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/sift10K/sift10K_groundtruth.ivecs'},
+    'sift100K': {'query':  f'{BASE_DATA_DIR}/sift1M/sift/sift_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/sift100K/sift100K_groundtruth.ivecs'},
+    'sift500K': {'query':  f'{BASE_DATA_DIR}/sift1M/sift/sift_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/sift500K/sift500K_groundtruth.ivecs'},
+    'sift1M': {'query':  f'{BASE_DATA_DIR}/sift1M/sift/sift_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/sift1M/sift/sift_groundtruth.ivecs'},
+}
+
+indices = [
+    'annoy_sift100K_float32_n_trees=10',
+    'annoy_deep1M_float32_n_trees=10',
+    'annoy_gist10K_float32_n_trees=10',
+    'annoy_sift1M_float32_n_trees=10',
+    'annoy_gist100K_float32_n_trees=10',
+    'annoy_deep100K_float32_n_trees=10',
+    'annoy_sift500K_float32_n_trees=10',
+    'annoy_deep10K_float32_n_trees=10',
+    'annoy_deep500K_float32_n_trees=10',
+    'annoy_gist1M_float32_n_trees=10',
+    'annoy_gist500K_float32_n_trees=10',
+    'annoy_sift10K_float32_n_trees=10'
+]
+
+
     # 'deep10K': {'query_path': 'deep10K', 'dims': 96, 'size': 10000, 'dtype': mvdb.DataType.FLOAT},
     # 'deep100K': {'query_path': 'deep100K', 'dims': 96, 'size': 100000, 'dtype': mvdb.DataType.FLOAT},
     # 'deep500K': {'query_path': 'deep500K', 'dims': 96, 'size': 500000, 'dtype': mvdb.DataType.FLOAT},
@@ -22,7 +46,7 @@ configs = {
     # 'deep5M': {'query_path': 'deep5M', 'dims': 96, 'size': 5000000, 'dtype': mvdb.DataType.FLOAT},
     # 'deep10M': {'query_path': 'deep10M', 'dims': 96, 'size': 10000000, 'dtype': mvdb.DataType.FLOAT},
 
-    'spann_sift10K_float32': {'index': './indices/spann_sift10K_float32', 'extra_args': {}, 'query': '../../ann_data/sift1M/sift/sift_query.fvecs', 'ground': '../../ann_data/sift10K/sift10K_groundtruth.ivecs'},
+    # 'spann_sift10K_float32': {'index': './indices/spann_sift10K_float32', 'extra_args': {}, 'query': '../../ann_data/sift1M/sift/sift_query.fvecs', 'ground': '../../ann_data/sift10K/sift10K_groundtruth.ivecs'},
     # 'sift100K': {'query_path': 'sift100K', 'dims': 128, 'size': 100000, 'dtype': mvdb.DataType.FLOAT},
     # 'sift500K': {'query_path': 'sift500K', 'dims': 128, 'size': 500000, 'dtype': mvdb.DataType.FLOAT},
     # 'sift1M': {'query_path': '../data/sift1M/sift/sift_query.fvecs', 'ground_path': '../data/sift1M/sift/sift_groundtruth.ivecs', 'dims': 128, 'size': 1000000, 'dtype': mvdb.DataType.FLOAT},
@@ -33,10 +57,12 @@ configs = {
     # 'gist100K': {'query_path': 'gist100K', 'dims': 960, 'size': 100000, 'dtype': mvdb.DataType.FLOAT},
     # 'gist500K': {'query_path': 'gist500K', 'dims': 960, 'size': 500000, 'dtype': mvdb.DataType.FLOAT},
     # 'gist1M': {'query_path': 'gist1M', 'dims': 960, 'size': 1000000, 'dtype': mvdb.DataType.FLOAT},
-}
+# }
 
-def topk_wrapper(db_, q, k):
-    results = db_.topk(query=q, k=k)
+def topk_wrapper(db_, q, k, params=None):
+    if params is None:
+        params = {}
+    results = db_.topk(query=q, k=k, **params)
     print('DONE')
     return results
 
@@ -80,28 +106,32 @@ load_average = mv_utils.get_system_load()
 cpu_env = {**cpu_info, **ram_info, **storage_info, **battery_info}
 
 def main():
-    os.makedirs('./benchmark_results', exist_ok=True)
+    result_dir = './results'
+    tegrastats_dir = './tegrastats'
+    index_dir = './indices'
+    result_file = f'{result_dir}/results.csv'
+    os.makedirs(result_dir, exist_ok=True)
     is_nano = nano_utils.is_jetson_nano()
-    for conf_key in configs:
+    for index in indices:
         gc.collect()
-        config = configs[conf_key]
-        conf_key_list = conf_key.split('_')
-        index_type, dataset, dtype = mvdb.str_to_index_type(conf_key_list[0]), conf_key_list[1], mvdb.str_to_data_type(conf_key_list[2])
+        index_key_list = index.split('_')
+        index_type, dataset_name, dtype = mvdb.str_to_index_type(index_key_list[0]), index_key_list[1], mvdb.str_to_data_type(index_key_list[2])
+        dataset = datasets[dataset_name]
         db = mvdb.MVDB(dtype=dtype)
-        db.open(config['index'])
-        queries = mv_utils.read_vector_file(config['query'])
-        ground = mv_utils.read_vector_file(config['ground'])
+        db.open(f"{index_dir}/{index}")
+        queries = mv_utils.read_vector_file(dataset['query'])
+        ground = mv_utils.read_vector_file(dataset['ground'])
         for q_size in query_sizes:
             gc.collect()
             q = queries[:q_size]
             gt = ground[:q_size]
             for k in k_values:
-                internal_config = f"{conf_key}_{q_size}_{k}"
+                internal_config = f"{index}_{q_size}_{k}"
                 print(f"processing: {internal_config}...")
                 if is_nano:
-                    nano_utils.start_tegrastats(f"./tegrastats/{internal_config}")
+                    nano_utils.start_tegrastats(f"{tegrastats_dir}/{internal_config}")
                 start_time = time.time()
-                peak_dram, results = memory_usage((topk_wrapper, (db, q, k)), retval=True, max_usage=True)
+                peak_dram, results = memory_usage((topk_wrapper, (db, q, k, {'n_threads': 3})), retval=True, max_usage=True)
                 query_time = time.time() - start_time
                 if is_nano:
                     nano_utils.stop_tegrastats()
@@ -113,14 +143,14 @@ def main():
                 row['distance_metric'] = 'L2'
                 row['peak_dram_(MB)'] = peak_dram
                 row['peak_WSS_(MB)'] = results[2]
-                row['index'] = conf_key
+                row['index'] = index
                 row['index_type'] = str(index_type)
                 row['latency_(s)'] = query_time
-                row['recall1'] = recall1(results[0], gt, k)
-                row['recall2'] = recall2(results[0], gt, k)
+                row['recall1'] = recall1(qr=results[0], gt=gt, k=k)
+                row['recall2'] = recall2(qr=results[0], gt=gt, k=k)
                 print(f"{internal_config} completed in {query_time} seconds")
-                file_exists = os.path.isfile(f"./benchmark_results/res.csv")
-                with open(f"./benchmark_results/res.csv", mode='a', newline='') as file:
+                file_exists = os.path.isfile(result_file)
+                with open(result_file, mode='a', newline='') as file:
                     fieldnames = row.keys()
                     writer = csv.DictWriter(file, fieldnames=fieldnames)
                     if not file_exists:
