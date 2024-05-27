@@ -4,7 +4,8 @@ import shutil
 from pymicrovecdb import mvdb, utils as mv_utils
 
 
-BASE_DATA_DIR = '~/ann_data'
+BASE_DATA_DIR = '/home/santius/ann_data'
+BASE_INDEX_DIR = '/home/santius/ann_indices'
 
 SIFT10K = f'{BASE_DATA_DIR}/sift10K/sift10K_base.fvecs'
 SIFT100K = f'{BASE_DATA_DIR}/sift100K/sift100K_base.fvecs'
@@ -108,7 +109,7 @@ def dataset_make(base_path, n, output_name):
         print(f'{output_name}_base.fvecs already exists')
 
 def build_datasets():
-    os.makedirs("indices", exist_ok=True)
+    os.makedirs(BASE_INDEX_DIR, exist_ok=True)
     for conf_key in dataset_configs:
         dataset_config = dataset_configs[conf_key]
         for size in dataset_config['sizes']:
@@ -121,10 +122,10 @@ def build_datasets():
             db.create(
                 index_type=mvdb.IndexType.FAISS_FLAT,
                 dims=mv_utils.get_fvecs_dim_size(f'{path}/{name}_base.fvecs'),
-                path=f'indices/faissflat_{name}',
+                path=f'{BASE_DATA_DIR}/faissflat_{name}',
                 initial_data_path=f'{path}/{name}_base.fvecs'
             )
-            print(f'./indices/{name} successfully built')
+            print(f'{BASE_INDEX_DIR}/{name} successfully built')
             ids, dists, _ = db.topk(query=mv_utils.read_vector_file(dataset_config['query_path']), k=100)
             mv_utils.write_vector_file(ids, f'{path}/{name}_groundtruth.ivecs')
             print(f'{path}/{name}_groundtruth.ivecs successfully built')
@@ -133,22 +134,22 @@ def build_datasets():
             gc.collect()
 
 def build_indices():
-    os.makedirs("indices", exist_ok=True)
+    os.makedirs(BASE_INDEX_DIR, exist_ok=True)
     for config in index_configs:
         gc.collect()
         index_name = f"{config['index_type']}_{config['dataset_name']}_{config['data_type']}"
         if config['extra_labels'] != "":
             index_name += f"_{config['extra_labels']}"
-        print(f"Building ./indices/{index_name}")
+        print(f"Building {BASE_INDEX_DIR}/{index_name}")
         db = mvdb.MVDB(dtype=config['data_type'])
         db.create(
             index_type=config['index_type'],
             dims=mv_utils.get_fvecs_dim_size(config['initial_data_path']),
-            path=f"indices/{index_name}",
+            path=f"{BASE_INDEX_DIR}/{index_name}",
             initial_data_path=config['initial_data_path'],
             **config['params']
         )
-        print(f"Successfully built ./indices/{index_name}")
+        print(f"Successfully built {BASE_INDEX_DIR}/{index_name}")
 
 def main():
     # build_datasets()

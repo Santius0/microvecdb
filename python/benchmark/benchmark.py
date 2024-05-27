@@ -15,6 +15,7 @@ query_sizes = [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 3840, 5120, 6400, 7680
 k_values = [1, 10, 50, 100]
 
 BASE_DATA_DIR = '/home/santius/ann_data'
+BASE_INDEX_DIR = '/home/santius/ann_indices'
 
 datasets = {
     'sift10K': {'query':  f'{BASE_DATA_DIR}/sift1M/sift/sift_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/sift10K/sift10K_groundtruth.ivecs'},
@@ -108,7 +109,6 @@ cpu_env = {**cpu_info, **ram_info, **storage_info, **battery_info}
 def main():
     result_dir = './results'
     tegrastats_dir = './tegrastats'
-    index_dir = './indices'
     result_file = f'{result_dir}/results.csv'
     os.makedirs(result_dir, exist_ok=True)
     is_nano = nano_utils.is_jetson_nano()
@@ -118,7 +118,7 @@ def main():
         index_type, dataset_name, dtype = mvdb.str_to_index_type(index_key_list[0]), index_key_list[1], mvdb.str_to_data_type(index_key_list[2])
         dataset = datasets[dataset_name]
         db = mvdb.MVDB(dtype=dtype)
-        db.open(f"{index_dir}/{index}")
+        db.open(f"{BASE_INDEX_DIR}/{index}")
         queries = mv_utils.read_vector_file(dataset['query'])
         ground = mv_utils.read_vector_file(dataset['ground'])
         for q_size in query_sizes:
