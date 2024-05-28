@@ -110,6 +110,7 @@ def main():
     result_dir = './results'
     tegrastats_dir = './tegrastats'
     result_file = f'{result_dir}/results.csv'
+    os.makedirs(tegrastats_dir, exist_ok=True)
     os.makedirs(result_dir, exist_ok=True)
     is_nano = nano_utils.is_jetson_nano()
     for index in indices:
