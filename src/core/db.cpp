@@ -48,11 +48,7 @@ namespace mvdb {
 
     template <typename T>
     void DB_<T>::serialize_(std::ostream &out) const {
-        serialize_string(out, _path);
-        serialize_string(out, _db_path);
-        serialize_string(out, _index_path);
         serialize_numeric<unsigned char>(out, _index_type);
-        serialize_string(out, _storage_path);
         serialize_numeric<idx_t>(out, _dims);
 //        out.write(reinterpret_cast<const char*>(_records->data()), ntotal_ * dims_ * sizeof(value_t));
         _index->serialize_(out);
@@ -61,11 +57,7 @@ namespace mvdb {
 
     template <typename T>
     void DB_<T>::deserialize_(std::istream &in) {
-        _path = deserialize_string(in);
-        _db_path = deserialize_string(in);
-        _index_path = deserialize_string(in);
         _index_type = static_cast<index::IndexType>(deserialize_numeric<unsigned char>(in));
-        _storage_path = deserialize_string(in);
         _dims = deserialize_numeric<idx_t>(in);
         index_make(_index_type);
         _index->deserialize_(in);
