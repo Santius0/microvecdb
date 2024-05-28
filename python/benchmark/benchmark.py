@@ -97,16 +97,22 @@ def q_copy(arr: np.array, flat: bool = False):
             external.append(internal)
     return external
 
-cpu_info = mv_utils.get_cpu_info()
-ram_info = mv_utils.get_ram_info()
-storage_info = mv_utils.get_storage_info()
-battery_info = mv_utils.get_battery_info()
-uptime = mv_utils.get_system_uptime()
-processes_df = mv_utils.get_concurrent_processes()
-load_average = mv_utils.get_system_load()
-cpu_env = {**cpu_info, **ram_info, **storage_info, **battery_info}
+def get_cpu_env():
+    cpu_info = mv_utils.get_cpu_info()
+    ram_info = mv_utils.get_ram_info()
+    storage_info = mv_utils.get_storage_info()
+    battery_info = mv_utils.get_battery_info()
+    uptime = mv_utils.get_system_uptime()
+    processes_df = mv_utils.get_concurrent_processes()
+    load_average = mv_utils.get_system_load()
+    cpu_env = {**cpu_info, **ram_info, **storage_info, **battery_info}
+    cpu_env['system_uptime'] = uptime
+    cpu_env['concurrent_processes'] = processes_df
+    cpu_env['load_average'] = load_average
+    return cpu_env
 
 def main():
+    get_cpu_env() # run once at the beginning so script immediately asks for sudo password
     result_dir = './results'
     tegrastats_dir = './tegrastats'
     result_file = f'{result_dir}/results.csv'
@@ -136,7 +142,7 @@ def main():
                 query_time = time.time() - start_time
                 if is_nano:
                     nano_utils.stop_tegrastats()
-                row = cpu_env
+                row = get_cpu_env()
                 row['dataset'] = dataset
                 row['dims'] = db.dims
                 row['index_size'] = db.num_items

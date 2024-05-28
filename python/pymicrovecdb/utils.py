@@ -91,7 +91,7 @@ def get_concurrent_processes():
     for proc in psutil.process_iter(['pid', 'name', 'username']):
         processes.append(proc.info)
     df = pd.DataFrame(processes)
-    return df
+    return df.to_dict("records")
 
 def get_system_load():
     if platform.system() == 'Linux' or 'microsoft' in platform.uname().release.lower():
