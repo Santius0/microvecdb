@@ -49,12 +49,10 @@ def get_storage_info():
     storage_info['storage_write_count'] = disk_io.write_count
     storage_info['storage_read_bytes'] = disk_io.read_bytes
     storage_info['storage_write_bytes'] = disk_io.write_bytes
-    print("linux storage")
     result = subprocess.check_output("lsblk -o NAME,TYPE,SIZE", shell=True).decode('utf-8')
     lines = result.strip().split('\n')[1:]  # skip header
     data = [line.split() for line in lines]
 
-    print("linux storage")
     result = subprocess.check_output("lsblk -o NAME,TYPE,SIZE", shell=True).decode('utf-8')
     lines = result.strip().split('\n')[1:]  # skip header
     data = [line.split() for line in lines]
@@ -66,7 +64,8 @@ def get_storage_info():
         io_stats = subprocess.check_output("iostat -dx", shell=True).decode('utf-8')
         lines = io_stats.strip().split('\n')[3:-2]
         data = [line.split() for line in lines]
-        df = pd.DataFrame(data, columns=['Device', 'tps', 'kB_read/s', 'kB_wrtn/s', 'kB_read', 'kB_wrtn'])
+        columns = ['Device', 'r/s', 'rkB/s', 'rrqm/s', '%rrqm', 'r_await', 'rareq-sz', 'w/s', 'wkB/s', 'wrqm/s', '%wrqm', 'w_await', 'wareq-sz', 'd/s', 'dkB/s', 'drqm/s', '%drqm', 'd_await', 'dareq-sz', 'aqu-sz', '%util']
+        df = pd.DataFrame(data, columns=columns)
         storage_info['IO Stats'] = df.to_dict('records')
     except Exception as e:
         print(f"Failed to get I/O stats: {e}")
