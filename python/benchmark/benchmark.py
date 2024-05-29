@@ -27,7 +27,7 @@ datasets = {
     'gist100K': {'query':  f'{BASE_DATA_DIR}/gist1M/gist/gist_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/gist100K/gist100K_groundtruth.ivecs'},
     'gist500K': {'query':  f'{BASE_DATA_DIR}/gist1M/gist/gist_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/gist500K/gist500K_groundtruth.ivecs'},
     'gist1M': {'query':  f'{BASE_DATA_DIR}/gist1M/gist/gist_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/gist1M/gist/gist_groundtruth.ivecs'},
-    
+
     'deep10K': {'query':  f'{BASE_DATA_DIR}/deep10M/deep1B_queries.fvecs', 'ground':  f'{BASE_DATA_DIR}/deep10K/deep10K_groundtruth.ivecs'},
     'deep100K': {'query':  f'{BASE_DATA_DIR}/deep10M/deep1B_queries.fvecs', 'ground':  f'{BASE_DATA_DIR}/deep100K/deep100K_groundtruth.ivecs'},
     'deep500K': {'query':  f'{BASE_DATA_DIR}/deep10M/deep1B_queries.fvecs', 'ground':  f'{BASE_DATA_DIR}/deep500K/deep500K_groundtruth.ivecs'},
@@ -35,20 +35,20 @@ datasets = {
 }
 
 indices = [
-    'annoy_sift10K_float32_n_trees=10',
-    'annoy_sift100K_float32_n_trees=10',
-    'annoy_sift500K_float32_n_trees=10',
-    'annoy_sift1M_float32_n_trees=10',
-
-    'annoy_gist10K_float32_n_trees=10',
-    'annoy_gist100K_float32_n_trees=10',
-    'annoy_gist500K_float32_n_trees=10',
-    'annoy_gist1M_float32_n_trees=10',
+    # 'annoy_sift10K_float32_n_trees=10',
+    # 'annoy_sift100K_float32_n_trees=10',
+    # 'annoy_sift500K_float32_n_trees=10',
+    # 'annoy_sift1M_float32_n_trees=10',
 
     'annoy_deep10K_float32_n_trees=10',
     'annoy_deep100K_float32_n_trees=10',
     'annoy_deep500K_float32_n_trees=10',
     'annoy_deep1M_float32_n_trees=10'
+    
+    # 'annoy_gist10K_float32_n_trees=10',
+    # 'annoy_gist100K_float32_n_trees=10',
+    'annoy_gist500K_float32_n_trees=10',
+    'annoy_gist1M_float32_n_trees=10',
 ]
 
 
@@ -150,6 +150,7 @@ def main():
                 if is_nano:
                     nano_utils.start_tegrastats(f"{tegrastats_dir}/{internal_config}")
                 start_time = time.time()
+                # optimal search_k = 6500
                 peak_dram, results = memory_usage((topk_wrapper, (db, q, k, {'n_threads': 3, 'search_k': 6500})), retval=True, max_usage=True)
                 query_time = time.time() - start_time
                 if is_nano:
