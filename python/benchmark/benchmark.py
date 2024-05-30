@@ -40,15 +40,15 @@ indices = [
     # 'annoy_sift500K_float32_n_trees=10',
     # 'annoy_sift1M_float32_n_trees=10',
 
-    'annoy_deep10K_float32_n_trees=10',
-    'annoy_deep100K_float32_n_trees=10',
-    'annoy_deep500K_float32_n_trees=10',
-    'annoy_deep1M_float32_n_trees=10'
-    
+    # 'annoy_deep10K_float32_n_trees=10',
+    # 'annoy_deep100K_float32_n_trees=10',
+    # 'annoy_deep500K_float32_n_trees=10',
+    'annoy_deep1M_float32_n_trees=10',
+
     # 'annoy_gist10K_float32_n_trees=10',
     # 'annoy_gist100K_float32_n_trees=10',
-    'annoy_gist500K_float32_n_trees=10',
-    'annoy_gist1M_float32_n_trees=10',
+    # 'annoy_gist500K_float32_n_trees=10',
+    # 'annoy_gist1M_float32_n_trees=10',
 ]
 
 
