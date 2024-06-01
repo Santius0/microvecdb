@@ -71,6 +71,16 @@ def _create_spann_named_args(**kwargs):
     meta_mapping = False
     normalized = False
     thread_num = 0
+    BKTKmeansK = 32
+    Samples = 10000
+    TPTNumber = 192
+    RefineIterations = 3
+    NeighborhoodSize = 16
+    CEF = 2000
+    MaxCheckForRefineGraph = 4096
+    NumberOfInitialDynamicPivots = 10
+    GraphNeighborhoodScale = 3
+    NumberOfOtherDynamicPivots = 10
     if 'build_config_path' in kwargs:
         build_config_path = kwargs['build_config_path']
     if 'quantizer_path' in kwargs:
@@ -81,7 +91,30 @@ def _create_spann_named_args(**kwargs):
         normalized = kwargs['normalized']
     if 'thread_num' in kwargs:
         thread_num = kwargs['thread_num']
-    return mvdb_c.SPANNIndexNamedArgs_init(build_config_path, quantizer_path, meta_mapping, normalized, thread_num)
+    if 'BKTKmeansK' in kwargs:
+        BKTKmeansK = kwargs['BKTKmeansK']
+    if 'Samples' in kwargs:
+        Samples = kwargs['Samples']
+    if 'TPTNumber' in kwargs:
+        TPTNumber = kwargs['TPTNumber']
+    if 'RefineIterations' in kwargs:
+        RefineIterations = kwargs['RefineIterations']
+    if 'NeighborhoodSize' in kwargs:
+        NeighborhoodSize = kwargs['NeighborhoodSize']
+    if 'CEF' in kwargs:
+        CEF = kwargs['CEF']
+    if 'MaxCheckForRefineGraph' in kwargs:
+        MaxCheckForRefineGraph = kwargs['MaxCheckForRefineGraph']
+    if 'NumberOfInitialDynamicPivots' in kwargs:
+        NumberOfInitialDynamicPivots = kwargs['NumberOfInitialDynamicPivots']
+    if 'GraphNeighborhoodScale' in kwargs:
+        GraphNeighborhoodScale = kwargs['GraphNeighborhoodScale']
+    if 'NumberOfOtherDynamicPivots' in kwargs:
+        NumberOfOtherDynamicPivots = kwargs['NumberOfOtherDynamicPivots']
+    return mvdb_c.SPANNIndexNamedArgs_init(build_config_path, quantizer_path, meta_mapping, normalized, thread_num,
+                                           BKTKmeansK, Samples, TPTNumber, RefineIterations, NeighborhoodSize, CEF,
+                                           MaxCheckForRefineGraph, NumberOfInitialDynamicPivots, GraphNeighborhoodScale,
+                                           NumberOfOtherDynamicPivots)
 
 def create_named_args(index_type: IndexType, **kwargs):
     if index_type == IndexType.FAISS_FLAT:

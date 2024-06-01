@@ -585,7 +585,10 @@ static PyObject* SPANNIndexNamedArgs_init(PyObject* self, PyObject* args) {
     const char *build_config_path, *quantizer_path;
     PyObject *meta_mapping, *normalized;
     unsigned int thread_num;
-    if (!PyArg_ParseTuple(args, "ssOOp", &build_config_path, &quantizer_path, &meta_mapping, &normalized, &thread_num)) return nullptr;
+    int BKTKmeansK, Samples, TPTNumber, RefineIterations, NeighborhoodSize, CEF, MaxCheckForRefineGraph, NumberOfInitialDynamicPivots, GraphNeighborhoodScale, NumberOfOtherDynamicPivots;
+    if (!PyArg_ParseTuple(args, "ssOOp", &build_config_path, &quantizer_path, &meta_mapping, &normalized, &thread_num,
+                          &BKTKmeansK, &Samples, &TPTNumber, &RefineIterations, &NeighborhoodSize, &CEF, &MaxCheckForRefineGraph, &NumberOfInitialDynamicPivots, &GraphNeighborhoodScale,
+                          &NumberOfOtherDynamicPivots)) return nullptr;
     auto * na_ = new mvdb::index::SPANNIndexNamedArgs();
     std::string build_config_path_str = std::string(build_config_path);
     if(!build_config_path_str.empty()) na_->build_config_path = build_config_path_str;
@@ -593,6 +596,17 @@ static PyObject* SPANNIndexNamedArgs_init(PyObject* self, PyObject* args) {
     na_->meta_mapping = PyObject_IsTrue(meta_mapping);
     na_->normalized = PyObject_IsTrue(normalized);
     if(thread_num > 0) na_->thread_num = thread_num;
+    // hyperparameters
+    na_->BKTKmeansK = BKTKmeansK;
+    na_->Samples = Samples;
+    na_->TPTNumber = TPTNumber;
+    na_->RefineIterations = RefineIterations;
+    na_->NeighborhoodSize = NeighborhoodSize;
+    na_->CEF = CEF;
+    na_->MaxCheckForRefineGraph = MaxCheckForRefineGraph;
+    na_->NumberOfInitialDynamicPivots = NumberOfInitialDynamicPivots;
+    na_->GraphNeighborhoodScale = GraphNeighborhoodScale;
+    na_->NumberOfOtherDynamicPivots = NumberOfOtherDynamicPivots;
     return PyCapsule_New(na_, SPANN_INDEX_NAMED_ARGS, SPANNIndexNamedArgs_delete);
 }
 

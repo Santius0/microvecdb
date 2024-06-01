@@ -410,6 +410,28 @@ namespace mvdb::index {
             bool meta_mapping = false;
             bool normalized = false;
             uint32_t thread_num = hw_concurrency;
+            int BKTKmeansK = 32;
+            int Samples = 10000;
+            int TPTNumber = 192;
+            int RefineIterations = 3;
+            int NeighborhoodSize = 16;
+            int CEF = 2000;
+            int MaxCheckForRefineGraph = 4096;
+            int NumberOfInitialDynamicPivots = 10;
+            int GraphNeighborhoodScale = 3;
+            int NumberOfOtherDynamicPivots = 10;
+            
+//        "BKTKmeansK": {"_type": "quniform", "_value": [4,32,8]},
+//        "Samples": {"_type": "quniform", "_value": [1000, 10000, 2000]},
+//        "TPTNumber": {"_type": "quniform", "_value": [32, 192, 16]},
+//        "RefineIterations": {"_type": "choice", "_value": [2, 3]},
+//        "NeighborhoodSize": {"_type": "quniform", "_value": [16, 192, 8]},
+//        "CEF": {"_type": "quniform", "_value": [1000, 2000,100]},
+//        "MaxCheckForRefineGraph": {"_type": "quniform", "_value": [4096, 16324, 1024]},
+//        "NumberOfInitialDynamicPivots": {"_type": "quniform", "_value": [1, 50, 10]},
+//        "GraphNeighborhoodScale": {"_type": "choice", "_value": [2, 3, 4]},
+//        "NumberOfOtherDynamicPivots": {"_type": "quniform", "_value": [1, 10, 2]}
+
             SPANNIndexNamedArgs() = default;
             ~SPANNIndexNamedArgs() override = default;
     };
