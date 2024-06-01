@@ -29,7 +29,6 @@ BASE_DIR = os.path.dirname(CURRENT_DIR)
 setup(
     name='pymicrovecdb',
     version='0.1.0',
-    description='MicroVecDB C++ Interface Package',
     # ext_modules=[pymicrovecdb_module],
     package_dir={'': '.'},
     packages=['pymicrovecdb'],
@@ -46,5 +45,23 @@ setup(
     install_requires=[
         'numpy>=1.19'
     ],
-    zip_safe=True
+    zip_safe=True,
+    url='https://your_project_url.com',
+    author='Your Name',
+    author_email='your_email@example.com',
+    maintainer='Your Name',
+    maintainer_email='your_email@example.com',
+    description='MicroVecDB C++ Interface Package',
+    long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+    ],
 )
