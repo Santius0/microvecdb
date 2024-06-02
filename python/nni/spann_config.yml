@@ -15,5 +15,5 @@ assessor:
   name: Medianstop
   classArgs:
     optimize_mode: maximize
-    start_step: 240
+    start_step: 24
 searchSpaceFile: spann_search_space.json

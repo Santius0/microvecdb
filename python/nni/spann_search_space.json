@@ -38,5 +38,9 @@
     "NumberOfOtherDynamicPivots": {
       "_type": "quniform",
       "_value": [1, 10, 2]
-    }
+    },
+  "batch_size": {
+    "_type": "quniform",
+    "_value": [1000, 10000, 1000]
+  }
 }

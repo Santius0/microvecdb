@@ -584,9 +584,8 @@ static void SPANNIndexNamedArgs_delete(PyObject* capsule) {
 static PyObject* SPANNIndexNamedArgs_init(PyObject* self, PyObject* args) {
     const char *build_config_path, *quantizer_path;
     PyObject *meta_mapping, *normalized;
-    unsigned int thread_num;
-    int BKTKmeansK, Samples, TPTNumber, RefineIterations, NeighborhoodSize, CEF, MaxCheckForRefineGraph, NumberOfInitialDynamicPivots, GraphNeighborhoodScale, NumberOfOtherDynamicPivots;
-    if (!PyArg_ParseTuple(args, "ssOOp", &build_config_path, &quantizer_path, &meta_mapping, &normalized, &thread_num,
+    int thread_num, batch_size, BKTKmeansK, Samples, TPTNumber, RefineIterations, NeighborhoodSize, CEF, MaxCheckForRefineGraph, NumberOfInitialDynamicPivots, GraphNeighborhoodScale, NumberOfOtherDynamicPivots;
+    if (!PyArg_ParseTuple(args, "ssOOiiiiiiiiiiii", &build_config_path, &quantizer_path, &meta_mapping, &normalized, &thread_num, &batch_size,
                           &BKTKmeansK, &Samples, &TPTNumber, &RefineIterations, &NeighborhoodSize, &CEF, &MaxCheckForRefineGraph, &NumberOfInitialDynamicPivots, &GraphNeighborhoodScale,
                           &NumberOfOtherDynamicPivots)) return nullptr;
     auto * na_ = new mvdb::index::SPANNIndexNamedArgs();
@@ -596,6 +595,7 @@ static PyObject* SPANNIndexNamedArgs_init(PyObject* self, PyObject* args) {
     na_->meta_mapping = PyObject_IsTrue(meta_mapping);
     na_->normalized = PyObject_IsTrue(normalized);
     if(thread_num > 0) na_->thread_num = thread_num;
+    if(batch_size > 0) na_->batch_size = batch_size;
     // hyperparameters
     na_->BKTKmeansK = BKTKmeansK;
     na_->Samples = Samples;

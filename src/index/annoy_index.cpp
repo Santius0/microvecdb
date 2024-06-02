@@ -9,8 +9,8 @@
 #include <sys/resource.h>
 
 namespace mvdb::index {
-
-    inline const AnnoyIndexNamedArgs* parse_named_args(const NamedArgs* args) {
+    
+    const AnnoyIndexNamedArgs* parse_annoy_named_args(const NamedArgs* args) {
         const auto *annoy_args = dynamic_cast<const AnnoyIndexNamedArgs *>(args);
         if (!annoy_args)
             throw std::runtime_error("Failed to dynamic_cast from NamedArgs to AnnoyIndexNamedArgs");
@@ -30,7 +30,7 @@ namespace mvdb::index {
 //        if (!annoy_args)
 //            throw std::runtime_error("Failed to dynamic_cast from NamedArgs to AnnoyIndexNamedArgs");
 
-        const auto *annoy_args = parse_named_args(args);
+        const auto *annoy_args = parse_annoy_named_args(args);
 
         std::cout << "Building MVDBAnnoyIndex @ " << path << std::endl;
         std::cout << "Dimensions = " << dims << " | Number of Trees = " << annoy_args->n_trees << " | Number of Threads = " << annoy_args->n_threads << std::endl;
@@ -151,7 +151,7 @@ namespace mvdb::index {
         if(!result_path.empty())
             throw std::runtime_error("Result file with MVDBAnnoyIndex topk not supported...yet");
 
-        const auto *annoy_args = parse_named_args(args);
+        const auto *annoy_args = parse_annoy_named_args(args);
 
         std::cout << "Searching MVDBAnnoyIndex with:" << std::endl
         << "Dimensions = "

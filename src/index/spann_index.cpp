@@ -3,7 +3,33 @@
 
 namespace mvdb::index {
 
-    inline const SPANNIndexNamedArgs* parse_named_args(const NamedArgs* args) {
+    std::ostream& operator<<(std::ostream& os, const SPANNIndexNamedArgs& args) {
+        os << "SPANNIndexNamedArgs {"
+           << "\n  build_config_path: " << args.build_config_path
+           << "\n  quantizer_path: " << args.quantizer_path
+           << "\n  meta_mapping: " << std::boolalpha << args.meta_mapping
+           << "\n  normalized: " << std::boolalpha << args.normalized
+           << "\n  thread_num: " << args.thread_num
+           << "\n  batch_size: " << args.batch_size
+           << "\n  BKTKmeansK: " << args.BKTKmeansK
+           << "\n  Samples: " << args.Samples
+           << "\n  TPTNumber: " << args.TPTNumber
+           << "\n  RefineIterations: " << args.RefineIterations
+           << "\n  NeighborhoodSize: " << args.NeighborhoodSize
+           << "\n  CEF: " << args.CEF
+           << "\n  MaxCheckForRefineGraph: " << args.MaxCheckForRefineGraph
+           << "\n  NumberOfInitialDynamicPivots: " << args.NumberOfInitialDynamicPivots
+           << "\n  GraphNeighborhoodScale: " << args.GraphNeighborhoodScale
+           << "\n  NumberOfOtherDynamicPivots: " << args.NumberOfOtherDynamicPivots
+           << "\n}";
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const SPANNIndexNamedArgs* args) {
+        return os << *args;
+    }
+
+    const SPANNIndexNamedArgs* parse_spann_named_args(const NamedArgs* args) {
         const auto *spann_args = dynamic_cast<const SPANNIndexNamedArgs *>(args);
         if (!spann_args)
             throw std::runtime_error("Failed to dynamic_cast from NamedArgs to SPANNIndexNamedArgs");
@@ -80,36 +106,28 @@ namespace mvdb::index {
             throw std::runtime_error("Only exactly one of 'initial_data' and 'initial_data_path' accepted");
 
         if constexpr (std::is_same_v<T, int8_t>) {
-            sptag_vector_index_ = SPTAG::VectorIndex::CreateInstance(SPTAG::IndexAlgoType::SPANN,
-                                                                     SPTAG::VectorValueType::Int8);
+            sptag_vector_index_ = SPTAG::VectorIndex::CreateInstance(SPTAG::IndexAlgoType::SPANN,SPTAG::VectorValueType::Int8);
             builder_options_->m_inputValueType = SPTAG::VectorValueType::Int8;
         }
         else if constexpr (std::is_same_v<T, int16_t>) {
-            sptag_vector_index_ = SPTAG::VectorIndex::CreateInstance(SPTAG::IndexAlgoType::SPANN,
-                                                                     SPTAG::VectorValueType::Int16);
+            sptag_vector_index_ = SPTAG::VectorIndex::CreateInstance(SPTAG::IndexAlgoType::SPANN,SPTAG::VectorValueType::Int16);
             builder_options_->m_inputValueType = SPTAG::VectorValueType::Int16;
         }
         else if constexpr (std::is_same_v<T, uint8_t>) {
-            sptag_vector_index_ = SPTAG::VectorIndex::CreateInstance(SPTAG::IndexAlgoType::SPANN,
-                                                                     SPTAG::VectorValueType::UInt8);
+            sptag_vector_index_ = SPTAG::VectorIndex::CreateInstance(SPTAG::IndexAlgoType::SPANN,SPTAG::VectorValueType::UInt8);
             builder_options_->m_inputValueType = SPTAG::VectorValueType::UInt8;
         }
         else if constexpr (std::is_same_v<T, float>) {
-            sptag_vector_index_ = SPTAG::VectorIndex::CreateInstance(SPTAG::IndexAlgoType::SPANN,
-                                                                     SPTAG::VectorValueType::Float);
+            sptag_vector_index_ = SPTAG::VectorIndex::CreateInstance(SPTAG::IndexAlgoType::SPANN,SPTAG::VectorValueType::Float);
             builder_options_->m_inputValueType = SPTAG::VectorValueType::Float;
         }
-        else
-            throw std::runtime_error("Unsupported data SPANN Index data type");
+        else throw std::runtime_error("Unsupported data SPANN Index data type");
 
 //        const auto *spann_args = dynamic_cast<const SPANNIndexNamedArgs *>(args);
 //        if (!spann_args)
 //            throw std::runtime_error("Failed to dynamic_cast from NamedArgs to SPANNIndexNamedArgs");
 
-        const auto *spann_args = parse_named_args(args);
-
-        if(spann_args->build_config_path.empty())
-            throw std::runtime_error("At this time build_config_path is required!");
+        const auto *spann_args = parse_spann_named_args(args);
 
         this->dims_ = dims;
         builder_options_->m_dimension = static_cast<SPTAG::DimensionType>(dims);
@@ -130,17 +148,40 @@ namespace mvdb::index {
                 throw std::runtime_error("failed to open quantizer file, '" + builder_options_->m_quantizerFile + "'");
         }
 
+
         SPTAG::Helper::IniReader iniReader;
-        if (!builder_options_->m_builderConfigFile.empty() && iniReader.LoadIniFile(builder_options_->m_builderConfigFile) != SPTAG::ErrorCode::Success)
+        std::string sections[] = {"Base", "SelectHead", "BuildHead", "BuildSSDIndex", "Index"};
+
+        if(builder_options_->m_builderConfigFile.empty())
+            throw std::runtime_error("no ini file, '" + builder_options_->m_builderConfigFile + "'");
+
+        if (iniReader.LoadIniFile(builder_options_->m_builderConfigFile) != SPTAG::ErrorCode::Success)
             throw std::runtime_error("cannot open index configure file, '" + builder_options_->m_builderConfigFile + "'");
 
-        std::string sections[] = { "Base", "SelectHead", "BuildHead", "BuildSSDIndex", "Index" };
-        for (const auto & section : sections) {
-            if (!iniReader.DoesParameterExist(section, "NumberOfThreads"))
+        if constexpr (std::is_same_v<T, int8_t>)
+            iniReader.SetParameter("Base", "ValueType", "Int8");
+        else if constexpr (std::is_same_v<T, float>)
+            iniReader.SetParameter("Base", "ValueType", "Float");
+
+        std::cout << "Build SPANN Args = \n" << spann_args << std::endl;
+        if(spann_args->BKTKmeansK > 0) iniReader.SetParameter("SelectHead", "BKTKmeansK", std::to_string(spann_args->BKTKmeansK));
+        if(spann_args->Samples > 0) iniReader.SetParameter("SelectHead", "Samples", std::to_string(spann_args->Samples));
+        if(spann_args->TPTNumber > 0) iniReader.SetParameter("BuildHead", "TPTNumber", std::to_string(spann_args->TPTNumber));
+        if(spann_args->RefineIterations > 0) iniReader.SetParameter("BuildHead", "RefineIterations", std::to_string(spann_args->RefineIterations));
+        if(spann_args->NeighborhoodSize > 0) iniReader.SetParameter("BuildHead", "NeighborhoodSize", std::to_string(spann_args->NeighborhoodSize));
+        if(spann_args->CEF > 0) iniReader.SetParameter("BuildHead", "CEF", std::to_string(spann_args->CEF));
+        if(spann_args->MaxCheckForRefineGraph > 0) iniReader.SetParameter("BuildHead", "MaxCheckForRefineGraph", std::to_string(spann_args->MaxCheckForRefineGraph));
+        if(spann_args->GraphNeighborhoodScale > 0) iniReader.SetParameter("BuildHead", "GraphNeighborhoodScale", std::to_string(spann_args->GraphNeighborhoodScale));
+        if(spann_args->NumberOfInitialDynamicPivots > 0) iniReader.SetParameter("BuildHead", "NumberOfInitialDynamicPivots", std::to_string(spann_args->NumberOfInitialDynamicPivots));
+        if(spann_args->NumberOfOtherDynamicPivots > 0) iniReader.SetParameter("BuildHead", "NumberOfOtherDynamicPivots", std::to_string(spann_args->NumberOfOtherDynamicPivots));
+
+        for (const auto &section: sections) {
+//            if (!iniReader.DoesParameterExist(section, "NumberOfThreads"))
                 iniReader.SetParameter(section, "NumberOfThreads", std::to_string(builder_options_->m_threadNum));
-            for (const auto& iter : iniReader.GetParameters(section)) {
-                if(section == "Base" && iter.first == "indexdirectory"){
-                    std::cout << "Skipping [Base][IndexDirectory] => Setting value to specified output folder = '" << builder_options_->m_outputFolder << "'" <<std::endl;
+            for (const auto &iter: iniReader.GetParameters(section)) {
+                std::cout << iter.first << ": " << iter.second << " @ " << section << std::endl;
+                if (section == "Base" && iter.first == "indexdirectory") {
+                    std::cout << "Skipping [Base][IndexDirectory] => Setting value to specified output folder = '" << builder_options_->m_outputFolder << "'" << std::endl;
                     sptag_vector_index_->SetParameter(iter.first, builder_options_->m_outputFolder, section);
                 } else {
                     sptag_vector_index_->SetParameter(iter.first, iter.second, section);
@@ -149,7 +190,6 @@ namespace mvdb::index {
         }
 
         SPTAG::ErrorCode code;
-
         std::shared_ptr<SPTAG::VectorSet> vec_set;
         std::shared_ptr<SPTAG::MetadataSet> metadata_set;
         if(!initial_data_path.empty()){
@@ -215,7 +255,7 @@ namespace mvdb::index {
         if(!query_path.empty() && query != nullptr)
             throw std::runtime_error("Exactly one of query and query_path accepted");
 
-        const auto * spann_args = parse_named_args(args);
+        const auto * spann_args = parse_spann_named_args(args);
 
         std::shared_ptr<SearcherOptions> options(new SearcherOptions);
         options->m_indexFolder = builder_options_->m_outputFolder;
@@ -226,17 +266,49 @@ namespace mvdb::index {
         options->m_resultFile = result_path; // results_path return not yet implemented
 //        options->m_outputformat = 0;
         options->m_K = (int)k;
-        options->m_batch = 10000;
+        options->m_batch = spann_args->batch_size;
+        options->m_threadNum = spann_args->thread_num;
 
         sptag_vector_index_->SetQuantizerADC(options->m_enableADC);
 
         SPTAG::Helper::IniReader iniReader;
-        std::string sections[] = { "Base", "SelectHead", "BuildHead", "BuildSSDIndex", "Index" };
-        for (const auto & section : sections) {
-            if (!iniReader.DoesParameterExist(section, "NumberOfThreads"))
+        std::string sections[] = {"Base", "SelectHead", "BuildHead", "BuildSSDIndex", "Index"};
+
+        if(builder_options_->m_builderConfigFile.empty())
+            throw std::runtime_error("no ini file, '" + builder_options_->m_builderConfigFile + "'");
+
+        if (iniReader.LoadIniFile(builder_options_->m_builderConfigFile) != SPTAG::ErrorCode::Success)
+            throw std::runtime_error("cannot open index configure file, '" + builder_options_->m_builderConfigFile + "'");
+
+        if constexpr (std::is_same_v<T, int8_t>)
+            iniReader.SetParameter("Base", "ValueType", "Int8");
+        else if constexpr (std::is_same_v<T, float>)
+            iniReader.SetParameter("Base", "ValueType", "Float");
+
+        std::cout << "Search SPANN Args = \n" << spann_args << std::endl;
+        if(spann_args->BKTKmeansK > 0) iniReader.SetParameter("SelectHead", "BKTKmeansK", std::to_string(spann_args->BKTKmeansK));
+        if(spann_args->Samples > 0) iniReader.SetParameter("SelectHead", "SamplesNumber", std::to_string(spann_args->Samples));
+        if(spann_args->TPTNumber > 0) iniReader.SetParameter("BuildHead", "TPTNumber", std::to_string(spann_args->TPTNumber));
+        if(spann_args->RefineIterations > 0) iniReader.SetParameter("BuildHead", "RefineIterations", std::to_string(spann_args->RefineIterations));
+        if(spann_args->NeighborhoodSize > 0) iniReader.SetParameter("BuildHead", "NeighborhoodSize", std::to_string(spann_args->NeighborhoodSize));
+        if(spann_args->CEF > 0) iniReader.SetParameter("BuildHead", "CEF", std::to_string(spann_args->CEF));
+        if(spann_args->MaxCheckForRefineGraph > 0) iniReader.SetParameter("BuildHead", "MaxCheckForRefineGraph", std::to_string(spann_args->MaxCheckForRefineGraph));
+        if(spann_args->GraphNeighborhoodScale > 0) iniReader.SetParameter("BuildHead", "GraphNeighborhoodScale", std::to_string(spann_args->GraphNeighborhoodScale));
+        if(spann_args->NumberOfInitialDynamicPivots > 0) iniReader.SetParameter("SearchSSDIndex", "NumberOfInitialDynamicPivots", std::to_string(spann_args->NumberOfInitialDynamicPivots));
+        if(spann_args->NumberOfOtherDynamicPivots > 0) iniReader.SetParameter("SearchSSDIndex", "NumberOfOtherDynamicPivots", std::to_string(spann_args->NumberOfOtherDynamicPivots));
+
+        for (const auto &section: sections) {
+//            if (!iniReader.DoesParameterExist(section, "NumberOfThreads"))
                 iniReader.SetParameter(section, "NumberOfThreads", std::to_string(options->m_threadNum));
-            for (const auto& iter : iniReader.GetParameters(section))
-                sptag_vector_index_->SetParameter(iter.first, iter.second, section);
+            for (const auto &iter: iniReader.GetParameters(section)) {
+                std::cout << iter.first << ": " << iter.second << " @ " << section;
+                if (section == "Base" && iter.first == "indexdirectory") {
+                    std::cout << "Skipping [Base][IndexDirectory] => Setting value to specified output folder = '" << builder_options_->m_outputFolder << "'" << std::endl;
+                    sptag_vector_index_->SetParameter(iter.first, builder_options_->m_outputFolder, section);
+                } else {
+                    sptag_vector_index_->SetParameter(iter.first, iter.second, section);
+                }
+            }
         }
         sptag_vector_index_->UpdateIndex();
 
@@ -299,7 +371,7 @@ namespace mvdb::index {
 //                    });
 //                }
 //                for (auto& thread : threads) { thread.join(); }
-
+                omp_set_num_threads((int)options->m_threadNum);
                 size_t queriesSent = 0;
                 #pragma omp parallel
                 {

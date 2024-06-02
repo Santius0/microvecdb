@@ -70,17 +70,18 @@ def _create_spann_named_args(**kwargs):
     quantizer_path = ""
     meta_mapping = False
     normalized = False
-    thread_num = 0
-    BKTKmeansK = 32
-    Samples = 10000
-    TPTNumber = 192
-    RefineIterations = 3
-    NeighborhoodSize = 16
-    CEF = 2000
-    MaxCheckForRefineGraph = 4096
-    NumberOfInitialDynamicPivots = 10
-    GraphNeighborhoodScale = 3
-    NumberOfOtherDynamicPivots = 10
+    thread_num = 3
+    batch_size = 10000
+    BKTKmeansK = -1
+    Samples = -1
+    TPTNumber = -1
+    RefineIterations = -1
+    NeighborhoodSize = -1
+    CEF = -1
+    MaxCheckForRefineGraph = -1
+    NumberOfInitialDynamicPivots = -1
+    GraphNeighborhoodScale = -1
+    NumberOfOtherDynamicPivots = -1
     if 'build_config_path' in kwargs:
         build_config_path = kwargs['build_config_path']
     if 'quantizer_path' in kwargs:
@@ -91,27 +92,29 @@ def _create_spann_named_args(**kwargs):
         normalized = kwargs['normalized']
     if 'thread_num' in kwargs:
         thread_num = kwargs['thread_num']
+    if 'batch_size' in kwargs:
+        batch_size = int(kwargs['batch_size'])
     if 'BKTKmeansK' in kwargs:
-        BKTKmeansK = kwargs['BKTKmeansK']
+        BKTKmeansK = int(kwargs['BKTKmeansK'])
     if 'Samples' in kwargs:
-        Samples = kwargs['Samples']
+        Samples = int(kwargs['Samples'])
     if 'TPTNumber' in kwargs:
-        TPTNumber = kwargs['TPTNumber']
+        TPTNumber = int(kwargs['TPTNumber'])
     if 'RefineIterations' in kwargs:
-        RefineIterations = kwargs['RefineIterations']
+        RefineIterations = int(kwargs['RefineIterations'])
     if 'NeighborhoodSize' in kwargs:
-        NeighborhoodSize = kwargs['NeighborhoodSize']
+        NeighborhoodSize = int(kwargs['NeighborhoodSize'])
     if 'CEF' in kwargs:
-        CEF = kwargs['CEF']
+        CEF = int(kwargs['CEF'])
     if 'MaxCheckForRefineGraph' in kwargs:
-        MaxCheckForRefineGraph = kwargs['MaxCheckForRefineGraph']
+        MaxCheckForRefineGraph = int(kwargs['MaxCheckForRefineGraph'])
     if 'NumberOfInitialDynamicPivots' in kwargs:
-        NumberOfInitialDynamicPivots = kwargs['NumberOfInitialDynamicPivots']
+        NumberOfInitialDynamicPivots = int(kwargs['NumberOfInitialDynamicPivots'])
     if 'GraphNeighborhoodScale' in kwargs:
-        GraphNeighborhoodScale = kwargs['GraphNeighborhoodScale']
+        GraphNeighborhoodScale = int(kwargs['GraphNeighborhoodScale'])
     if 'NumberOfOtherDynamicPivots' in kwargs:
-        NumberOfOtherDynamicPivots = kwargs['NumberOfOtherDynamicPivots']
-    return mvdb_c.SPANNIndexNamedArgs_init(build_config_path, quantizer_path, meta_mapping, normalized, thread_num,
+        NumberOfOtherDynamicPivots = int(kwargs['NumberOfOtherDynamicPivots'])
+    return mvdb_c.SPANNIndexNamedArgs_init(build_config_path, quantizer_path, meta_mapping, normalized, thread_num, batch_size,
                                            BKTKmeansK, Samples, TPTNumber, RefineIterations, NeighborhoodSize, CEF,
                                            MaxCheckForRefineGraph, NumberOfInitialDynamicPivots, GraphNeighborhoodScale,
                                            NumberOfOtherDynamicPivots)

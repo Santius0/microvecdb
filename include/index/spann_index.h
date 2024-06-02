@@ -410,31 +410,23 @@ namespace mvdb::index {
             bool meta_mapping = false;
             bool normalized = false;
             uint32_t thread_num = hw_concurrency;
-            int BKTKmeansK = 32;
-            int Samples = 10000;
-            int TPTNumber = 192;
-            int RefineIterations = 3;
-            int NeighborhoodSize = 16;
-            int CEF = 2000;
-            int MaxCheckForRefineGraph = 4096;
-            int NumberOfInitialDynamicPivots = 10;
-            int GraphNeighborhoodScale = 3;
-            int NumberOfOtherDynamicPivots = 10;
-            
-//        "BKTKmeansK": {"_type": "quniform", "_value": [4,32,8]},
-//        "Samples": {"_type": "quniform", "_value": [1000, 10000, 2000]},
-//        "TPTNumber": {"_type": "quniform", "_value": [32, 192, 16]},
-//        "RefineIterations": {"_type": "choice", "_value": [2, 3]},
-//        "NeighborhoodSize": {"_type": "quniform", "_value": [16, 192, 8]},
-//        "CEF": {"_type": "quniform", "_value": [1000, 2000,100]},
-//        "MaxCheckForRefineGraph": {"_type": "quniform", "_value": [4096, 16324, 1024]},
-//        "NumberOfInitialDynamicPivots": {"_type": "quniform", "_value": [1, 50, 10]},
-//        "GraphNeighborhoodScale": {"_type": "choice", "_value": [2, 3, 4]},
-//        "NumberOfOtherDynamicPivots": {"_type": "quniform", "_value": [1, 10, 2]}
-
+            int batch_size = 10000;
+            int BKTKmeansK = -1;
+            int Samples = -1;
+            int TPTNumber = -1;
+            int RefineIterations = -1;
+            int NeighborhoodSize = -1;
+            int CEF = -1;
+            int MaxCheckForRefineGraph = -1;
+            int NumberOfInitialDynamicPivots = -1;
+            int GraphNeighborhoodScale = -1;
+            int NumberOfOtherDynamicPivots = -1;
             SPANNIndexNamedArgs() = default;
             ~SPANNIndexNamedArgs() override = default;
     };
+
+    std::ostream& operator<<(std::ostream& os, const SPANNIndexNamedArgs& args);
+    std::ostream& operator<<(std::ostream& os, const SPANNIndexNamedArgs* args);
 
     template <typename T = float>
     class SPANNIndex final : public Index<T> {
