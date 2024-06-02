@@ -92,7 +92,7 @@ def evaluate_spann(params):
                 initial_data=mv_utils.read_vector_file(dataset['base'])[:1000],
                 # initial_data_path=dataset['base'],
                 thread_num=10,
-                build_config_path='../../SPTAG/buildconfig.ini',
+                build_config_path='buildconfig.ini',
                 **params
             )
             print(f"Build successful for {dataset['name']} at {index_path}")

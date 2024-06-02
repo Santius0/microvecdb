@@ -294,8 +294,8 @@ namespace mvdb::index {
         if(spann_args->CEF > 0) iniReader.SetParameter("BuildHead", "CEF", std::to_string(spann_args->CEF));
         if(spann_args->MaxCheckForRefineGraph > 0) iniReader.SetParameter("BuildHead", "MaxCheckForRefineGraph", std::to_string(spann_args->MaxCheckForRefineGraph));
         if(spann_args->GraphNeighborhoodScale > 0) iniReader.SetParameter("BuildHead", "GraphNeighborhoodScale", std::to_string(spann_args->GraphNeighborhoodScale));
-        if(spann_args->NumberOfInitialDynamicPivots > 0) iniReader.SetParameter("SearchSSDIndex", "NumberOfInitialDynamicPivots", std::to_string(spann_args->NumberOfInitialDynamicPivots));
-        if(spann_args->NumberOfOtherDynamicPivots > 0) iniReader.SetParameter("SearchSSDIndex", "NumberOfOtherDynamicPivots", std::to_string(spann_args->NumberOfOtherDynamicPivots));
+        if(spann_args->NumberOfInitialDynamicPivots > 0) iniReader.SetParameter("BuildHead", "NumberOfInitialDynamicPivots", std::to_string(spann_args->NumberOfInitialDynamicPivots));
+        if(spann_args->NumberOfOtherDynamicPivots > 0) iniReader.SetParameter("BuildHead", "NumberOfOtherDynamicPivots", std::to_string(spann_args->NumberOfOtherDynamicPivots));
 
         for (const auto &section: sections) {
 //            if (!iniReader.DoesParameterExist(section, "NumberOfThreads"))
