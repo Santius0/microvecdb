@@ -146,14 +146,15 @@ if __name__ == "__main__":
 
 
 # notes: best experiment results obtained. best params are as follows:
-# BKTKmeansK:8
-# Samples:4000
-# TPTNumber:112
-# RefineIterations:2
-# NeighborhoodSize:144
-# CEF:1800
-# MaxCheckForRefineGraph:7168
-# NumberOfInitialDynamicPivots:30
-# GraphNeighborhoodScale:2
-# NumberOfOtherDynamicPivots:2
-# batch_size:2000
+# experiment ID: f4thbx6v
+        # BKTKmeansK:8
+        # Samples:4000
+        # TPTNumber:112
+        # RefineIterations:2
+        # NeighborhoodSize:144
+        # CEF:1800
+        # MaxCheckForRefineGraph:7168
+        # NumberOfInitialDynamicPivots:30
+        # GraphNeighborhoodScale:2
+        # NumberOfOtherDynamicPivots:2
+        # batch_size:2000
