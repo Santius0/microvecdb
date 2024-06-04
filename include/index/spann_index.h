@@ -407,6 +407,7 @@ namespace mvdb::index {
     struct SPANNIndexNamedArgs final : NamedArgs {
             std::string build_config_path;
             std::string quantizer_path;
+            std::string truth_path;
             bool meta_mapping = false;
             bool normalized = false;
             uint32_t thread_num = hw_concurrency;

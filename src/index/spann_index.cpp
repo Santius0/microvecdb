@@ -6,6 +6,7 @@ namespace mvdb::index {
     std::ostream& operator<<(std::ostream& os, const SPANNIndexNamedArgs& args) {
         os << "SPANNIndexNamedArgs {"
            << "\n  build_config_path: " << args.build_config_path
+           << "\n  truth_path: " << args.truth_path
            << "\n  quantizer_path: " << args.quantizer_path
            << "\n  meta_mapping: " << std::boolalpha << args.meta_mapping
            << "\n  normalized: " << std::boolalpha << args.normalized
@@ -164,8 +165,12 @@ namespace mvdb::index {
             iniReader.SetParameter("Base", "ValueType", "Float");
 
         std::cout << "Build SPANN Args = \n" << spann_args << std::endl;
+        if(!initial_data_path.empty()) iniReader.SetParameter("Base", "VectorPath", initial_data_path);
+//        if(!spann_args->query_path.empty()) iniReader.SetParameter("Base", "QueryPath", spann_args->query_path);
+//        if(!spann_args->query_path.empty()) iniReader.SetParameter("Base", "WarmupPath", spann_args->query_path);
+        if(!spann_args->truth_path.empty()) iniReader.SetParameter("Base", "TruthPath", spann_args->truth_path);
         if(spann_args->BKTKmeansK > 0) iniReader.SetParameter("SelectHead", "BKTKmeansK", std::to_string(spann_args->BKTKmeansK));
-        if(spann_args->Samples > 0) iniReader.SetParameter("SelectHead", "Samples", std::to_string(spann_args->Samples));
+        if(spann_args->Samples > 0) iniReader.SetParameter("SelectHead", "SamplesNumber", std::to_string(spann_args->Samples));
         if(spann_args->TPTNumber > 0) iniReader.SetParameter("BuildHead", "TPTNumber", std::to_string(spann_args->TPTNumber));
         if(spann_args->RefineIterations > 0) iniReader.SetParameter("BuildHead", "RefineIterations", std::to_string(spann_args->RefineIterations));
         if(spann_args->NeighborhoodSize > 0) iniReader.SetParameter("BuildHead", "NeighborhoodSize", std::to_string(spann_args->NeighborhoodSize));
@@ -286,6 +291,9 @@ namespace mvdb::index {
             iniReader.SetParameter("Base", "ValueType", "Float");
 
         std::cout << "Search SPANN Args = \n" << spann_args << std::endl;
+        if(!query_path.empty()) iniReader.SetParameter("Base", "QueryPath", query_path);
+        if(!query_path.empty()) iniReader.SetParameter("Base", "WarmupPath", query_path);
+        if(!spann_args->truth_path.empty()) iniReader.SetParameter("Base", "TruthPath", spann_args->truth_path);
         if(spann_args->BKTKmeansK > 0) iniReader.SetParameter("SelectHead", "BKTKmeansK", std::to_string(spann_args->BKTKmeansK));
         if(spann_args->Samples > 0) iniReader.SetParameter("SelectHead", "SamplesNumber", std::to_string(spann_args->Samples));
         if(spann_args->TPTNumber > 0) iniReader.SetParameter("BuildHead", "TPTNumber", std::to_string(spann_args->TPTNumber));

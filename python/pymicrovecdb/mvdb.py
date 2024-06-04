@@ -68,6 +68,7 @@ def _create_annoy_named_args(**kwargs):
 def _create_spann_named_args(**kwargs):
     build_config_path = ""
     quantizer_path = ""
+    truth_path = ""
     meta_mapping = False
     normalized = False
     thread_num = 3
@@ -86,6 +87,8 @@ def _create_spann_named_args(**kwargs):
         build_config_path = kwargs['build_config_path']
     if 'quantizer_path' in kwargs:
         quantizer_path = kwargs['quantizer_path']
+    if 'truth_path' in kwargs:
+        truth_path = kwargs['truth_path']
     if 'meta_mapping' in kwargs:
         meta_mapping = kwargs['meta_mapping']
     if 'normalized' in kwargs:
@@ -114,7 +117,7 @@ def _create_spann_named_args(**kwargs):
         GraphNeighborhoodScale = int(kwargs['GraphNeighborhoodScale'])
     if 'NumberOfOtherDynamicPivots' in kwargs:
         NumberOfOtherDynamicPivots = int(kwargs['NumberOfOtherDynamicPivots'])
-    return mvdb_c.SPANNIndexNamedArgs_init(build_config_path, quantizer_path, meta_mapping, normalized, thread_num, batch_size,
+    return mvdb_c.SPANNIndexNamedArgs_init(build_config_path, truth_path, quantizer_path, meta_mapping, normalized, thread_num, batch_size,
                                            BKTKmeansK, Samples, TPTNumber, RefineIterations, NeighborhoodSize, CEF,
                                            MaxCheckForRefineGraph, NumberOfInitialDynamicPivots, GraphNeighborhoodScale,
                                            NumberOfOtherDynamicPivots)

@@ -10,9 +10,12 @@ import json
 import re
 
 datasets = [
-    {'name': 'sift1M', 'base': '../../../ann_data/sift1M/sift/sift_base.fvecs', 'query': '../../../ann_data/sift1M/sift/sift_query.fvecs', 'ground': '../../../ann_data/sift1M/sift/sift_groundtruth.ivecs'},
-    {'name': 'gist1M', 'base': '../../../ann_data/gist1M/gist/gist_base.fvecs', 'query': '../../../ann_data/gist1M/gist/gist_query.fvecs', 'ground': '../../../ann_data/gist1M/gist/gist_groundtruth.ivecs'},
-    {'name': 'deep1M', 'base': '../../../ann_data/deep1M/deep1M_base.fvecs', 'query': '../../../ann_data/deep10M/deep1B_queries.fvecs', 'ground': '../../../ann_data/deep1M/deep1M_groundtruth.ivecs'},
+    # {'name': 'sift1M', 'base': '../../../ann_data/sift1M/sift/sift_base.fvecs', 'query': '../../../ann_data/sift1M/sift/sift_query.fvecs', 'ground': '../../../ann_data/sift1M/sift/sift_groundtruth.ivecs'},
+    # {'name': 'gist1M', 'base': '../../../ann_data/gist1M/gist/gist_base.fvecs', 'query': '../../../ann_data/gist1M/gist/gist_query.fvecs', 'ground': '../../../ann_data/gist1M/gist/gist_groundtruth.ivecs'},
+    # {'name': 'deep1M', 'base': '../../../ann_data/deep1M/deep1M_base.fvecs', 'query': '../../../ann_data/deep10M/deep1B_queries.fvecs', 'ground': '../../../ann_data/deep1M/deep1M_groundtruth.ivecs'},
+    {'name': 'sift10K', 'base': '../../../ann_data/sift10K/sift10K_base.fvecs', 'query': '../../../ann_data/sift1M/sift/sift_query.fvecs', 'ground': '../../../ann_data/sift10K/sift10K_groundtruth.ivecs'},
+    {'name': 'gist10K', 'base': '../../../ann_data/gist10K/gist10K_base.fvecs', 'query': '../../../ann_data/gist1M/gist/gist_query.fvecs', 'ground': '../../../ann_data/gist10K/gist10K_groundtruth.ivecs'},
+    {'name': 'deep10K', 'base': '../../../ann_data/deep10K/deep10K_base.fvecs', 'query': '../../../ann_data/deep10M/deep1B_queries.fvecs', 'ground': '../../../ann_data/deep10K/deep10K_groundtruth.ivecs'},
 ]
 
 k_values = [1, 10, 50, 100]
@@ -89,8 +92,8 @@ def evaluate_spann(params):
                 index_type=mvdb.IndexType.SPANN,
                 dims=mv_utils.get_fvecs_dim_size(dataset['query']),
                 path=index_path,
-                initial_data=mv_utils.read_vector_file(dataset['base'])[:1000],
-                # initial_data_path=dataset['base'],
+                # initial_data=mv_utils.read_vector_file(dataset['base']),
+                initial_data_path=dataset['base'],
                 thread_num=10,
                 build_config_path='buildconfig.ini',
                 **params
@@ -143,13 +146,14 @@ if __name__ == "__main__":
 
 
 # notes: best experiment results obtained. best params are as follows:
-#   1. n_trees = 10, search_k = 6500
-#   2. n_trees = 10, search_k = 5500
-#   3. n_trees = 10, search_k = 7000
-#   4. n_trees = 10, search_k = 4500
-#   5. n_trees = 10, search_k = 7500
-#   6. n_trees = 10, search_k = 6000
-#   7. n_trees = 10, search_k = 3500
-#   8. n_trees = 10, search_k = 4000
-#   9. n_trees = 10, search_k = 5000
-#   10. n_trees = 10, search_k = 8000
+# BKTKmeansK:8
+# Samples:4000
+# TPTNumber:112
+# RefineIterations:2
+# NeighborhoodSize:144
+# CEF:1800
+# MaxCheckForRefineGraph:7168
+# NumberOfInitialDynamicPivots:30
+# GraphNeighborhoodScale:2
+# NumberOfOtherDynamicPivots:2
+# batch_size:2000

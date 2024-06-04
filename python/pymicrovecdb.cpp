@@ -582,15 +582,16 @@ static void SPANNIndexNamedArgs_delete(PyObject* capsule) {
 }
 
 static PyObject* SPANNIndexNamedArgs_init(PyObject* self, PyObject* args) {
-    const char *build_config_path, *quantizer_path;
+    const char *build_config_path, *quantizer_path, *truth_path;
     PyObject *meta_mapping, *normalized;
     int thread_num, batch_size, BKTKmeansK, Samples, TPTNumber, RefineIterations, NeighborhoodSize, CEF, MaxCheckForRefineGraph, NumberOfInitialDynamicPivots, GraphNeighborhoodScale, NumberOfOtherDynamicPivots;
-    if (!PyArg_ParseTuple(args, "ssOOiiiiiiiiiiii", &build_config_path, &quantizer_path, &meta_mapping, &normalized, &thread_num, &batch_size,
+    if (!PyArg_ParseTuple(args, "sssOOiiiiiiiiiiii", &build_config_path, &truth_path, &quantizer_path, &meta_mapping, &normalized, &thread_num, &batch_size,
                           &BKTKmeansK, &Samples, &TPTNumber, &RefineIterations, &NeighborhoodSize, &CEF, &MaxCheckForRefineGraph, &NumberOfInitialDynamicPivots, &GraphNeighborhoodScale,
                           &NumberOfOtherDynamicPivots)) return nullptr;
     auto * na_ = new mvdb::index::SPANNIndexNamedArgs();
     std::string build_config_path_str = std::string(build_config_path);
     if(!build_config_path_str.empty()) na_->build_config_path = build_config_path_str;
+    na_->truth_path = std::string(truth_path);
     na_->quantizer_path = std::string(quantizer_path);
     na_->meta_mapping = PyObject_IsTrue(meta_mapping);
     na_->normalized = PyObject_IsTrue(normalized);
