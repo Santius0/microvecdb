@@ -291,7 +291,6 @@ inline float euclidean_distance<float>(const float* x, const float* y, int f) {
 #if defined(ANNOYLIB_USE_NEON) // equivalent NEON specific computations
 // Horizontal single sum of 128bit vector.
 inline float hsum256_ps_neon(float32x4_t v) {
-    annoylib_showUpdate("hsum256_ps_neon from NEON instrinsic code running\n"); // TODO: remove this line
     float32x2_t sum = vadd_f32(vget_low_f32(v), vget_high_f32(v));
     sum = vpadd_f32(sum, sum);
     return vget_lane_f32(sum, 0);
