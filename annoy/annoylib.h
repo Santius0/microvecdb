@@ -105,6 +105,8 @@ typedef signed __int64    int64_t;
 #define ANNOYLIB_USE_AVX512
 #elif !defined(NO_MANUAL_VECTORIZATION) && defined(__AVX__) && defined (__SSE__) && defined(__SSE2__) && defined(__SSE3__)
 #define ANNOYLIB_USE_AVX
+#elif defined(__ARM_NEON)
+#define ANNOYLIB_USE_NEON
 #else
 #endif
 
@@ -114,6 +116,8 @@ typedef signed __int64    int64_t;
 #elif defined(__GNUC__)
 #include <x86intrin.h>
 #endif
+#elif defined(ANNOYLIB_USE_NEON)
+#include <arm_neon.h> // NEON intrinsics - ADDED
 #endif
 
 #if !defined(__MINGW32__)
@@ -282,6 +286,87 @@ inline float euclidean_distance<float>(const float* x, const float* y, int f) {
   return result;
 }
 
+#endif
+
+#if defined(ANNOYLIB_USE_NEON) // equivalent NEON specific computations
+// Horizontal single sum of 128bit vector.
+inline float hsum256_ps_neon(float32x4_t v) {
+    annoylib_showUpdate("hsum256_ps_neon from NEON instrinsic code running\n"); // TODO: remove this line
+    float32x2_t sum = vadd_f32(vget_low_f32(v), vget_high_f32(v));
+    sum = vpadd_f32(sum, sum);
+    return vget_lane_f32(sum, 0);
+}
+
+template<>
+inline float dot<float>(const float* x, const float *y, int f) {
+    float result = 0;
+    if (f > 3) {
+        float32x4_t d = vdupq_n_f32(0.0f);
+        for (; f > 3; f -= 4) {
+            d = vmlaq_f32(d, vld1q_f32(x), vld1q_f32(y));
+            x += 4;
+            y += 4;
+        }
+        // Sum all floats in dot register.
+        result += hsum256_ps_neon(d);
+    }
+    // Don't forget the remaining values.
+    for (; f > 0; f--) {
+        result += *x * *y;
+        x++;
+        y++;
+    }
+    return result;
+}
+
+template<>
+inline float manhattan_distance<float>(const float* x, const float* y, int f) {
+    float result = 0;
+    int i = f;
+    if (f > 3) {
+        float32x4_t manhattan = vdupq_n_f32(0.0f);
+        for (; i > 3; i -= 4) {
+            const float32x4_t x_minus_y = vsubq_f32(vld1q_f32(x), vld1q_f32(y));
+            const float32x4_t distance = vabsq_f32(x_minus_y); // Absolute value of x_minus_y
+            manhattan = vaddq_f32(manhattan, distance);
+            x += 4;
+            y += 4;
+        }
+        // Sum all floats in manhattan register.
+        result = hsum256_ps_neon(manhattan);
+    }
+    // Don't forget the remaining values.
+    for (; i > 0; i--) {
+        result += fabsf(*x - *y);
+        x++;
+        y++;
+    }
+    return result;
+}
+
+template<>
+inline float euclidean_distance<float>(const float* x, const float* y, int f) {
+    float result = 0;
+    if (f > 3) {
+        float32x4_t d = vdupq_n_f32(0.0f);
+        for (; f > 3; f -= 4) {
+            const float32x4_t diff = vsubq_f32(vld1q_f32(x), vld1q_f32(y));
+            d = vmlaq_f32(d, diff, diff); // no support for fmadd in NEON...
+            x += 4;
+            y += 4;
+        }
+        // Sum all floats in dot register.
+        result = hsum256_ps_neon(d);
+    }
+    // Don't forget the remaining values.
+    for (; f > 0; f--) {
+        float tmp = *x - *y;
+        result += tmp * tmp;
+        x++;
+        y++;
+    }
+    return result;
+}
 #endif
 
 #ifdef ANNOYLIB_USE_AVX512

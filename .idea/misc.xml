@@ -15,7 +15,6 @@
     <excludeRoots>
       <file path="$PROJECT_DIR$/ImageBind/imagebind" />
       <file path="$PROJECT_DIR$/SPTAG" />
-      <file path="$PROJECT_DIR$/annoy" />
       <file path="$PROJECT_DIR$/diskann" />
       <file path="$PROJECT_DIR$/eigen" />
       <file path="$PROJECT_DIR$/faiss" />
