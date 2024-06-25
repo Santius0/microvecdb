@@ -286,6 +286,105 @@ inline float euclidean_distance<float>(const float* x, const float* y, int f) {
   return result;
 }
 
+
+// Horizontal single sum of 256bit vector for int8.
+inline int8_t hsum256_epi8_avx(__m256i v) {
+    const __m128i v128 = _mm_add_epi8(_mm256_extracti128_si256(v, 1), _mm256_castsi256_si128(v));
+    const __m128i v64 = _mm_add_epi8(v128, _mm_srli_si128(v128, 8));
+    const __m128i v32 = _mm_add_epi8(v64, _mm_srli_si128(v64, 4));
+    const __m128i v16 = _mm_add_epi8(v32, _mm_srli_si128(v32, 2));
+    const __m128i v8 = _mm_add_epi8(v16, _mm_srli_si128(v16, 1));
+    return _mm_extract_epi8(v8, 0);
+}
+
+template<>
+inline int8_t dot<int8_t>(const int8_t* x, const int8_t* y, int f) {
+    int8_t result = 0;
+    if (f > 31) {
+        __m256i d = _mm256_setzero_si256();
+        for (; f > 31; f -= 32) {
+            __m256i xv = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(x));
+            __m256i yv = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(y));
+            __m256i prod = _mm256_maddubs_epi16(xv, yv);
+            d = _mm256_add_epi16(d, prod);
+            x += 32;
+            y += 32;
+        }
+        // Sum all int8 in dot register.
+        result += hsum256_epi8_avx(d);
+    }
+    // Don't forget the remaining values.
+    for (; f > 0; f--) {
+        result += (*x) * (*y);
+        x++;
+        y++;
+    }
+    return result;
+}
+
+template<>
+inline int8_t manhattan_distance<int8_t>(const int8_t* x, const int8_t* y, int f) {
+    int8_t result = 0;
+    int i = f;
+    if (f > 31) {
+        __m256i manhattan = _mm256_setzero_si256();
+        for (; i > 31; i -= 32) {
+            __m256i xv = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(x));
+            __m256i yv = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(y));
+            __m256i diff = _mm256_sub_epi8(xv, yv);
+            __m256i abs_diff = _mm256_abs_epi8(diff);
+            manhattan = _mm256_add_epi8(manhattan, abs_diff);
+            x += 32;
+            y += 32;
+        }
+        // Sum all int8 in manhattan register.
+        result = hsum256_epi8_avx(manhattan);
+    }
+    // Don't forget the remaining values.
+    for (; i > 0; i--) {
+        result += abs(*x - *y);
+        x++;
+        y++;
+    }
+    return result;
+}
+
+template<>
+inline int8_t euclidean_distance<int8_t>(const int8_t* x, const int8_t* y, int f) {
+    int8_t result = 0;
+    if (f > 31) {
+        __m256i d = _mm256_setzero_si256();
+        for (; f > 31; f -= 32) {
+            __m256i xv = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(x));
+            __m256i yv = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(y));
+            __m256i diff = _mm256_sub_epi8(xv, yv);
+
+            // Convert to 16-bit integers for squaring
+            __m256i diff_lo = _mm256_cvtepi8_epi16(_mm256_castsi256_si128(diff));
+            __m256i diff_hi = _mm256_cvtepi8_epi16(_mm256_extracti128_si256(diff, 1));
+
+            __m256i square_lo = _mm256_mullo_epi16(diff_lo, diff_lo);
+            __m256i square_hi = _mm256_mullo_epi16(diff_hi, diff_hi);
+
+            d = _mm256_add_epi16(d, square_lo);
+            d = _mm256_add_epi16(d, square_hi);
+
+            x += 32;
+            y += 32;
+        }
+        // Sum all int8 in dot register.
+        result = hsum256_epi8_avx(d);
+    }
+    // Don't forget the remaining values.
+    for (; f > 0; f--) {
+        int8_t tmp = *x - *y;
+        result += tmp * tmp;
+        x++;
+        y++;
+    }
+    return result;
+}
+
 #endif
 
 #if defined(ANNOYLIB_USE_NEON) // equivalent NEON specific computations
@@ -365,6 +464,104 @@ inline float euclidean_distance<float>(const float* x, const float* y, int f) {
         y++;
     }
     return result;
+}
+
+// Horizontal single sum of 128bit vector for int8.
+inline int8_t hsum128_epi8_neon(int8x16_t v) {
+  int8x8_t v64 = vadd_s8(vget_low_s8(v), vget_high_s8(v));
+  int8x8_t v32 = vpadd_s8(v64, v64);
+  int8x8_t v16 = vpadd_s8(v32, v32);
+  int8x8_t v8 = vpadd_s8(v16, v16);
+  return vget_lane_s8(v8, 0);
+}
+
+template<>
+inline int8_t dot<int8_t>(const int8_t* x, const int8_t* y, int f) {
+  int8_t result = 0;
+  if (f > 15) {
+    int16x8_t d = vdupq_n_s16(0);
+    for (; f > 15; f -= 16) {
+      int8x16_t xv = vld1q_s8(x);
+      int8x16_t yv = vld1q_s8(y);
+      int16x8_t prod_low = vmull_s8(vget_low_s8(xv), vget_low_s8(yv));
+      int16x8_t prod_high = vmull_s8(vget_high_s8(xv), vget_high_s8(yv));
+      d = vaddq_s16(d, prod_low);
+      d = vaddq_s16(d, prod_high);
+      x += 16;
+      y += 16;
+    }
+    // Sum all int8 in dot register.
+    result += hsum128_epi8_neon(vcombine_s8(vmovn_s16(d), vmovn_s16(d)));
+  }
+  // Don't forget the remaining values.
+  for (; f > 0; f--) {
+    result += (*x) * (*y);
+    x++;
+    y++;
+  }
+  return result;
+}
+
+template<>
+inline int8_t manhattan_distance<int8_t>(const int8_t* x, const int8_t* y, int f) {
+  int8_t result = 0;
+  int i = f;
+  if (f > 15) {
+    int8x16_t manhattan = vdupq_n_s8(0);
+    for (; i > 15; i -= 16) {
+      int8x16_t xv = vld1q_s8(x);
+      int8x16_t yv = vld1q_s8(y);
+      int8x16_t diff = vabdq_s8(xv, yv);
+      manhattan = vaddq_s8(manhattan, diff);
+      x += 16;
+      y += 16;
+    }
+    // Sum all int8 in manhattan register.
+    result = hsum128_epi8_neon(manhattan);
+  }
+  // Don't forget the remaining values.
+  for (; i > 0; i--) {
+    result += abs(*x - *y);
+    x++;
+    y++;
+  }
+  return result;
+}
+
+template<>
+inline int8_t euclidean_distance<int8_t>(const int8_t* x, const int8_t* y, int f) {
+  int8_t result = 0;
+  if (f > 15) {
+    int16x8_t d = vdupq_n_s16(0);
+    for (; f > 15; f -= 16) {
+      int8x16_t xv = vld1q_s8(x);
+      int8x16_t yv = vld1q_s8(y);
+      int8x16_t diff = vsubq_s8(xv, yv);
+
+      // Convert to 16-bit integers for squaring
+      int16x8_t diff_lo = vmovl_s8(vget_low_s8(diff));
+      int16x8_t diff_hi = vmovl_s8(vget_high_s8(diff));
+
+      int16x8_t square_lo = vmulq_s16(diff_lo, diff_lo);
+      int16x8_t square_hi = vmulq_s16(diff_hi, diff_hi);
+
+      d = vaddq_s16(d, square_lo);
+      d = vaddq_s16(d, square_hi);
+
+      x += 16;
+      y += 16;
+    }
+    // Sum all int8 in dot register.
+    result = hsum128_epi8_neon(vcombine_s8(vmovn_s16(d), vmovn_s16(d)));
+  }
+  // Don't forget the remaining values.
+  for (; f > 0; f--) {
+    int8_t tmp = *x - *y;
+    result += tmp * tmp;
+    x++;
+    y++;
+  }
+  return result;
 }
 #endif
 
