@@ -90,7 +90,7 @@ namespace mvdb {
 
         while (file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) {
             if (dimension != vec.size()) {
-                throw std::runtime_error("Inconsistent vector dimensions found.");
+                throw std::runtime_error("Inconsistent vector dimensions found: Expected " + std::to_string(dimension) + ", got " + std::to_string(vec.size()));
             }
 
             start_indexes.push_back(currentStartIndex);

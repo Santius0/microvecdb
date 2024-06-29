@@ -12,9 +12,10 @@ class DataType(Enum):
         return f"{self.name.lower()}"
 
 def str_to_data_type(type_str: str):
-    if type_str == str(DataType.INT8):
+    type_str = type_str.lower()
+    if type_str == str(DataType.INT8).lower():
         return DataType.INT8
-    elif type_str == str(DataType.FLOAT32):
+    elif type_str == str(DataType.FLOAT32).lower():
         return DataType.FLOAT32
     else:
         raise ValueError(f"Unsupported index type '{type_str}'")
@@ -36,14 +37,15 @@ class IndexType(Enum):
         return f"{self.name.lower()}"
 
 def str_to_index_type(type_str: str):
-    if type_str == str(IndexType.FAISS_FLAT):
+    type_str = type_str.lower()
+    if type_str == str(IndexType.FAISS_FLAT).lower():
         return IndexType.FAISS_FLAT
-    elif type_str == str(IndexType.ANNOY):
+    elif type_str == str(IndexType.ANNOY).lower():
         return IndexType.ANNOY
-    elif type_str == str(IndexType.SPANN):
+    elif type_str == str(IndexType.SPANN).lower():
         return IndexType.SPANN
     else:
-        raise ValueError("Unsupported index type")
+        raise ValueError("Unsupported index type: " + type_str)
 
 @unique
 class DistanceMetric(Enum):

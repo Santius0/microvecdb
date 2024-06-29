@@ -164,6 +164,8 @@ namespace mvdb::index {
         else if constexpr (std::is_same_v<T, float>)
             iniReader.SetParameter("Base", "ValueType", "Float");
 
+        iniReader.SetParameter("Base", "Dim", std::to_string(dims));
+
         std::cout << "Build SPANN Args = \n" << spann_args << std::endl;
         if(!initial_data_path.empty()) iniReader.SetParameter("Base", "VectorPath", initial_data_path);
 //        if(!spann_args->query_path.empty()) iniReader.SetParameter("Base", "QueryPath", spann_args->query_path);
@@ -179,6 +181,9 @@ namespace mvdb::index {
         if(spann_args->GraphNeighborhoodScale > 0) iniReader.SetParameter("BuildHead", "GraphNeighborhoodScale", std::to_string(spann_args->GraphNeighborhoodScale));
         if(spann_args->NumberOfInitialDynamicPivots > 0) iniReader.SetParameter("BuildHead", "NumberOfInitialDynamicPivots", std::to_string(spann_args->NumberOfInitialDynamicPivots));
         if(spann_args->NumberOfOtherDynamicPivots > 0) iniReader.SetParameter("BuildHead", "NumberOfOtherDynamicPivots", std::to_string(spann_args->NumberOfOtherDynamicPivots));
+
+        std::cout << "CHECKING DIM =>  " << iniReader.GetParameter("Base", "Dim", -1) << std::endl;
+        std::cout << "CHECKING TPTNUMBER =>  " << iniReader.GetParameter("BuildHead", "TPTNumber", -1) << std::endl;
 
         for (const auto &section: sections) {
 //            if (!iniReader.DoesParameterExist(section, "NumberOfThreads"))

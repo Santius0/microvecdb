@@ -135,7 +135,7 @@ float* extract_float_arr(PyObject* arr) {
     if(arr == nullptr) return nullptr;
     auto* pyarray = (PyArrayObject*)arr;
     if (PyArray_TYPE(pyarray) != NPY_FLOAT) {
-        PyErr_SetString(PyExc_TypeError, "input data must be of type np.float");
+        PyErr_SetString(PyExc_TypeError, "input data must be of type np.float32");
         return nullptr;
     }
     auto *data_arr = (float *)PyArray_DATA(pyarray);
@@ -298,70 +298,140 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
 
     double peak_wss_mb = -1.0;
 
-    auto* pyarray = (PyArrayObject*)query_array_obj;
-    if (PyArray_TYPE(pyarray) != NPY_FLOAT) {
-        PyErr_SetString(PyExc_TypeError, "input data must be of type np.float");
+    if(data_type == INT8) {
+        auto* pyarray = (PyArrayObject*)query_array_obj;
+        if (PyArray_TYPE(pyarray) != NPY_INT8) {
+            PyErr_SetString(PyExc_TypeError, "input data must be of type np.float");
+            return nullptr;
+        }
+        auto *data_arr = (int8_t*)PyArray_DATA(pyarray);
+        if(data_arr == nullptr){
+            PyErr_SetString(PyExc_BufferError, "failed to extract np.uint8 array data");
+            return nullptr;
+        }
+
+        npy_intp return_arr_dims[1] = {static_cast<npy_intp>(nq * k)};
+
+        auto *ids = (mvdb::idx_t*)malloc(nq * k * sizeof(mvdb::idx_t));
+        if(ids == nullptr) {
+            PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for ids");
+            return nullptr;
+        }
+
+        auto *distances = (int8_t*)malloc(nq * k * sizeof(int8_t));
+        if(distances == nullptr) {
+            PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for distances");
+            free(ids);
+            return nullptr;
+        }
+
+        auto *mvdb_ = static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
+        mvdb_->topk(nq, data_arr, "", "", ids, distances, peak_wss_mb, k, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, (float)c, c_args);
+
+        PyObject *ids_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, ids);
+        if(ids_npArray == nullptr){
+            PyErr_SetString(PyExc_RuntimeError, "Failed to create return NumPy array, 'ids'");
+            free(ids);
+            free(distances);
+            return nullptr;
+        }
+
+        PyObject *distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT8, distances);
+        if(distances_npArray == nullptr){
+            PyErr_SetString(PyExc_RuntimeError, "Failed to create return NumPy array, 'distances'");
+            Py_DECREF(ids_npArray);
+            free(ids);
+            free(distances);
+            return nullptr;
+        }
+
+        PyArray_ENABLEFLAGS((PyArrayObject *) ids_npArray, NPY_ARRAY_OWNDATA);
+        PyArray_ENABLEFLAGS((PyArrayObject *) distances_npArray, NPY_ARRAY_OWNDATA);
+
+        PyObject* tuple = PyTuple_New(3);
+        if (!tuple) {
+            Py_DECREF(ids_npArray);
+            Py_DECREF(distances_npArray);
+            PyErr_SetString(PyExc_RuntimeError, "Failed to create return tuple.");
+            return nullptr;
+        }
+
+        PyObject *peak_wss_mb_py_obj = Py_BuildValue("d", peak_wss_mb);
+
+        PyTuple_SetItem(tuple, 0, ids_npArray);
+        PyTuple_SetItem(tuple, 1, distances_npArray);
+        PyTuple_SetItem(tuple, 2, peak_wss_mb_py_obj);
+
+        return tuple;
+    } else if(data_type == FLOAT32){
+        auto* pyarray = (PyArrayObject*)query_array_obj;
+        if (PyArray_TYPE(pyarray) != NPY_FLOAT) {
+            PyErr_SetString(PyExc_TypeError, "input data must be of type np.float");
+            return nullptr;
+        }
+        auto *data_arr = (float *)PyArray_DATA(pyarray);
+        if(data_arr == nullptr){
+            PyErr_SetString(PyExc_BufferError, "failed to extract np.uint8 array data");
+            return nullptr;
+        }
+
+        npy_intp return_arr_dims[1] = {static_cast<npy_intp>(nq * k)};
+
+        auto *ids = (mvdb::idx_t*)malloc(nq * k * sizeof(mvdb::idx_t));
+        if(ids == nullptr) {
+            PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for ids");
+            return nullptr;
+        }
+
+        auto *distances = (float*)malloc(nq * k * sizeof(float));
+        if(distances == nullptr) {
+            PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for distances");
+            free(ids);
+            return nullptr;
+        }
+
+        auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
+        mvdb_->topk(nq, data_arr, "", "", ids, distances, peak_wss_mb, k, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, (float)c, c_args);
+
+        PyObject *ids_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, ids);
+        if(ids_npArray == nullptr){
+            PyErr_SetString(PyExc_RuntimeError, "Failed to create return NumPy array, 'ids'");
+            free(ids);
+            free(distances);
+            return nullptr;
+        }
+
+        PyObject *distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_FLOAT, distances);
+        if(distances_npArray == nullptr){
+            PyErr_SetString(PyExc_RuntimeError, "Failed to create return NumPy array, 'distances'");
+            Py_DECREF(ids_npArray);
+            free(ids);
+            free(distances);
+            return nullptr;
+        }
+
+        PyArray_ENABLEFLAGS((PyArrayObject *) ids_npArray, NPY_ARRAY_OWNDATA);
+        PyArray_ENABLEFLAGS((PyArrayObject *) distances_npArray, NPY_ARRAY_OWNDATA);
+
+        PyObject* tuple = PyTuple_New(3);
+        if (!tuple) {
+            Py_DECREF(ids_npArray);
+            Py_DECREF(distances_npArray);
+            PyErr_SetString(PyExc_RuntimeError, "Failed to create return tuple.");
+            return nullptr;
+        }
+
+        PyObject *peak_wss_mb_py_obj = Py_BuildValue("d", peak_wss_mb);
+
+        PyTuple_SetItem(tuple, 0, ids_npArray);
+        PyTuple_SetItem(tuple, 1, distances_npArray);
+        PyTuple_SetItem(tuple, 2, peak_wss_mb_py_obj);
+
+        return tuple;
+    } else {
+        PyErr_SetString(PyExc_ValueError, "Unsupported data type");
         return nullptr;
     }
-    auto *data_arr = (float *)PyArray_DATA(pyarray);
-    if(data_arr == nullptr){
-        PyErr_SetString(PyExc_BufferError, "failed to extract np.uint8 array data");
-        return nullptr;
-    }
-
-    npy_intp return_arr_dims[1] = {static_cast<npy_intp>(nq * k)};
-
-    auto *ids = (mvdb::idx_t*)malloc(nq * k * sizeof(mvdb::idx_t));
-    if(ids == nullptr) {
-        PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for ids");
-        return nullptr;
-    }
-
-    auto *distances = (float*)malloc(nq * k * sizeof(float));
-    if(distances == nullptr) {
-        PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for distances");
-        free(ids);
-        return nullptr;
-    }
-
-    auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
-    mvdb_->topk(nq, data_arr, "", "", ids, distances, peak_wss_mb, k, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, (float)c, c_args);
-
-    PyObject *ids_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, ids);
-    if(ids_npArray == nullptr){
-        PyErr_SetString(PyExc_RuntimeError, "Failed to create return NumPy array, 'ids'");
-        free(ids);
-        free(distances);
-        return nullptr;
-    }
-
-    PyObject *distances_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_FLOAT, distances);
-    if(distances_npArray == nullptr){
-        PyErr_SetString(PyExc_RuntimeError, "Failed to create return NumPy array, 'distances'");
-        Py_DECREF(ids_npArray);
-        free(ids);
-        free(distances);
-        return nullptr;
-    }
-
-    PyArray_ENABLEFLAGS((PyArrayObject *) ids_npArray, NPY_ARRAY_OWNDATA);
-    PyArray_ENABLEFLAGS((PyArrayObject *) distances_npArray, NPY_ARRAY_OWNDATA);
-
-    PyObject* tuple = PyTuple_New(3);
-    if (!tuple) {
-        Py_DECREF(ids_npArray);
-        Py_DECREF(distances_npArray);
-        PyErr_SetString(PyExc_RuntimeError, "Failed to create return tuple.");
-        return nullptr;
-    }
-
-    PyObject *peak_wss_mb_py_obj = Py_BuildValue("d", peak_wss_mb);
-
-    PyTuple_SetItem(tuple, 0, ids_npArray);
-    PyTuple_SetItem(tuple, 1, distances_npArray);
-    PyTuple_SetItem(tuple, 2, peak_wss_mb_py_obj);
-
-    return tuple;
 }
 
 //static PyObject* MVDB_topk(PyObject* self, PyObject* args) {

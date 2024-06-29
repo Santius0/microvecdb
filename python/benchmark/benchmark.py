@@ -35,7 +35,7 @@ datasets = {
 }
 
 indices = [
-    # 'annoy_sift10K_float32_n_trees=10',
+    'annoy_sift10K_float32_n_trees=10',
     # 'annoy_sift100K_float32_n_trees=10',
     # 'annoy_sift500K_float32_n_trees=10',
     # 'annoy_sift1M_float32_n_trees=10',
@@ -50,27 +50,6 @@ indices = [
     # 'annoy_gist500K_float32_n_trees=10',
     # 'annoy_gist1M_float32_n_trees=10',
 ]
-
-
-    # 'deep10K': {'query_path': 'deep10K', 'dims': 96, 'size': 10000, 'dtype': mvdb.DataType.FLOAT},
-    # 'deep100K': {'query_path': 'deep100K', 'dims': 96, 'size': 100000, 'dtype': mvdb.DataType.FLOAT},
-    # 'deep500K': {'query_path': 'deep500K', 'dims': 96, 'size': 500000, 'dtype': mvdb.DataType.FLOAT},
-    # 'deep1M': {'query_path': 'deep1M', 'dims': 96, 'size': 1000000, 'dtype': mvdb.DataType.FLOAT},
-    # 'deep5M': {'query_path': 'deep5M', 'dims': 96, 'size': 5000000, 'dtype': mvdb.DataType.FLOAT},
-    # 'deep10M': {'query_path': 'deep10M', 'dims': 96, 'size': 10000000, 'dtype': mvdb.DataType.FLOAT},
-
-    # 'spann_sift10K_float32': {'index': './indices/spann_sift10K_float32', 'extra_args': {}, 'query': '../../ann_data/sift1M/sift/sift_query.fvecs', 'ground': '../../ann_data/sift10K/sift10K_groundtruth.ivecs'},
-    # 'sift100K': {'query_path': 'sift100K', 'dims': 128, 'size': 100000, 'dtype': mvdb.DataType.FLOAT},
-    # 'sift500K': {'query_path': 'sift500K', 'dims': 128, 'size': 500000, 'dtype': mvdb.DataType.FLOAT},
-    # 'sift1M': {'query_path': '../data/sift1M/sift/sift_query.fvecs', 'ground_path': '../data/sift1M/sift/sift_groundtruth.ivecs', 'dims': 128, 'size': 1000000, 'dtype': mvdb.DataType.FLOAT},
-    # 'sift5M': {'query_path': 'sift5M', 'dims': 128, 'size': 5000000, 'dtype': mvdb.DataType.FLOAT},
-    # 'sift10M': {'query_path': 'sift10M', 'dims': 128, 'size': 10000000, 'dtype': mvdb.DataType.FLOAT},
-    #
-    # 'gist10K': {'query_path': 'gist10K', 'dims': 960, 'size': 10000, 'dtype': mvdb.DataType.FLOAT},
-    # 'gist100K': {'query_path': 'gist100K', 'dims': 960, 'size': 100000, 'dtype': mvdb.DataType.FLOAT},
-    # 'gist500K': {'query_path': 'gist500K', 'dims': 960, 'size': 500000, 'dtype': mvdb.DataType.FLOAT},
-    # 'gist1M': {'query_path': 'gist1M', 'dims': 960, 'size': 1000000, 'dtype': mvdb.DataType.FLOAT},
-# }
 
 def topk_wrapper(db_, q, k, params=None):
     if params is None:

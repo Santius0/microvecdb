@@ -54,17 +54,24 @@ def test_topk_function(db_):
 
 queries = utils.read_vector_file("../../ann_data/deep10M/deep1B_queries.fvecs")
 
+BASE_DATA_DIR = '/home/santius/ann_data'
+BASE_INDEX_DIR = '/home/santius/ann_indices'
+
+SIFT10K = f'{BASE_DATA_DIR}/sift10K/sift10K_base.fvecs'
+
 # @profile
 def main():
     if os.path.exists("./test_annoy_idx"):
         shutil.rmtree("./test_annoy_idx")
 
-    annoy_db = mvdb.MVDB()
+    annoy_db = mvdb.MVDB(dtype=mvdb.DataType.INT8)
     annoy_db.create(
-      index_type=mvdb.IndexType.ANNOY,
-      dims=128,
-      path="./test_annoy_idx",
-      initial_data=utils.read_vector_file("../../ann_data/sift10K/sift10K_base.fvecs")
+        index_type=mvdb.IndexType.ANNOY,
+        dims=128,
+        path="./test_annoy_idx",
+        initial_data=utils.read_vector_file(SIFT10K).astype(np.int8),
+        n_trees=10,
+        n_threads=12
     )
     print(annoy_db.num_items)
     print(annoy_db.dims)
@@ -78,8 +85,8 @@ def main():
     # db2 = mvdb.MVDB()
     # db2.open("./indices/spann_sift1M_float32")
     # print(f'python num items {db2.num_items}')
-    # res = db_.topk(query=queries, k = 100)
-    # print(res[0])
+    res = annoy_db.topk(query=queries.astype(np.int8), k=100)
+    print(res[0])
     # print(utils.read_vector_file("../../ann_data/deep1M/deep1M_groundtruth.ivecs"))
 # test_create_function(db)
     # test_topk_function(db)
