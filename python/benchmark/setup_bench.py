@@ -76,26 +76,52 @@ DATASET_CONFIGS = {
             'batch_size': 2000
         }
     },
-    # 'sift': {
-    #     'base_path': f'{BASE_DATA_DIR}/sift/sift_base.fvecs',
-    #     'query_path': f'{BASE_DATA_DIR}/sift/sift_query.fvecs',
-    #     'sizes': [10000, 100000, 500000, 1000000],
-    #     'dimensions': [128],
-    #     'dtype': ['float32', 'int8'],
-    #     'index_types': ['annoy', 'spann'],
-    #     'annoy_index_params': {'n_trees': 10, 'n_threads': 12},
-    #     'spann_index_params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}
-    # },
-    # 'gist': {
-    #     'base_path': f'{BASE_DATA_DIR}/gist/gist_base.fvecs',
-    #     'query_path': f'{BASE_DATA_DIR}/gist/gist_query.fvecs',
-    #     'sizes': [10000, 100000, 500000, 1000000],
-    #     'dimensions': [256, 512, 960],
-    #     'dtype': ['float32', 'int8'],
-    #     'index_types': ['annoy', 'spann'],
-    #     'annoy_index_params': {'n_trees': 10, 'n_threads': 12},
-    #     'spann_index_params': {'build_config_path': "/home/santius/microvecdb/SPTAG/buildconfig.ini"}
-    # },
+    'sift': {
+        'base_path': f'{BASE_DATA_DIR}/sift/sift_base.fvecs',
+        'query_path': f'{BASE_DATA_DIR}/sift/sift_query.fvecs',
+        'sizes': [10000, 100000, 500000, 1000000],
+        'dimensions': [128],
+        'dtype': ['float32', 'int8'],
+        'index_types': ['annoy', 'spann'],
+        'annoy_index_params': {'n_trees': 10, 'n_threads': 12},
+        'spann_index_params': {
+            'build_config_path': "buildconfig.ini",
+            'BKTKmeansK': 8,
+            'Samples': 4000,
+            'TPTNumber': 112,
+            'RefineIterations': 2,
+            'NeighborhoodSize': 144,
+            'CEF': 1800,
+            'MaxCheckForRefineGraph': 7168,
+            'NumberOfInitialDynamicPivots': 30,
+            'GraphNeighborhoodScale': 2,
+            'NumberOfOtherDynamicPivots': 2,
+            'batch_size': 2000
+        }
+    },
+    'gist': {
+        'base_path': f'{BASE_DATA_DIR}/gist/gist_base.fvecs',
+        'query_path': f'{BASE_DATA_DIR}/gist/gist_query.fvecs',
+        'sizes': [10000, 100000, 500000, 1000000],
+        'dimensions': [256, 512, 960],
+        'dtype': ['float32', 'int8'],
+        'index_types': ['annoy', 'spann'],
+        'annoy_index_params': {'n_trees': 10, 'n_threads': 12},
+        'spann_index_params': {
+            'build_config_path': "buildconfig.ini",
+            'BKTKmeansK': 8,
+            'Samples': 4000,
+            'TPTNumber': 112,
+            'RefineIterations': 2,
+            'NeighborhoodSize': 144,
+            'CEF': 1800,
+            'MaxCheckForRefineGraph': 7168,
+            'NumberOfInitialDynamicPivots': 30,
+            'GraphNeighborhoodScale': 2,
+            'NumberOfOtherDynamicPivots': 2,
+            'batch_size': 2000
+        }
+    },
 }
 
 def build_indices():
