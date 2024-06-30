@@ -17,39 +17,88 @@ k_values = [1, 10, 50, 100]
 BASE_DATA_DIR = '/home/santius/ann_data'
 BASE_INDEX_DIR = '/home/santius/ann_indices'
 
-datasets = {
-    'sift10K': {'query':  f'{BASE_DATA_DIR}/sift1M/sift/sift_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/sift10K/sift10K_groundtruth.ivecs'},
-    'sift100K': {'query':  f'{BASE_DATA_DIR}/sift1M/sift/sift_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/sift100K/sift100K_groundtruth.ivecs'},
-    'sift500K': {'query':  f'{BASE_DATA_DIR}/sift1M/sift/sift_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/sift500K/sift500K_groundtruth.ivecs'},
-    'sift1M': {'query':  f'{BASE_DATA_DIR}/sift1M/sift/sift_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/sift1M/sift/sift_groundtruth.ivecs'},
-
-    'gist10K': {'query':  f'{BASE_DATA_DIR}/gist1M/gist/gist_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/gist10K/gist10K_groundtruth.ivecs'},
-    'gist100K': {'query':  f'{BASE_DATA_DIR}/gist1M/gist/gist_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/gist100K/gist100K_groundtruth.ivecs'},
-    'gist500K': {'query':  f'{BASE_DATA_DIR}/gist1M/gist/gist_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/gist500K/gist500K_groundtruth.ivecs'},
-    'gist1M': {'query':  f'{BASE_DATA_DIR}/gist1M/gist/gist_query.fvecs', 'ground':  f'{BASE_DATA_DIR}/gist1M/gist/gist_groundtruth.ivecs'},
-
-    'deep10K': {'query':  f'{BASE_DATA_DIR}/deep10M/deep1B_queries.fvecs', 'ground':  f'{BASE_DATA_DIR}/deep10K/deep10K_groundtruth.ivecs'},
-    'deep100K': {'query':  f'{BASE_DATA_DIR}/deep10M/deep1B_queries.fvecs', 'ground':  f'{BASE_DATA_DIR}/deep100K/deep100K_groundtruth.ivecs'},
-    'deep500K': {'query':  f'{BASE_DATA_DIR}/deep10M/deep1B_queries.fvecs', 'ground':  f'{BASE_DATA_DIR}/deep500K/deep500K_groundtruth.ivecs'},
-    'deep1M': {'query':  f'{BASE_DATA_DIR}/deep10M/deep1B_queries.fvecs', 'ground':  f'{BASE_DATA_DIR}/deep1M/deep1M_groundtruth.ivecs'},
+DATASET_CONFIGS = {
+    'deep': {
+        'base_path': f'{BASE_DATA_DIR}/deep/deep10M.fvecs',
+        'query_path': f'{BASE_DATA_DIR}/deep/deep1B_queries.fvecs',
+        'sizes': [10000, 100000, 500000, 1000000],
+        'dimensions': [96],
+        'dtype': ['float32', 'int8'],
+        'index_types': ['annoy', 'spann'],
+        'annoy_index_params': {'n_trees': 10, 'n_threads': 12},
+        'spann_index_params': {
+            'build_config_path': "buildconfig.ini",
+            'BKTKmeansK': 8,
+            'Samples': 4000,
+            'TPTNumber': 112,
+            'RefineIterations': 2,
+            'NeighborhoodSize': 144,
+            'CEF': 1800,
+            'MaxCheckForRefineGraph': 7168,
+            'NumberOfInitialDynamicPivots': 30,
+            'GraphNeighborhoodScale': 2,
+            'NumberOfOtherDynamicPivots': 2,
+            'batch_size': 2000
+        }
+    },
+    'sift': {
+        'base_path': f'{BASE_DATA_DIR}/sift/sift_base.fvecs',
+        'query_path': f'{BASE_DATA_DIR}/sift/sift_query.fvecs',
+        'sizes': [10000, 100000, 500000, 1000000],
+        'dimensions': [128],
+        'dtype': ['float32', 'int8'],
+        'index_types': ['annoy', 'spann'],
+        'annoy_index_params': {'n_trees': 10, 'n_threads': 12},
+        'spann_index_params': {
+            'build_config_path': "buildconfig.ini",
+            'BKTKmeansK': 8,
+            'Samples': 4000,
+            'TPTNumber': 112,
+            'RefineIterations': 2,
+            'NeighborhoodSize': 144,
+            'CEF': 1800,
+            'MaxCheckForRefineGraph': 7168,
+            'NumberOfInitialDynamicPivots': 30,
+            'GraphNeighborhoodScale': 2,
+            'NumberOfOtherDynamicPivots': 2,
+            'batch_size': 2000
+        }
+    },
+    # 'gist': {
+    #     'base_path': f'{BASE_DATA_DIR}/gist/gist_base.fvecs',
+    #     'query_path': f'{BASE_DATA_DIR}/gist/gist_query.fvecs',
+    #     'sizes': [10000, 100000, 500000, 1000000],
+    #     'dimensions': [256, 512, 960],
+    #     'dtype': ['float32', 'int8'],
+    #     'index_types': ['annoy', 'spann'],
+    #     'annoy_index_params': {'n_trees': 10, 'n_threads': 12},
+    #     'spann_index_params': {
+    #         'build_config_path': "buildconfig.ini",
+    #         'BKTKmeansK': 8,
+    #         'Samples': 4000,
+    #         'TPTNumber': 112,
+    #         'RefineIterations': 2,
+    #         'NeighborhoodSize': 144,
+    #         'CEF': 1800,
+    #         'MaxCheckForRefineGraph': 7168,
+    #         'NumberOfInitialDynamicPivots': 30,
+    #         'GraphNeighborhoodScale': 2,
+    #         'NumberOfOtherDynamicPivots': 2,
+    #         'batch_size': 2000
+    #     }
+    # },
 }
 
-indices = [
-    'annoy_sift10K_float32_n_trees=10',
-    # 'annoy_sift100K_float32_n_trees=10',
-    # 'annoy_sift500K_float32_n_trees=10',
-    # 'annoy_sift1M_float32_n_trees=10',
-
-    # 'annoy_deep10K_float32_n_trees=10',
-    # 'annoy_deep100K_float32_n_trees=10',
-    # 'annoy_deep500K_float32_n_trees=10',
-    'annoy_deep1M_float32_n_trees=10',
-
-    # 'annoy_gist10K_float32_n_trees=10',
-    # 'annoy_gist100K_float32_n_trees=10',
-    # 'annoy_gist500K_float32_n_trees=10',
-    # 'annoy_gist1M_float32_n_trees=10',
-]
+def short_code(num):
+    suffixes = ['K', 'M', 'B', 'T']
+    base = 1000
+    num_str = str(num)
+    for suffix in suffixes:
+        if num < base:
+            return num_str
+        num /= base
+        num_str = f"{num:.1f}".rstrip('0').rstrip('.') + suffix
+    return num_str
 
 def topk_wrapper(db_, q, k, params=None):
     if params is None:
@@ -102,60 +151,76 @@ def get_cpu_env():
     cpu_env['load_average'] = load_average
     return cpu_env
 
-def main():
+def benchmark():
     get_cpu_env() # run once at the beginning so script immediately asks for sudo password
     result_dir = './results'
     tegrastats_dir = './tegrastats'
     result_file = f'{result_dir}/results.csv'
     os.makedirs(tegrastats_dir, exist_ok=True)
     os.makedirs(result_dir, exist_ok=True)
+
     is_nano = nano_utils.is_jetson_nano()
-    for index in indices:
-        gc.collect()
-        index_key_list = index.split('_')
-        index_type, dataset_name, dtype = mvdb.str_to_index_type(index_key_list[0]), index_key_list[1], mvdb.str_to_data_type(index_key_list[2])
-        dataset = datasets[dataset_name]
-        db = mvdb.MVDB(dtype=dtype)
-        db.open(f"{BASE_INDEX_DIR}/{index}")
-        queries = mv_utils.read_vector_file(dataset['query'])
-        ground = mv_utils.read_vector_file(dataset['ground'])
-        for q_size in query_sizes:
-            gc.collect()
-            q = queries[:q_size]
-            gt = ground[:q_size]
-            for k in k_values:
-                internal_config = f"{index}_{q_size}_{k}"
-                print(f"processing: {internal_config}...")
-                if is_nano:
-                    nano_utils.start_tegrastats(f"{tegrastats_dir}/{internal_config}")
-                start_time = time.time()
-                # optimal search_k = 6500
-                peak_dram, results = memory_usage((topk_wrapper, (db, q, k, {'n_threads': 3, 'search_k': 6500})), retval=True, max_usage=True)
-                query_time = time.time() - start_time
-                if is_nano:
-                    nano_utils.stop_tegrastats()
-                row = get_cpu_env()
-                row['dataset'] = dataset
-                row['dims'] = db.dims
-                row['index_size'] = db.num_items
-                row['k'] = k
-                row['distance_metric'] = 'L2'
-                row['peak_dram_(MB)'] = peak_dram
-                row['peak_WSS_(MB)'] = results[2]
-                row['index'] = index
-                row['index_type'] = str(index_type)
-                row['latency_(s)'] = query_time
-                row['recall1'] = recall1(qr=results[0], gt=gt, k=k)
-                row['recall2'] = recall2(qr=results[0], gt=gt, k=k)
-                print(f"{internal_config} completed in {query_time} seconds")
-                file_exists = os.path.isfile(result_file)
-                with open(result_file, mode='a', newline='') as file:
-                    fieldnames = row.keys()
-                    writer = csv.DictWriter(file, fieldnames=fieldnames)
-                    if not file_exists:
-                        writer.writeheader()
-                    writer.writerow(row)
+
+    for key, config in DATASET_CONFIGS.items():
+        for size in config['sizes']:
+            for dims in config['dimensions']:
+                for dtype in config['dtype']:
+                    for index_type in config['index_types']:
+                        dataset_name = f'{key}{short_code(size)}_{dims}D_{dtype}'
+                        data_path = os.path.join(BASE_DATA_DIR, dataset_name)
+                        index_name = f'{dataset_name}.{index_type}'
+                        index_path = os.path.join(BASE_INDEX_DIR, index_name)
+
+                        db = mvdb.MVDB(dtype=mvdb.str_to_data_type(dtype))
+                        db.open(index_path)
+
+                        queries = mv_utils.read_vector_file(config['query_path'])
+                        ground = mv_utils.read_vector_file(f'{data_path}/{dataset_name}_groundtruth.ivecs')
+
+                        for q_size in query_sizes:
+                            q = queries[:q_size]
+                            gt = ground[:q_size]
+
+                            for k in k_values:
+                                internal_config = f"{index_name}_{q_size}_{k}"
+                                print(f'Processing {index_name}:\n\tq_size={q_size}, k={k}')
+
+                                if is_nano:
+                                    nano_utils.start_tegrastats(f"{tegrastats_dir}/{internal_config}")
+
+                                start_time = time.time()
+
+                                # optimal search_k for SPANN = 6500
+                                peak_dram, results = memory_usage((topk_wrapper, (db, q, k, {'n_threads': 3, 'search_k': 6500})), retval=True, max_usage=True)
+
+                                query_time = time.time() - start_time
+
+                                if is_nano:
+                                    nano_utils.stop_tegrastats()
+
+                                row = get_cpu_env()
+                                row['dataset'] = f'{key}{short_code(size)}'
+                                row['dims'] = db.dims
+                                row['index_size'] = db.num_items
+                                row['k'] = k
+                                row['distance_metric'] = 'L2'
+                                row['peak_dram_(MB)'] = peak_dram
+                                row['peak_WSS_(MB)'] = results[2]
+                                row['index'] = index_name
+                                row['index_type'] = str(index_type)
+                                row['latency_(s)'] = query_time
+                                row['recall1'] = recall1(qr=results[0], gt=gt, k=k)
+                                row['recall2'] = recall2(qr=results[0], gt=gt, k=k)
+                                print(f"{internal_config} completed in {query_time} seconds")
+                                file_exists = os.path.isfile(result_file)
+                                with open(result_file, mode='a', newline='') as file:
+                                    fieldnames = row.keys()
+                                    writer = csv.DictWriter(file, fieldnames=fieldnames)
+                                    if not file_exists:
+                                        writer.writeheader()
+                                    writer.writerow(row)
+
     print("**DONE**")
 
 if __name__ == '__main__':
-    main()
+    benchmark()

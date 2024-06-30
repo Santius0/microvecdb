@@ -196,16 +196,3 @@ def build_datasets():
 if __name__ == '__main__':
     # build_datasets()
     build_indices()
-    # deep = mv_utils.read_vector_file(DATASET_CONFIGS['deep']['base_path'], 1000000)
-    # sift = mv_utils.read_vector_file(DATASET_CONFIGS['sift']['base_path'])
-    # gist = mv_utils.read_vector_file(DATASET_CONFIGS['gist']['base_path'])
-    #
-    # # print(deep[0])
-    # # print(sift[0])
-    # # print(gist[0])
-    #
-    # deep *= 10
-    # deep = deep.astype(np.int8)
-    # print(f'deep_max = {np.min(deep)}')
-    # print(f'sift_max = {np.min(sift)}')
-    # print(f'gist_max = {np.min(gist)}')
