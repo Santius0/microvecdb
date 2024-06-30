@@ -174,7 +174,7 @@ def benchmark():
                         db = mvdb.MVDB(dtype=mvdb.str_to_data_type(dtype))
                         db.open(index_path)
 
-                        queries = mv_utils.read_vector_file(config['query_path'])
+                        queries = mv_utils.read_vector_file(config['query_path']).astype(np.int8) if dtype == "int8" else mv_utils.read_vector_file(config['query_path'])
                         ground = mv_utils.read_vector_file(f'{data_path}/{dataset_name}_base.fvecs_groundtruth.ivecs')
 
                         for q_size in query_sizes:
@@ -208,6 +208,7 @@ def benchmark():
                                 row['peak_WSS_(MB)'] = results[2]
                                 row['index'] = index_name
                                 row['index_type'] = str(index_type)
+                                row['dtype'] = str(dtype)
                                 row['latency_(s)'] = query_time
                                 row['recall1'] = recall1(qr=results[0], gt=gt, k=k)
                                 row['recall2'] = recall2(qr=results[0], gt=gt, k=k)
