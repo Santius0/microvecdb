@@ -191,7 +191,7 @@ def benchmark():
                                 start_time = time.time()
 
                                 # optimal search_k for SPANN = 6500
-                                peak_dram, results = memory_usage((topk_wrapper, (db, q, k, {'n_threads': 3, 'search_k': 6500})), retval=True, max_usage=True)
+                                peak_dram, results = memory_usage((topk_wrapper, (db, q, k, {'n_threads': 4, 'search_k': 6500})), retval=True, max_usage=True)
 
                                 query_time = time.time() - start_time
 
