@@ -175,7 +175,7 @@ def benchmark():
                         db.open(index_path)
 
                         queries = mv_utils.read_vector_file(config['query_path'])
-                        ground = mv_utils.read_vector_file(f'{data_path}/{dataset_name}_groundtruth.ivecs')
+                        ground = mv_utils.read_vector_file(f'{data_path}/{dataset_name}_base.fvecs_groundtruth.ivecs')
 
                         for q_size in query_sizes:
                             q = queries[:q_size]
