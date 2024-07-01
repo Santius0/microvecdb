@@ -69,24 +69,6 @@
          return nullptr;
      }
 
-//     bool Storage::putMany(const std::vector<std::pair<std::string, std::string>>& pairs) const {
-//         rocksdb::WriteBatch batch;
-//         for (const auto& pair : pairs) {
-//             batch.Put(pair.first, pair.second);
-//         }
-//         const rocksdb::Status status = db_->Write(rocksdb::WriteOptions(), &batch);
-//         return status.ok();
-//     }
-//
-//     bool Storage::putManyAutoKey(const std::vector<std::string>&values) const {
-//         std::vector<std::pair<std::string, std::string>> pairs;
-//         for(int i = 0; i < values.size(); i++) {
-//             std::string key_str = std::to_string(this->db_->GetLatestSequenceNumber() + i);
-//             pairs.emplace_back(key_str, values[i]);
-//         }
-//         return Storage::putMany(pairs);
-//     }
-
      std::string Storage::get(const std::string& key) const {
          std::string value;
          const rocksdb::Status status = db_->Get(rocksdb::ReadOptions(), key, &value);
