@@ -20,7 +20,7 @@ def is_jetson_nano():
 
 def start_tegrastats(logfile_name):
     # Build the command with the specified interval and logfile
-    command = ['tegrastats', '--interval', '100', '--logfile', logfile_name]
+    command = ['tegrastats', '--interval', '10', '--logfile', logfile_name]
     # Run tegrastats in the background
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
