@@ -281,6 +281,6 @@ def benchmark():
     print("**DONE**")
 
 if __name__ == '__main__':
-    parsed = parse_tegrastats('./results_sunday/tegrastats/deep10K_96D_float32.spann_10000_100')
-    print(parsed)
-    # benchmark()
+    # parsed = parse_tegrastats('./results_sunday/tegrastats/deep10K_96D_float32.spann_10000_100')
+    # print(parsed)
+    benchmark()
