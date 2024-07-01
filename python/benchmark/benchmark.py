@@ -2,6 +2,7 @@ import gc
 import csv
 import os
 import time
+import re
 
 import numpy as np
 from memory_profiler import memory_usage
@@ -25,7 +26,7 @@ DATASET_CONFIGS = {
         'dimensions': [96],
         'dtype': ['float32', 'int8'],
         'index_types': ['annoy', 'spann'],
-        'annoy_index_params': {'n_trees': 10, 'n_threads': 12},
+        'annoy_index_params': {'n_trees': 10, 'n_threads': 4},
         'spann_index_params': {
             'build_config_path': "buildconfig.ini",
             'BKTKmeansK': 8,
@@ -38,7 +39,9 @@ DATASET_CONFIGS = {
             'NumberOfInitialDynamicPivots': 30,
             'GraphNeighborhoodScale': 2,
             'NumberOfOtherDynamicPivots': 2,
-            'batch_size': 2000
+            'batch_size': 2000,
+            'thread_num': 4,
+            'search_k': 6500
         }
     },
     'sift': {
@@ -48,7 +51,7 @@ DATASET_CONFIGS = {
         'dimensions': [128],
         'dtype': ['float32', 'int8'],
         'index_types': ['annoy', 'spann'],
-        'annoy_index_params': {'n_trees': 10, 'n_threads': 12},
+        'annoy_index_params': {'n_trees': 10, 'n_threads': 4},
         'spann_index_params': {
             'build_config_path': "buildconfig.ini",
             'BKTKmeansK': 8,
@@ -61,7 +64,9 @@ DATASET_CONFIGS = {
             'NumberOfInitialDynamicPivots': 30,
             'GraphNeighborhoodScale': 2,
             'NumberOfOtherDynamicPivots': 2,
-            'batch_size': 2000
+            'batch_size': 2000,
+            'thread_num': 4,
+            'search_k': 6500
         }
     },
     # 'gist': {
@@ -71,7 +76,7 @@ DATASET_CONFIGS = {
     #     'dimensions': [256, 512, 960],
     #     'dtype': ['float32', 'int8'],
     #     'index_types': ['annoy', 'spann'],
-    #     'annoy_index_params': {'n_trees': 10, 'n_threads': 12},
+    #     'annoy_index_params': {'n_trees': 10, 'n_threads': 4},
     #     'spann_index_params': {
     #         'build_config_path': "buildconfig.ini",
     #         'BKTKmeansK': 8,
@@ -84,7 +89,9 @@ DATASET_CONFIGS = {
     #         'NumberOfInitialDynamicPivots': 30,
     #         'GraphNeighborhoodScale': 2,
     #         'NumberOfOtherDynamicPivots': 2,
-    #         'batch_size': 2000
+    #         'batch_size': 2000,
+    #         'thread_num': 4,
+    #         'search_k': 6500
     #     }
     # },
 }
@@ -151,6 +158,52 @@ def get_cpu_env():
     cpu_env['load_average'] = load_average
     return cpu_env
 
+
+def parse_tegrastats(file_path):
+    with open(file_path, 'r') as file:
+        data = file.read()
+
+    lines = data.strip().split('\n')
+    parsed_data = []
+
+    for line in lines:
+        ram = re.search(r'RAM (\d+)/(\d+)MB', line).groups()
+        swap = re.search(r'SWAP (\d+)/(\d+)MB', line).groups()
+        cpu = re.findall(r'(\d+)%@(\d+)', line)
+        emc_freq = re.search(r'EMC_FREQ (\d+)%', line).group(1)
+        gr3d_freq = re.search(r'GR3D_FREQ (\d+)%', line).group(1)
+        temps = re.findall(r'(\w+)@([\d.]+)C', line)
+
+        parsed_line = {
+            'RAM_Used_MB': int(ram[0]),
+            'RAM_Total_MB': int(ram[1]),
+            'SWAP_Used_MB': int(swap[0]),
+            'SWAP_Total_MB': int(swap[1]),
+            'CPU0_Usage_Percent': int(cpu[0][0]),
+            'CPU0_Freq_MHz': int(cpu[0][1]),
+            'CPU1_Usage_Percent': int(cpu[1][0]),
+            'CPU1_Freq_MHz': int(cpu[1][1]),
+            'CPU2_Usage_Percent': int(cpu[2][0]),
+            'CPU2_Freq_MHz': int(cpu[2][1]),
+            'CPU3_Usage_Percent': int(cpu[3][0]),
+            'CPU3_Freq_MHz': int(cpu[3][1]),
+            'EMC_FREQ_Percent': int(emc_freq),
+            'GR3D_FREQ_Percent': int(gr3d_freq),
+        }
+
+        for temp in temps:
+            parsed_line[temp[0]] = float(temp[1])
+
+        parsed_data.append(parsed_line)
+
+    averages = {}
+    count = len(parsed_data)
+    for key in parsed_data[0]:
+        averages[key] = sum(d[key] for d in parsed_data) / count
+
+    return averages
+
+
 def benchmark():
     get_cpu_env() # run once at the beginning so script immediately asks for sudo password
     result_dir = './results'
@@ -191,28 +244,32 @@ def benchmark():
                                 start_time = time.time()
 
                                 # optimal search_k for SPANN = 6500
-                                peak_dram, results = memory_usage((topk_wrapper, (db, q, k, {'n_threads': 4, 'search_k': 6500})), retval=True, max_usage=True)
+                                peak_dram, results = memory_usage((topk_wrapper, (db, q, k, config['annoy_index_params'] if index_type == "annoy" else config['spann_index_params'])), retval=True, max_usage=True)
 
                                 query_time = time.time() - start_time
 
+                                tegrastats = {}
                                 if is_nano:
                                     nano_utils.stop_tegrastats()
+                                    tegrastats = parse_tegrastats(f"{tegrastats_dir}/{internal_config}")
 
-                                row = get_cpu_env()
-                                row['dataset'] = f'{key}{short_code(size)}'
-                                row['dims'] = db.dims
-                                row['index_size'] = db.num_items
-                                row['k'] = k
-                                row['distance_metric'] = 'L2'
-                                row['peak_dram_(MB)'] = peak_dram
-                                row['peak_WSS_(MB)'] = results[2]
-                                row['index'] = index_name
-                                row['index_type'] = str(index_type)
-                                row['dtype'] = str(dtype)
-                                row['latency_(s)'] = query_time
-                                row['recall1'] = recall1(qr=results[0], gt=gt, k=k)
-                                row['recall2'] = recall2(qr=results[0], gt=gt, k=k)
+                                row = {
+                                    **get_cpu_env(),
+                                    **tegrastats,
+                                    'dataset': f'{key}{short_code(size)}',
+                                    'dims': db.dims, 'index_size': db.num_items, 'k': k, 'distance_metric': 'L2',
+                                    'peak_dram_(MB)': peak_dram,
+                                    'peak_WSS_(MB)': results[2],
+                                    'index': index_name,
+                                    'index_type': str(index_type),
+                                    'dtype': str(dtype),
+                                    'latency_(s)': query_time,
+                                    'recall1': recall1(qr=results[0], gt=gt, k=k),
+                                    'recall2': recall2(qr=results[0], gt=gt, k=k)
+                                }
+
                                 print(f"{internal_config} completed in {query_time} seconds")
+
                                 file_exists = os.path.isfile(result_file)
                                 with open(result_file, mode='a', newline='') as file:
                                     fieldnames = row.keys()
@@ -224,4 +281,6 @@ def benchmark():
     print("**DONE**")
 
 if __name__ == '__main__':
-    benchmark()
+    parsed = parse_tegrastats('./results_sunday/tegrastats/deep10K_96D_float32.spann_10000_100')
+    print(parsed)
+    # benchmark()
