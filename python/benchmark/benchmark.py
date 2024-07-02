@@ -26,7 +26,7 @@ DATASET_CONFIGS = {
         'dimensions': [96],
         'dtype': ['float32', 'int8'],
         'index_types': ['annoy', 'spann'],
-        'annoy_index_params': {'n_trees': 10, 'n_threads': 10, 'search_k': 6500},
+        'annoy_index_params': {'n_trees': 10, 'n_threads': 3, 'search_k': 6500},
         'spann_index_params': {
             'build_config_path': "buildconfig.ini",
             'BKTKmeansK': 8,
@@ -40,7 +40,7 @@ DATASET_CONFIGS = {
             'GraphNeighborhoodScale': 2,
             'NumberOfOtherDynamicPivots': 2,
             'batch_size': 2000,
-            'thread_num': 10,
+            'thread_num': 3,
         }
     },
     'sift': {
@@ -50,7 +50,7 @@ DATASET_CONFIGS = {
         'dimensions': [128],
         'dtype': ['float32', 'int8'],
         'index_types': ['annoy', 'spann'],
-        'annoy_index_params': {'n_trees': 10, 'n_threads': 10, 'search_k': 6500},
+        'annoy_index_params': {'n_trees': 10, 'n_threads': 3, 'search_k': 6500},
         'spann_index_params': {
             'build_config_path': "buildconfig.ini",
             'BKTKmeansK': 8,
@@ -64,7 +64,7 @@ DATASET_CONFIGS = {
             'GraphNeighborhoodScale': 2,
             'NumberOfOtherDynamicPivots': 2,
             'batch_size': 2000,
-            'thread_num': 10,
+            'thread_num': 3,
         }
     },
     # 'gist': {
