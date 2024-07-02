@@ -16,6 +16,12 @@
 
 namespace mvdb {
 
+    struct Record {
+        std::string id;
+        std::string rdb_key;
+        int64_t idx_key;
+    };
+
     class Status {
     public:
         Status() {
@@ -93,16 +99,12 @@ namespace mvdb {
     template <typename T = float>
     class DB_ final : Serializable {
         std::unique_ptr<Status> status_ = std::make_unique<Status>();
-        std::unordered_map<idx_t, uint64_t> _records;       // maps a vector's id to a storage key.
         std::string _path, _db_path, _index_path, _storage_path;
         idx_t _dims = 0;
         index::IndexType _index_type;
         std::unique_ptr<Storage> _storage;
         std::unique_ptr<index::Index<T>> _index;
-//        idx_t* _add_ids = nullptr;                           // ptr to most recent keys array returned for cleanup if necessary
-//        idx_t* _search_ids = nullptr;                        // ptr to most recent keys array returned for cleanup if necessary
-//        T* _search_distances = nullptr;                      // ptr to most recent keys array returned for cleanup if necessary
-        std::unordered_map<idx_t, idx_t> _memory_map;        // maps a vector's id in the vector index to a key in the storage layer
+        std::vector<Record> _records;
         friend std::ostream& operator<<(std::ostream& os, const DB_<T>& obj);
         friend std::ostream& operator<<(std::ostream& os, const DB_<T>* obj);
         void _save(const std::string& save_path = "");

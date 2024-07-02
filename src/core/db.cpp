@@ -133,8 +133,10 @@ namespace mvdb {
 
         index_make(index_type);
 
+        _records = std::vector<Record>(initial_data_size);
         _index->build(dims, _index_path, initial_data_path, initial_data, initial_data_size, args);
         _save(_db_path);
+
         return true;
     }
 
