@@ -1,6 +1,8 @@
+#include <iostream>
 #include "storage.h"
+#include "constants.h"
 
- namespace mvdb {
+namespace mvdb {
      std::ostream& operator<<(std::ostream& os, const Storage& obj) {
          return os   << "data_dir_path_: " << obj.data_dir_path_ << std::endl
                      << "create_if_missing: " << obj.options_.create_if_missing << std::endl
@@ -46,14 +48,20 @@
 
      bool Storage::put(const size_t& n, const uint64_t* keys, char* values, size_t* value_sizes) const {
          if(n == 1){
-             rocksdb::Slice value(reinterpret_cast<char*>(values[0]), value_sizes[0]);
+             rocksdb::Slice value(values, value_sizes[0]);
              const rocksdb::Status status = db_->Put(rocksdb::WriteOptions(), std::to_string(keys[0]), value);
              return status.ok();
          }
          rocksdb::WriteBatch batch;
          size_t bytes_processed = 0;
          for (size_t i = 0; i < n; i++){
-             rocksdb::Slice value(reinterpret_cast<char*>(values[bytes_processed]), value_sizes[i]);
+             rocksdb::Slice value(values + bytes_processed, value_sizes[i]);
+//             std::cout << "bytes_processed: " << bytes_processed << std::endl;
+//             std::cout << "size: " << value_sizes[i] << std::endl;
+//             std::cout << "pos: " << bytes_processed + value_sizes[i] << std::endl;
+//             std::cout << "putting: " << value.ToString() << std::endl << std::endl;
+//             std::cout << "putting_size: " << value.size() << std::endl << std::endl;
+//             std::cout << "key: " << std::to_string(keys[i]) << std::endl << std::endl;
              batch.Put(std::to_string(keys[i]), value);
              bytes_processed += value_sizes[i];
          }
@@ -69,12 +77,9 @@
          return nullptr;
      }
 
-     std::string Storage::get(const std::string& key) const {
-         std::string value;
+     bool Storage::get(const std::string& key, std::string& value) const {
          const rocksdb::Status status = db_->Get(rocksdb::ReadOptions(), key, &value);
-         if (status.ok())
-             return value;
-         return status.ToString();
+         return status.ok();
      }
 
      bool Storage::remove(const uint64_t& key) const {

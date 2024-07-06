@@ -104,9 +104,15 @@ namespace mvdb {
     }
 
     template<typename T>
-    bool DB_<T>::create(index::IndexType index_type, const uint64_t &dims, std::string &path,
-                        const std::string &initial_data_path, const T *initial_data,
-                        const uint64_t &initial_data_size, const NamedArgs *args) {
+    bool DB_<T>::create(index::IndexType index_type,
+                        const uint64_t &dims,
+                        std::string &path,
+                        const std::string &initial_data_path,
+                        const T *initial_data,
+                        const std::string& binary_data,
+                        const size_t *binary_data_sizes,
+                        const uint64_t &initial_data_size,
+                        const NamedArgs *args) {
         remove_trailing_slashes(path);
         std::string sep = std::string(1, fs::preferred_separator);
 
@@ -134,7 +140,13 @@ namespace mvdb {
         index_make(index_type);
 
         _records = std::vector<Record>(initial_data_size);
-        _index->build(dims, _index_path, initial_data_path, initial_data, initial_data_size, args);
+
+        auto *ids = new idx_t[initial_data_size];
+
+        _index->build(dims, _index_path, initial_data_path, initial_data, ids, initial_data_size, args);
+//        std::cout << "HERE = " << const_cast<char *>(binary_data.c_str()) << std::endl;
+        _storage->put(initial_data_size, (uint64_t*)ids, const_cast<char *>(binary_data.c_str()), const_cast<size_t *>(binary_data_sizes));
+
         _save(_db_path);
 
         return true;
@@ -159,6 +171,12 @@ namespace mvdb {
     template <typename T>
     index::Index<T>* DB_<T>::index() {
         return _index.get();
+    }
+
+    template <typename T>
+    void DB_<T>::get_obj(const uint64_t& n, const uint64_t *keys, std::string* values) const {
+        for(idx_t i = 0; i < n; i++)
+            if(!_storage->get(std::to_string(keys[i]), values[i])) values[i] = "null";
     }
 
     template class DB_<int8_t>;

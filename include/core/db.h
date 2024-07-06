@@ -116,13 +116,19 @@ namespace mvdb {
         ~DB_() override = default;
         Status* status() const;
         bool open(std::string& path);
-        bool create(index::IndexType index_type, const uint64_t& dims, std::string& path,
-                    const std::string& initial_data_path = "", const T* initial_data = nullptr,
-                    const uint64_t &initial_data_size = 0, const NamedArgs* args = nullptr);
+        bool create(index::IndexType index_type,
+                    const uint64_t& dims,
+                    std::string& path,
+                    const std::string& initial_data_path = "",
+                    const T* initial_data = nullptr,
+                    const std::string& binary_data = "",
+                    const size_t *binary_data_sizes = nullptr,
+                    const uint64_t &initial_data_size = 0,
+                    const NamedArgs* args = nullptr);
 
         Storage* storage();
         index::Index<T>* index();
-//        T* get(idx_t& n, idx_t* keys) const;
+        void get_obj(const uint64_t& n, const uint64_t *keys, std::string* values) const;
     };
 
     extern template class DB_<int8_t>;

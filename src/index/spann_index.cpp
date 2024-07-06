@@ -97,7 +97,8 @@ namespace mvdb::index {
 
     template <typename T>
     void SPANNIndex<T>::build(const idx_t &dims, const std::string& path, const std::string& initial_data_path,
-                              const T* initial_data, const uint64_t& initial_data_size, const NamedArgs* args) {
+                              const T* initial_data, idx_t* ids,
+                              const uint64_t& initial_data_size, const NamedArgs* args) {
 
 //        ./indexbuilder -c buildconfig.ini -d 128 -v Float -f XVEC -i sift1M/sift_base.fvecs -o sift1m_index_dir_Saved -a SPANN
 

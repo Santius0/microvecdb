@@ -45,7 +45,8 @@ namespace mvdb::index {
 
     template <typename T>
     void FaissFlatIndex<T>::build(const idx_t &dims, const std::string& path, const std::string& initial_data_path,
-                                  const T* initial_data, const uint64_t& initial_data_size, const NamedArgs* args) {
+                                  const T* initial_data, idx_t* ids,
+                                  const uint64_t& initial_data_size, const NamedArgs* args) {
         std::cout << "Building FaissFlatIndex at " << path << std::endl;
         this->dims_ = dims;
         faiss_index_ = std::make_unique<faiss::IndexFlatL2>(this->dims_);

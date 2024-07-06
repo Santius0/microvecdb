@@ -62,6 +62,7 @@ namespace mvdb::index {
         virtual void build(const idx_t &dims, const std::string& path,
                            const std::string& initial_data_path,
                            const T* initial_data,
+                           idx_t* ids,
                            const uint64_t& initial_data_size,
                            const NamedArgs* args) = 0;
         virtual void open(const std::string& path) = 0;                     // open current index state and data from location specified via index_path_

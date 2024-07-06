@@ -9,10 +9,16 @@ namespace mvdb {
     }
 
     template<typename T>
-    void MVDB<T>::create(index::IndexType index_type, const uint64_t &dims, const std::string &path,
-                         const std::string &initial_data_path, const T *initial_data, const uint64_t& initial_data_size,
+    void MVDB<T>::create(index::IndexType index_type,
+                         const uint64_t &dims,
+                         const std::string &path,
+                         const std::string &initial_data_path,
+                         const T *initial_data,
+                         const std::string& binary_data,
+                         const size_t *binary_data_sizes,
+                         const uint64_t& initial_data_size,
                          const NamedArgs *args) {
-        db_->create(index_type, dims, const_cast<std::string&>(path), initial_data_path, initial_data, initial_data_size, args);
+        db_->create(index_type, dims, const_cast<std::string&>(path), initial_data_path, initial_data, binary_data, binary_data_sizes, initial_data_size, args);
     }
 
     template<typename T>
@@ -47,6 +53,11 @@ namespace mvdb {
 //                return db_->status()->success();
 //        }
         return db_->status()->success() && db_->status()->ok();
+    }
+
+    template <typename T>
+    void MVDB<T>::get_obj(const uint64_t& n, const uint64_t* keys, std::string* values) {
+        db_->get_obj(n, keys, values);
     }
 
     template <typename T>

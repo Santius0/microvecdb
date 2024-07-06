@@ -1,6 +1,9 @@
 import os
 import shutil
 import numpy as np
+import pickle
+from PIL import Image
+import io
 from memory_profiler import profile
 
 from pymicrovecdb import mvdb, utils
@@ -52,44 +55,106 @@ def test_topk_function(db_):
     print(res[1].shape)
     # print(res)
 
-queries = utils.read_vector_file("../../ann_data/deep10M/deep1B_queries.fvecs")
 
 BASE_DATA_DIR = '/home/santius/ann_data'
 BASE_INDEX_DIR = '/home/santius/ann_indices'
 
-SIFT10K = f'{BASE_DATA_DIR}/sift10K/sift10K_base.fvecs'
+SIFT10K = f'{BASE_DATA_DIR}/sift10K_128D_float32/sift10K_128D_float32_base.fvecs'
+queries = utils.read_vector_file(f"{BASE_DATA_DIR}/deep/deep1B_queries.fvecs")
 
 # @profile
 def main():
+    # mvdb.process_image('./Screenshot 2024-05-24 074314.png')
+
     if os.path.exists("./test_annoy_idx"):
         shutil.rmtree("./test_annoy_idx")
+
+    image_path = './Screenshot 2024-05-24 074314.png'
+    audio_path = './file_example_WAV_10MG.wav'
+    # text_path = 'path/to/text.txt'
+
+    # Read binary data from the files
+    image_data = mvdb.read_binary_file(image_path)
+    audio_data = mvdb.read_binary_file(audio_path)
+    # print(audio_data)
+    # with open(text_path, 'r', encoding='utf-8') as f:
+    #     text_data = f.read().encode('utf-8')
+
+    # Create a list of mixed data types
+    data_list = [
+        # "asdasda",
+        # "asassssssssssssssssssssss",
+        {'type': 'image', 'data': image_data},
+        {'type': 'audio', 'data': audio_data},
+        None
+        # {'type': 'text', 'data': text_data}
+        # b'00000000',
+        # b'10000000',
+        # b'11000000',
+        # image_data
+    ]
+
+    serialized_data_list = [pickle.dumps(data) for data in data_list]
+    serialized_data = np.array(serialized_data_list, dtype=object)
 
     annoy_db = mvdb.MVDB(dtype=mvdb.DataType.INT8)
     annoy_db.create(
         index_type=mvdb.IndexType.ANNOY,
-        dims=128,
+        dims=5,
         path="./test_annoy_idx",
-        initial_data=utils.read_vector_file(SIFT10K).astype(np.int8),
+        initial_data=np.array([
+            [1, 2, 3, 4, 5],
+            [0, 44, 55, 3, 1],
+            [0, 44, 55, 3, 1],
+        ], dtype=np.int8),
+        initial_objs=serialized_data,
         n_trees=10,
         n_threads=12
     )
-    print(annoy_db.num_items)
-    print(annoy_db.dims)
-    # print(queries)
-    # print(len(queries))
-    # print(len(queries[33]))
-    # db1 = mvdb.MVDB()
-    # db1.open("./indices/spann_sift10K_float32")
-    # print(f'python num items {db1.num_items}')
 
-    # db2 = mvdb.MVDB()
-    # db2.open("./indices/spann_sift1M_float32")
-    # print(f'python num items {db2.num_items}')
-    res = annoy_db.topk(query=queries.astype(np.int8), k=100)
-    print(res[0])
-    # print(utils.read_vector_file("../../ann_data/deep1M/deep1M_groundtruth.ivecs"))
-# test_create_function(db)
-    # test_topk_function(db)
+    keys = np.array([0, 1, 2])
+    a = annoy_db.get(keys)
+
+    for i in range(len(keys)):
+        try:
+            thing = pickle.loads(a[i])
+            if thing is not None:
+                print(thing['type'])
+            else:
+                print(f'{i} is None')
+        except Exception as e:
+            print(f"Error unpickling data for key {keys[i]}: {e}")
+
+    # print(a)
+    # image_stream = io.BytesIO(a[2])
+    # image = Image.open(image_stream)
+    # image.save("./test_image.png")
+
+
+    # if a is not None:
+    #     print("Data successfully retrieved from RocksDB.")
+    #     for i in range(len(keys)):
+    #         print(pickle.loads(a[i]))
+    # else:
+    #     print("Failed to retrieve data from RocksDB.")
+
+#     print(annoy_db.num_items)
+#     print(annoy_db.dims)
+#     # print(queries)
+#     # print(len(queries))
+#     # print(len(queries[33]))
+#     # db1 = mvdb.MVDB()
+#     # db1.open("./indices/spann_sift10K_float32")
+#     # print(f'python num items {db1.num_items}')
+#
+#     # db2 = mvdb.MVDB()
+#     # db2.open("./indices/spann_sift1M_float32")
+#     # print(f'python num items {db2.num_items}')
+#     res = annoy_db.topk(query=queries.astype(np.int8), k=100)
+#     print(res[0])
+#     # print(utils.read_vector_file("../../ann_data/deep1M/deep1M_groundtruth.ivecs"))
+# # test_create_function(db)
+#     # test_topk_function(db)
 
 if __name__ == '__main__':
     main()

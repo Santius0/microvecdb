@@ -18,7 +18,9 @@ namespace mvdb::index {
     }
 
     template <typename T>
-    void MVDBAnnoyIndex<T>::build(const idx_t &dims, const std::string& path, const std::string& initial_data_path, const T* initial_data, const uint64_t& initial_data_size, const NamedArgs* args) {
+    void MVDBAnnoyIndex<T>::build(const idx_t &dims, const std::string& path, const std::string& initial_data_path,
+                                  const T* initial_data, idx_t* ids,
+                                  const uint64_t& initial_data_size, const NamedArgs* args) {
         if (path.empty())
             throw std::invalid_argument("Index path cannot be empty.");
         if (fs::exists(path))
@@ -57,8 +59,10 @@ namespace mvdb::index {
             std::cout << "loading file " << initial_data_path << std::endl;
             read_xvecs<T>(initial_data_path, data, start_indexes, num_vecs);
             std::cout << "adding elements to Annoy index..." << std::endl;
-            for (int i = 0; i < num_vecs; i++)
+            for (int i = 0; i < num_vecs; i++) {
                 annoy_index_->add_item(i, data.data() + i * dims);
+                ids[i] = i;
+            }
             std::cout << "finished adding elements to Annoy index" << std::endl;
             data.clear();
             data.shrink_to_fit();
@@ -66,8 +70,9 @@ namespace mvdb::index {
             if (!initial_data)
                 throw std::invalid_argument("Initial data pointer cannot be null when size is specified.");
             std::cout << "adding elements to Annoy index..." << std::endl;
-            for (size_t i = 0; i < initial_data_size; i++) {
+            for (int i = 0; i < initial_data_size; i++) {
                 annoy_index_->add_item(i, initial_data + i * dims);
+                ids[i] = i;
             }
             std::cout << "finished adding elements to Annoy index" << std::endl;
         }

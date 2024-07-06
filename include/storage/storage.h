@@ -2,6 +2,7 @@
 #define MICROVECDB_STORAGE_H
 
 #include "serializable.h"
+#include "constants.h"
 #include <rocksdb/db.h>
 
 namespace mvdb {
@@ -30,7 +31,7 @@ namespace mvdb {
 
         // Function to retrieve data by key
         // Returns the value or empty string if the key does not exist
-        [[nodiscard]] std::string get(const std::string& key) const;
+        [[nodiscard]] bool get(const std::string& key, std::string& value) const;
 
         // Function to remove data using a key
         // Returns true on success, false if the key does not exist
