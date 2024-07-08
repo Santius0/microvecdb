@@ -1,5 +1,6 @@
 #include "spann_index.h"
 #include "exception.h"
+#include "utils.h"
 //#include "filesystem.h"
 
 
@@ -361,18 +362,7 @@ namespace mvdb::index {
                     }
                 }
 
-                #ifndef _MSC_VER
-                struct rusage rusage;
-                getrusage(RUSAGE_SELF, &rusage);
-//                double peakWSS = (double)(rusage.ru_maxrss * 1024) / (double)1000000000;
-                double peakWSS = (double)(rusage.ru_maxrss) / (double)1024;
-                #else
-                PROCESS_MEMORY_COUNTERS pmc;
-                GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
-                unsigned long long peakWSS = pmc.PeakWorkingSetSize / 1000000000;
-                #endif
-                peak_wss_mb = peakWSS;
-                std::cout << "peakWSS = " << peakWSS << " MB" << std::endl;
+                peak_wss_mb = peakWSS();
             }
 
             for (SPTAG::SizeType i = 0; i < numQuerys; i++) {

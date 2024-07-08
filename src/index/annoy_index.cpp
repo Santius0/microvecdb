@@ -157,16 +157,7 @@ namespace mvdb::index {
             }
         };
 
-        #ifndef _MSC_VER
-        struct rusage rusage{};
-        getrusage(RUSAGE_SELF, &rusage);
-        double peakWSS = (double)(rusage.ru_maxrss) / (double)1024;
-        #else
-        PROCESS_MEMORY_COUNTERS pmc;
-        GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
-        unsigned long long peakWSS = pmc.PeakWorkingSetSize / 1000000000;
-        #endif
-        peak_wss_mb = peakWSS;
+        peak_wss_mb = peakWSS();
     }
 
 

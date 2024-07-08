@@ -147,16 +147,7 @@ namespace mvdb::index {
 
         faiss_index_->search(static_cast<long>(nq), (float*)(query), k, (float*)(distances), reinterpret_cast<faiss::idx_t*>(ids));
 
-        #ifndef _MSC_VER
-        struct rusage rusage{};
-        getrusage(RUSAGE_SELF, &rusage);
-        double peakWSS = (double)(rusage.ru_maxrss) / (double)1048576;
-        #else
-        PROCESS_MEMORY_COUNTERS pmc;
-        GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
-        unsigned long long peakWSS = pmc.PeakWorkingSetSize / 1000000000;
-        #endif
-        peak_wss_mb = peakWSS;
+        peak_wss_mb = peakWSS();
     }
 
     template <typename T>
