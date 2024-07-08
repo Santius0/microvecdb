@@ -30,13 +30,24 @@ namespace mvdb::index {
         FaissFlatIndex(const FaissFlatIndex&) = delete;
         FaissFlatIndex& operator=(const FaissFlatIndex&) = delete;
         [[nodiscard]] IndexType type() const override;
-        void build(const idx_t &dims, const std::string& path, const std::string& initial_data_path, const T* initial_data, idx_t* binary_data, const uint64_t& initial_data_size, const NamedArgs* args) override;
+        void build(const idx_t &dims,
+                   const std::string& path,
+                   const T* v,
+                   idx_t* binary_data,
+                   const uint64_t& n,
+                   const NamedArgs* args) override;
         void open(const std::string& path) override;
         [[nodiscard]] bool add(const idx_t& n, T* data, idx_t* ids) override;
         [[nodiscard]] bool remove(const idx_t& n, const idx_t* ids) override;
-        void topk(const idx_t& nq, T* query, const std::string& query_path,
-                  const std::string& result_path, idx_t* ids, T* distances, double& peak_wss_mb, const idx_t& k,
-                  const DISTANCE_METRIC& distance_metric, const float& c, const NamedArgs* args) const override;
+        void topk(const idx_t& nq,
+                  T* query,
+                  idx_t* ids,
+                  T* distances,
+                  double& peak_wss_mb,
+                  const idx_t& k,
+                  const DISTANCE_METRIC& distance_metric,
+                  const float& c,
+                  const NamedArgs* args) const override;
         T* get(idx_t& n, idx_t* keys) const override;
         [[nodiscard]] T* get_all() const override;
         [[nodiscard]] idx_t dims() const override;

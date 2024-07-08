@@ -119,10 +119,9 @@ namespace mvdb {
         bool create(index::IndexType index_type,
                     const uint64_t& dims,
                     std::string& path,
-                    const std::string& initial_data_path = "",
                     const T* initial_data = nullptr,
-                    const std::string& binary_data = "",
-                    const size_t *binary_data_sizes = nullptr,
+                    const std::string& bin = "",
+                    const size_t *bin_sizes = nullptr,
                     const uint64_t &initial_data_size = 0,
                     const NamedArgs* args = nullptr);
 

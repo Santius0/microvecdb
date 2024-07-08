@@ -80,7 +80,7 @@ namespace fs {
             return CreateDirectory(path, NULL) != 0;
         #else
             mode_t mode = 0755; // Permissions set to read+write+execute for owner, read+execute for group and others
-            return mkdir(path, mode) == 0;
+            return ::mkdir(path, mode) == 0;
         #endif
     }
 

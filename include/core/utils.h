@@ -14,16 +14,9 @@ namespace mvdb {
 
     int next_closest_multiple(int n, int val);
 
-    template <typename T>
-    std::vector<T> read_vector(std::ifstream &file, const int& dims = 0);
-
-    template <typename T>
-    void read_xvecs(const std::string& filePath, std::vector<T>& data, std::vector<size_t>& startIndexes, int num_vecs = -1);
-
-    template <typename T>
-    int xvecs_num_vecs(const std::string& path);
-
     void remove_trailing_slashes(std::string& path);
+
+    double peakWSS();
 
 }
 

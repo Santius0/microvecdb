@@ -1,12 +1,9 @@
 #include "utils.h"
-#include "constants.h"
 #include <chrono>
 #include <iomanip>
 #include <sstream>
-#include <fstream>
-#include <vector>
-#include <iostream>
 #include <algorithm>
+#include <sys/resource.h>
 
 namespace mvdb {
 
@@ -26,14 +23,6 @@ namespace mvdb {
         return timestampStream.str();
     }
 
-//    template<typename Func, typename Callback>
-//    auto run_task_with_callback(Func task, Callback callback) {
-//        return [task, callback]() {
-//            auto result = task(); // Execute the task
-//            callback(result); // Execute the callback with the result
-//        };
-//    }
-
     /**
     * Finds the next closest multiple of `multiple` for the number `n`.
     *
@@ -51,72 +40,6 @@ namespace mvdb {
         return nextMultiple;
     }
 
-    template <typename T>
-    std::vector<T> read_vector(std::ifstream& file, const int& dims) { // reads a single vector from the .fvecs file
-        std::vector<T> vec;
-        int dimension;
-        if (file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) { // Read the dimension of the vector
-//            if(dims > 0 && dims != dimension) throw std::runtime_error("specified dimensionality(" + std::to_string(dims) + ") does not match fvecs file dimensionality(" + std::to_string(dimension) + ")");
-            vec.resize(dimension); // Resize the vector to hold all components
-            for (int i = 0; i < dimension; ++i) {
-                file.read(reinterpret_cast<char*>(&vec[i]), sizeof(T)); // Read each component of the vector
-            }
-        }
-        return vec;
-    }
-    template std::vector<int8_t> read_vector<int8_t>(std::ifstream& file, const int& dims);
-    template std::vector<int16_t> read_vector<int16_t>(std::ifstream& file, const int& dims);
-    template std::vector<uint8_t> read_vector<uint8_t>(std::ifstream& file, const int& dims);
-    template std::vector<float> read_vector<float>(std::ifstream& file, const int& dims);
-
-    template<typename T>
-    void read_xvecs(const std::string& file_path, std::vector<T> &data, std::vector<size_t>& start_indexes, int num_vecs) {
-        std::ifstream file(file_path, std::ios::binary);
-        if (!file.is_open()) {
-            throw std::runtime_error("Failed to open file: " + file_path);
-        }
-
-        int dimension;
-        if (!file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) {
-            throw std::runtime_error("Failed to read the dimension of the first vector.");
-        }
-
-        // Rewind to start to read dimensions again with each vector
-        file.seekg(0, std::ios::beg);
-
-        std::vector<T> vec(dimension);
-        size_t currentStartIndex = 0;
-        int vectorCount = 0;
-
-        while (file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) {
-            if (dimension != vec.size()) {
-                throw std::runtime_error("Inconsistent vector dimensions found: Expected " + std::to_string(dimension) + ", got " + std::to_string(vec.size()));
-            }
-
-            start_indexes.push_back(currentStartIndex);
-            for (int i = 0; i < dimension; ++i) {
-                if (!file.read(reinterpret_cast<char*>(&vec[i]), sizeof(T))) {
-                    throw std::runtime_error("Failed to read all elements of a vector.");
-                }
-                data.push_back(vec[i]);
-            }
-            currentStartIndex += dimension;
-            vectorCount++;
-
-            // Check if we have read the required number of vectors
-            if (num_vecs != -1 && vectorCount >= num_vecs) {
-                break;
-            }
-        }
-
-        file.close();
-    }
-
-    template void read_xvecs<int8_t>(const std::string& file_path, std::vector<int8_t> &data, std::vector<size_t>& start_indexes, int num_vecs = -1);
-    template void read_xvecs<int16_t>(const std::string& file_path, std::vector<int16_t> &data, std::vector<size_t>& start_indexes, int num_vecs = -1);
-    template void read_xvecs<uint8_t>(const std::string& file_path, std::vector<uint8_t> &data, std::vector<size_t>& start_indexes, int num_vecs = -1);
-    template void read_xvecs<float>(const std::string& file_path, std::vector<float> &data, std::vector<size_t>& start_indexes, int num_vecs = -1);
-
     void remove_trailing_slashes(std::string& path) {
         // Removes all trailing '/' and '\' from the end of the string
         path.erase(std::find_if(path.rbegin(), path.rend(), [](char ch) {
@@ -124,27 +47,16 @@ namespace mvdb {
         }).base(), path.end());
     }
 
-    template <typename T>
-    int xvecs_num_vecs(const std::string& path) {
-        std::ifstream file(path, std::ios::binary);
-        if (!file.is_open()) {
-            std::cerr << "Failed to open the file, '" + path + "'" << std::endl;
-            return -1;
-        }
-        file.seekg(0, std::ios::end);
-        std::streampos fileSize = file.tellg();
-        file.seekg(0, std::ios::beg);
-        int dimension;
-        file.read(reinterpret_cast<char*>(&dimension), sizeof(int));
-        size_t vector_size = dimension * sizeof(T) + sizeof(int);
-        file.close();
-        return fileSize / vector_size;
+    double peakWSS(){
+        #ifndef _MSC_VER
+        struct rusage rusage{};
+        getrusage(RUSAGE_SELF, &rusage);
+        double peak_wss = (double)(rusage.ru_maxrss) / (double)1024;
+        #else
+        PROCESS_MEMORY_COUNTERS pmc;
+        GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
+        unsigned long long peakWSS = pmc.PeakWorkingSetSize / 1000000000;
+        #endif
+        return peak_wss;
     }
-
-    template int xvecs_num_vecs<int>(const std::string& path);
-    template int xvecs_num_vecs<int8_t>(const std::string& path);
-    template int xvecs_num_vecs<int16_t>(const std::string& path);
-    template int xvecs_num_vecs<uint8_t>(const std::string& path);
-    template int xvecs_num_vecs<float>(const std::string& path);
-
 }

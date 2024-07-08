@@ -217,7 +217,6 @@ static PyObject* MVDB_create(PyObject* self, PyObject* args) {
             mvdb_->create(static_cast<mvdb::index::IndexType>(index_type),
                           dims,
                           std::string(path),
-                          std::string(initial_data_path),
                           (int8_t*)vector_data,
                           binary_data,
                           binary_data_sizes,
@@ -235,7 +234,6 @@ static PyObject* MVDB_create(PyObject* self, PyObject* args) {
             mvdb_->create(static_cast<mvdb::index::IndexType>(index_type),
                           dims,
                           std::string(path),
-                          std::string(initial_data_path),
                           (float*)vector_data,
                           binary_data,
                           binary_data_sizes,
@@ -375,7 +373,7 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
         }
 
         auto *mvdb_ = static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
-        mvdb_->topk(nq, data_arr, "", "", ids, distances, peak_wss_mb, k, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, (float)c, c_args);
+        mvdb_->knn(nq, data_arr, "", "", ids, distances, peak_wss_mb, k, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, (float)c, c_args);
 
         PyObject *ids_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, ids);
         if(ids_npArray == nullptr){
@@ -440,7 +438,7 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
         }
 
         auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
-        mvdb_->topk(nq, data_arr, "", "", ids, distances, peak_wss_mb, k, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, (float)c, c_args);
+        mvdb_->knn(nq, data_arr, "", "", ids, distances, peak_wss_mb, k, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, (float)c, c_args);
 
         PyObject *ids_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, ids);
         if(ids_npArray == nullptr){

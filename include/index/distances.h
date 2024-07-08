@@ -21,7 +21,8 @@ namespace mvdb::index {
 
     enum DISTANCE_METRIC : unsigned char {
         L2_DISTANCE,
-        MAHALANOBIS_DISTANCE
+        MAHALANOBIS_DISTANCE,
+        COSINE_DISTANCE
     };
 
     float l2_distance_optimised_single(const float* vec1, const float* vec2, const size_t& d);

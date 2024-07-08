@@ -6,7 +6,6 @@
 #include "faiss_flat_index.h"
 #include "spann_index.h"
 #include "annoy_index.h"
-#include "flat_index.h"
 
 #include <fstream>
 #include <iostream>
@@ -27,8 +26,6 @@ namespace mvdb {
             _index = std::make_unique<index::MVDBAnnoyIndex<T>>();
         else
             throw std::runtime_error("_index creation failed. invalid index_type, '" + std::to_string(index_type) + "'");
-//        else
-//            _index = std::make_unique<index::FlatIndex<T>>();
     }
 
     template <typename T>
@@ -50,7 +47,6 @@ namespace mvdb {
     void DB_<T>::serialize_(std::ostream &out) const {
         serialize_numeric<unsigned char>(out, _index_type);
         serialize_numeric<idx_t>(out, _dims);
-//        out.write(reinterpret_cast<const char*>(_records->data()), ntotal_ * dims_ * sizeof(value_t));
         _index->serialize_(out);
         _storage->serialize_(out);
     }
@@ -107,11 +103,10 @@ namespace mvdb {
     bool DB_<T>::create(index::IndexType index_type,
                         const uint64_t &dims,
                         std::string &path,
-                        const std::string &initial_data_path,
-                        const T *initial_data,
-                        const std::string& binary_data,
-                        const size_t *binary_data_sizes,
-                        const uint64_t &initial_data_size,
+                        const T *v,
+                        const std::string& bin,
+                        const size_t *bin_sizes,
+                        const uint64_t &n,
                         const NamedArgs *args) {
         remove_trailing_slashes(path);
         std::string sep = std::string(1, fs::preferred_separator);
@@ -139,13 +134,13 @@ namespace mvdb {
 
         index_make(index_type);
 
-        _records = std::vector<Record>(initial_data_size);
+        _records = std::vector<Record>(n);
 
-        auto *ids = new idx_t[initial_data_size];
+        auto *ids = new idx_t[n];
 
-        _index->build(dims, _index_path, initial_data_path, initial_data, ids, initial_data_size, args);
+        _index->build(dims, _index_path, v, ids, n, args);
 //        std::cout << "HERE = " << const_cast<char *>(binary_data.c_str()) << std::endl;
-        _storage->put(initial_data_size, (uint64_t*)ids, const_cast<char *>(binary_data.c_str()), const_cast<size_t *>(binary_data_sizes));
+        _storage->put(n, (uint64_t*)ids, const_cast<char *>(bin.c_str()), const_cast<size_t *>(bin_sizes));
 
         _save(_db_path);
 

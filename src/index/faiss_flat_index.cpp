@@ -44,9 +44,20 @@ namespace mvdb::index {
     }
 
     template <typename T>
-    void FaissFlatIndex<T>::build(const idx_t &dims, const std::string& path, const std::string& initial_data_path,
-                                  const T* initial_data, idx_t* ids,
-                                  const uint64_t& initial_data_size, const NamedArgs* args) {
+    void FaissFlatIndex<T>::build(const idx_t &dims,
+                                  const std::string& path,
+                                  const T* v,
+                                  idx_t* ids,
+                                  const uint64_t& n,
+                                  const NamedArgs* args) {
+
+        if (path.empty())
+            throw std::invalid_argument("Index path cannot be empty.");
+        if (fs::exists(path))
+            throw std::invalid_argument("Path '" + path + "' already exists. Please specify a new path.");
+        if (!args)
+            throw std::invalid_argument("NamedArgs pointer cannot be null.");
+
         std::cout << "Building FaissFlatIndex at " << path << std::endl;
         this->dims_ = dims;
         faiss_index_ = std::make_unique<faiss::IndexFlatL2>(this->dims_);
@@ -58,18 +69,9 @@ namespace mvdb::index {
         if(fs::exists(path))
             throw std::runtime_error("'" + path + "' is invalid. make sure no file or dir exists at that location");
 
-        if(!initial_data_path.empty()) {
-            std::vector<T> data;
-            std::vector<size_t> start_indexes;
-            int num_vecs = 0;
-            if(std::is_same_v<T, float>)
-                num_vecs = xvecs_num_vecs<float>(initial_data_path);
-            else
-                num_vecs = xvecs_num_vecs<int32_t>(initial_data_path);
-            read_xvecs<T>(initial_data_path, data, start_indexes, num_vecs);
-            faiss_index_->add(num_vecs, (float*)data.data());
-        } else if(initial_data_size > 0) {
-            faiss_index_->add((faiss::idx_t)initial_data_size, (float*)initial_data);
+        if(n > 0) {
+            if (!v) throw std::invalid_argument("Initial data pointer cannot be null when n > 0.");
+            faiss_index_->add((faiss::idx_t)n, (float*)n);
         }
         this->save_(path);
         this->built_ = true;
@@ -133,18 +135,18 @@ namespace mvdb::index {
     }
 
     template <typename T>
-    void FaissFlatIndex<T>::topk(const idx_t& nq, T* query, const std::string& query_path,
-                                 const std::string& result_path, idx_t* ids, T* distances, double& peak_wss_mb,
-                                 const idx_t& k, const DISTANCE_METRIC& distance_metric, const float& c,
-                                 const NamedArgs* args) const{
-        if(!query_path.empty())
-            throw std::runtime_error("Query file with FaissFlatIndex topk not supported...yet");
+    void FaissFlatIndex<T>::topk(const idx_t& nq,
+                                 T* query,
+                                 idx_t* ids,
+                                 T* distances,
+                                 double& peak_wss_mb,
+                                 const idx_t& k,
+                                 const DISTANCE_METRIC& distance_metric,
+                                 const float& c,
+                                 const NamedArgs* args) const {
 
-        if(!result_path.empty())
-            throw std::runtime_error("Result file with FaissFlatIndex topk not supported...yet");
+        faiss_index_->search(static_cast<long>(nq), (float*)(query), k, (float*)(distances), reinterpret_cast<faiss::idx_t*>(ids));
 
-        faiss_index_->search(static_cast<long>(nq), (float*)(query), k, (float*)(distances),
-                             reinterpret_cast<faiss::idx_t*>(ids));
         #ifndef _MSC_VER
         struct rusage rusage{};
         getrusage(RUSAGE_SELF, &rusage);

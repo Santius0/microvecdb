@@ -18,19 +18,18 @@ namespace mvdb::index {
     }
 
     template <typename T>
-    void MVDBAnnoyIndex<T>::build(const idx_t &dims, const std::string& path, const std::string& initial_data_path,
-                                  const T* initial_data, idx_t* ids,
-                                  const uint64_t& initial_data_size, const NamedArgs* args) {
+    void MVDBAnnoyIndex<T>::build(const idx_t &dims,
+                                  const std::string& path,
+                                  const T* v,
+                                  idx_t* ids,
+                                  const uint64_t& n,
+                                  const NamedArgs* args) {
         if (path.empty())
             throw std::invalid_argument("Index path cannot be empty.");
         if (fs::exists(path))
             throw std::invalid_argument("Path '" + path + "' already exists. Please specify a new path.");
         if (!args)
             throw std::invalid_argument("NamedArgs pointer cannot be null.");
-
-//        const auto *annoy_args = dynamic_cast<const AnnoyIndexNamedArgs *>(args);
-//        if (!annoy_args)
-//            throw std::runtime_error("Failed to dynamic_cast from NamedArgs to AnnoyIndexNamedArgs");
 
         const auto *annoy_args = parse_annoy_named_args(args);
 
@@ -47,35 +46,19 @@ namespace mvdb::index {
         annoy_index_ = std::make_unique<Annoy::AnnoyIndex<int, T, Annoy::Euclidean, Annoy::Kiss32Random, Annoy::AnnoyIndexSingleThreadedBuildPolicy>>(dims);
         #endif
 
-        if (!initial_data_path.empty()) {
-            std::vector<T> data;
-            std::vector<size_t> start_indexes;
+        if (n > 0) {
+            if (!v) throw std::invalid_argument("Initial data pointer cannot be null when n > 0.");
 
-            int num_vecs = 0;
-            if(std::is_same_v<T, float>)
-                num_vecs = xvecs_num_vecs<float>(initial_data_path);
-            else
-                num_vecs = xvecs_num_vecs<int32_t>(initial_data_path);
-            std::cout << "loading file " << initial_data_path << std::endl;
-            read_xvecs<T>(initial_data_path, data, start_indexes, num_vecs);
             std::cout << "adding elements to Annoy index..." << std::endl;
-            for (int i = 0; i < num_vecs; i++) {
-                annoy_index_->add_item(i, data.data() + i * dims);
+            for (int i = 0; i < n; i++) {
+                annoy_index_->add_item(i, v + i * dims);
                 ids[i] = i;
             }
             std::cout << "finished adding elements to Annoy index" << std::endl;
-            data.clear();
-            data.shrink_to_fit();
-        } else if (initial_data_size > 0) {
-            if (!initial_data)
-                throw std::invalid_argument("Initial data pointer cannot be null when size is specified.");
-            std::cout << "adding elements to Annoy index..." << std::endl;
-            for (int i = 0; i < initial_data_size; i++) {
-                annoy_index_->add_item(i, initial_data + i * dims);
-                ids[i] = i;
-            }
-            std::cout << "finished adding elements to Annoy index" << std::endl;
+        } else {
+            std::cerr << "Warning: " << "You are about to create an empty ANNOY index. ANNOY indices cannot be updated after creation. Be sure this is what you want to do!" << std::endl;
         }
+
         annoy_index_->build(this->n_trees, this->n_threads);
         this->save_(path);
         this->built_ = true;
@@ -145,16 +128,9 @@ namespace mvdb::index {
     }
 
     template<typename T>
-    void MVDBAnnoyIndex<T>::topk(const idx_t &nq, T *query, const std::string& query_path,
-                                 const std::string& result_path, idx_t *ids, T *distances,
+    void MVDBAnnoyIndex<T>::topk(const idx_t &nq, T *query, idx_t *ids, T *distances,
                                  double& peak_wss_mb, const idx_t &k, const DISTANCE_METRIC &distance_metric,
                                  const float &c, const NamedArgs* args) const {
-
-        if(!query_path.empty())
-            throw std::runtime_error("Query file with MVDBAnnoyIndex topk not supported...yet");
-
-        if(!result_path.empty())
-            throw std::runtime_error("Result file with MVDBAnnoyIndex topk not supported...yet");
 
         const auto *annoy_args = parse_annoy_named_args(args);
 
@@ -165,21 +141,12 @@ namespace mvdb::index {
 
         if(annoy_args->n_threads > 0) omp_set_num_threads(annoy_args->n_threads);
 
-        std::cout << "dims = " << this->dims_ << std::endl;
-//        annoy_index_->
         #pragma omp parallel
         {
             std::vector<int> closest_ids;           // DO NOT pre-allocate memory for Annoy receptacles!
             std::vector<T> closest_distances;       // Annoy's search methods will ignore all pre-allocated memory and allocate its own memory right after
             #pragma omp parallel for schedule(dynamic) if (nq >= 50)
             for (idx_t i = 0; i < nq; i++) {
-
-//                std::cout << "query " << i << " = [ ";
-//                for(int a = 0; a < this->dims_; a++){
-//                    std::cout << *((query + i * this->dims_) + a) << " ";
-//                }
-//                std::cout << " ]" << std::endl;
-
                 annoy_index_->get_nns_by_vector(query + i * this->dims_, k, annoy_args->search_k, &closest_ids, &closest_distances);
                 for (int j = 0; j < k; j++) {
                     ids[i * k + j] = closest_ids[j];
@@ -187,19 +154,6 @@ namespace mvdb::index {
                 }
                 closest_ids.clear();
                 closest_distances.clear();
-
-//                std::cout << " query " << i << " ids = [ ";
-//                for (int j = 0; j < k; j++) {
-//                    std::cout << ids[i * k + j] << " ";
-//                }
-//                std::cout << " ]" << std::endl;
-//
-//                std::cout << " query " << i << " distances = [ ";
-//                for (int j = 0; j < k; j++) {
-//                    std::cout << distances[i * k + j] << " ";
-//                }
-//                std::cout << " ]" << std::endl;
-
             }
         };
 

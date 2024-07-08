@@ -1,5 +1,7 @@
 #include "spann_index.h"
 #include "exception.h"
+//#include "filesystem.h"
+
 
 namespace mvdb::index {
 
@@ -96,16 +98,19 @@ namespace mvdb::index {
     }
 
     template <typename T>
-    void SPANNIndex<T>::build(const idx_t &dims, const std::string& path, const std::string& initial_data_path,
-                              const T* initial_data, idx_t* ids,
-                              const uint64_t& initial_data_size, const NamedArgs* args) {
+    void SPANNIndex<T>::build(const idx_t &dims,
+                              const std::string& path,
+                              const T* v,
+                              idx_t* ids,
+                              const uint64_t& n,
+                              const NamedArgs* args) {
 
-//        ./indexbuilder -c buildconfig.ini -d 128 -v Float -f XVEC -i sift1M/sift_base.fvecs -o sift1m_index_dir_Saved -a SPANN
-
-        if(path.empty()) throw std::runtime_error("output path cannot be empty");
-
-        if((!initial_data_path.empty() && initial_data_size > 0) || (initial_data_path.empty() && initial_data_size <= 0))
-            throw std::runtime_error("Only exactly one of 'initial_data' and 'initial_data_path' accepted");
+//        if (path.empty())
+//            throw std::invalid_argument("Index path cannot be empty.");
+//        if (fs::exists(path))
+//            throw std::invalid_argument("Path '" + path + "' already exists. Please specify a new path.");
+//        if (!args)
+//            throw std::invalid_argument("NamedArgs pointer cannot be null.");
 
         if constexpr (std::is_same_v<T, int8_t>) {
             sptag_vector_index_ = SPTAG::VectorIndex::CreateInstance(SPTAG::IndexAlgoType::SPANN,SPTAG::VectorValueType::Int8);
@@ -125,15 +130,11 @@ namespace mvdb::index {
         }
         else throw std::runtime_error("Unsupported data SPANN Index data type");
 
-//        const auto *spann_args = dynamic_cast<const SPANNIndexNamedArgs *>(args);
-//        if (!spann_args)
-//            throw std::runtime_error("Failed to dynamic_cast from NamedArgs to SPANNIndexNamedArgs");
-
         const auto *spann_args = parse_spann_named_args(args);
 
         this->dims_ = dims;
         builder_options_->m_dimension = static_cast<SPTAG::DimensionType>(dims);
-        builder_options_->m_inputFiles = initial_data_path;
+        builder_options_->m_inputFiles = "";
         builder_options_->m_outputFolder = path;
         builder_options_->m_indexAlgoType = SPTAG::IndexAlgoType::SPANN;
         builder_options_->m_builderConfigFile = spann_args->build_config_path;
@@ -143,13 +144,11 @@ namespace mvdb::index {
         builder_options_->m_inputFileType = SPTAG::VectorFileType::XVEC;
         builder_options_->m_threadNum = spann_args->thread_num;
 
-
         if (!builder_options_->m_quantizerFile.empty()) {
             sptag_vector_index_->LoadQuantizer(builder_options_->m_quantizerFile);
             if (!sptag_vector_index_->m_pQuantizer)
                 throw std::runtime_error("failed to open quantizer file, '" + builder_options_->m_quantizerFile + "'");
         }
-
 
         SPTAG::Helper::IniReader iniReader;
         std::string sections[] = {"Base", "SelectHead", "BuildHead", "BuildSSDIndex", "Index"};
@@ -167,10 +166,6 @@ namespace mvdb::index {
 
         iniReader.SetParameter("Base", "Dim", std::to_string(dims));
 
-        std::cout << "Build SPANN Args = \n" << spann_args << std::endl;
-        if(!initial_data_path.empty()) iniReader.SetParameter("Base", "VectorPath", initial_data_path);
-//        if(!spann_args->query_path.empty()) iniReader.SetParameter("Base", "QueryPath", spann_args->query_path);
-//        if(!spann_args->query_path.empty()) iniReader.SetParameter("Base", "WarmupPath", spann_args->query_path);
         if(!spann_args->truth_path.empty()) iniReader.SetParameter("Base", "TruthPath", spann_args->truth_path);
         if(spann_args->BKTKmeansK > 0) iniReader.SetParameter("SelectHead", "BKTKmeansK", std::to_string(spann_args->BKTKmeansK));
         if(spann_args->Samples > 0) iniReader.SetParameter("SelectHead", "SamplesNumber", std::to_string(spann_args->Samples));
@@ -183,11 +178,7 @@ namespace mvdb::index {
         if(spann_args->NumberOfInitialDynamicPivots > 0) iniReader.SetParameter("BuildHead", "NumberOfInitialDynamicPivots", std::to_string(spann_args->NumberOfInitialDynamicPivots));
         if(spann_args->NumberOfOtherDynamicPivots > 0) iniReader.SetParameter("BuildHead", "NumberOfOtherDynamicPivots", std::to_string(spann_args->NumberOfOtherDynamicPivots));
 
-        std::cout << "CHECKING DIM =>  " << iniReader.GetParameter("Base", "Dim", -1) << std::endl;
-        std::cout << "CHECKING TPTNUMBER =>  " << iniReader.GetParameter("BuildHead", "TPTNumber", -1) << std::endl;
-
         for (const auto &section: sections) {
-//            if (!iniReader.DoesParameterExist(section, "NumberOfThreads"))
                 iniReader.SetParameter(section, "NumberOfThreads", std::to_string(builder_options_->m_threadNum));
             for (const auto &iter: iniReader.GetParameters(section)) {
                 std::cout << iter.first << ": " << iter.second << " @ " << section << std::endl;
@@ -203,22 +194,17 @@ namespace mvdb::index {
         SPTAG::ErrorCode code;
         std::shared_ptr<SPTAG::VectorSet> vec_set;
         std::shared_ptr<SPTAG::MetadataSet> metadata_set;
-        if(!initial_data_path.empty()){
-            auto vectorReader = SPTAG::Helper::VectorSetReader::CreateInstance(builder_options_);
-            if (SPTAG::ErrorCode::Success != vectorReader->LoadFile(builder_options_->m_inputFiles))
-                throw std::runtime_error("failed to read input file, '" + builder_options_->m_inputFiles + "'");
-            vec_set = vectorReader->GetVectorSet();
-            metadata_set = vectorReader->GetMetadataSet();
-        } else {
-            uint64_t query_size_bytes = sizeof(T) * this->dims_ * initial_data_size;
-            SPTAG::ByteArray vec_set_byte_arr = SPTAG::ByteArray::Alloc(query_size_bytes);
-            char* vecBuf = reinterpret_cast<char*>(vec_set_byte_arr.Data());
-            memcpy(vecBuf, initial_data, query_size_bytes);
-            vec_set.reset(new SPTAG::BasicVectorSet(vec_set_byte_arr,
-                                                    builder_options_->m_inputValueType,
-                                                    this->dims_, initial_data_size));
-            metadata_set = nullptr;
+
+        if(n > 0) {
+            if (!v) throw std::invalid_argument("Initial data pointer cannot be null when n > 0.");
+
+            uint64_t vec_size_bytes = sizeof(T) * this->dims_ * n;
+            SPTAG::ByteArray vec_set_byte_arr = SPTAG::ByteArray::Alloc(vec_size_bytes);
+            char *vecBuf = reinterpret_cast<char *>(vec_set_byte_arr.Data());
+            memcpy(vecBuf, v, vec_size_bytes);
+            vec_set.reset(new SPTAG::BasicVectorSet(vec_set_byte_arr, builder_options_->m_inputValueType, this->dims_, n));
         }
+        metadata_set = nullptr;
 
         code = sptag_vector_index_->BuildIndex(vec_set, metadata_set,
                                                builder_options_->m_metaMapping,
@@ -254,17 +240,17 @@ namespace mvdb::index {
     }
 
     template<typename T>
-    void SPANNIndex<T>::topk(const idx_t &nq, T *query, const std::string& query_path,
-                             const std::string& result_path, idx_t *ids, T *distances,
-                             double& peak_wss_mb, const idx_t &k,
-                             const DISTANCE_METRIC &distance_metric, const float& c, const NamedArgs* args) const {
-//  ./indexsearcher -x sift1m_index_dir_Saved/ -d 128 -v Float -f XVEC -i sift1M/sift_query.fvecs -o outputSearch.txt -k 100
+    void SPANNIndex<T>::topk(const idx_t &nq,
+                             T *query,
+                             idx_t *ids,
+                             T *distances,
+                             double& peak_wss_mb,
+                             const idx_t &k,
+                             const DISTANCE_METRIC &distance_metric,
+                             const float& c,
+                             const NamedArgs* args) const {
 
-        if(query_path.empty() && query == nullptr)
-            throw std::runtime_error("either query or query_path is required");
-
-        if(!query_path.empty() && query != nullptr)
-            throw std::runtime_error("Exactly one of query and query_path accepted");
+        if(!query) throw std::runtime_error("query cannot be nullptr");
 
         const auto * spann_args = parse_spann_named_args(args);
 
@@ -273,9 +259,6 @@ namespace mvdb::index {
         options->m_dimension = builder_options_->m_dimension;
         options->m_inputValueType = builder_options_->m_inputValueType;
         options->m_inputFileType = SPTAG::VectorFileType::XVEC;
-        options->m_queryFile = query_path;
-        options->m_resultFile = result_path; // results_path return not yet implemented
-//        options->m_outputformat = 0;
         options->m_K = (int)k;
         options->m_batch = spann_args->batch_size;
         options->m_threadNum = spann_args->thread_num;
@@ -296,9 +279,6 @@ namespace mvdb::index {
         else if constexpr (std::is_same_v<T, float>)
             iniReader.SetParameter("Base", "ValueType", "Float");
 
-        std::cout << "Search SPANN Args = \n" << spann_args << std::endl;
-        if(!query_path.empty()) iniReader.SetParameter("Base", "QueryPath", query_path);
-        if(!query_path.empty()) iniReader.SetParameter("Base", "WarmupPath", query_path);
         if(!spann_args->truth_path.empty()) iniReader.SetParameter("Base", "TruthPath", spann_args->truth_path);
         if(spann_args->BKTKmeansK > 0) iniReader.SetParameter("SelectHead", "BKTKmeansK", std::to_string(spann_args->BKTKmeansK));
         if(spann_args->Samples > 0) iniReader.SetParameter("SelectHead", "SamplesNumber", std::to_string(spann_args->Samples));
@@ -312,7 +292,6 @@ namespace mvdb::index {
         if(spann_args->NumberOfOtherDynamicPivots > 0) iniReader.SetParameter("BuildHead", "NumberOfOtherDynamicPivots", std::to_string(spann_args->NumberOfOtherDynamicPivots));
 
         for (const auto &section: sections) {
-//            if (!iniReader.DoesParameterExist(section, "NumberOfThreads"))
                 iniReader.SetParameter(section, "NumberOfThreads", std::to_string(options->m_threadNum));
             for (const auto &iter: iniReader.GetParameters(section)) {
                 std::cout << iter.first << ": " << iter.second << " @ " << section;
@@ -366,25 +345,6 @@ namespace mvdb::index {
 
                 for (SPTAG::SizeType i = 0; i < numQuerys; i++) results[i].Reset();
 
-//                std::atomic_size_t queriesSent(0);
-//                std::vector<std::thread> threads;
-//                threads.reserve(options->m_threadNum);
-//
-//                for (std::uint32_t i = 0; i < options->m_threadNum; i++) {
-//                    threads.emplace_back([&, i] {
-//                        SPTAG::NumaStrategy ns = (sptag_vector_index_->GetIndexAlgoType() == SPTAG::IndexAlgoType::SPANN) ? SPTAG::NumaStrategy::SCATTER: SPTAG::NumaStrategy::LOCAL; // Only for SPANN, we need to avoid IO threads overlap with search threads.
-//                        SPTAG::Helper::SetThreadAffinity(i, threads[i], ns, SPTAG::OrderStrategy::ASC);
-//
-//                        size_t qid = 0;
-//                        while (true) {
-//                            qid = queriesSent.fetch_add(1);
-//                            if (qid < numQuerys)
-//                                sptag_vector_index_->SearchIndex(results[qid]); // this line within this multi-threading code causes memory_profiler to fail horribly, can't be removed though
-//                            else return;
-//                        }
-//                    });
-//                }
-//                for (auto& thread : threads) { thread.join(); }
                 omp_set_num_threads((int)options->m_threadNum);
                 size_t queriesSent = 0;
                 #pragma omp parallel
@@ -435,19 +395,6 @@ namespace mvdb::index {
                 }
             }
         }
-
-
-//        switch (options->m_inputValueType) {
-//            #define DefineVectorValueType(Name, Type) \
-//            case SPTAG::VectorValueType::Name: \
-//            Process<Type>(options, *(sptag_vector_index_.get()), ids, distances, vec_set, meta_set); \
-//            break; \
-//
-//            #include <inc/Core/DefinitionList.h>
-//            #undef DefineVectorValueType
-//
-//            default: break;
-//        }
     }
 
     template<typename T>
@@ -475,16 +422,8 @@ namespace mvdb::index {
         return this->built_;
     }
 
-
     template class SPANNIndex<int8_t>;
     template class SPANNIndex<int16_t>;
-    template class SPANNIndex<int32_t>;
-    template class SPANNIndex<int64_t>;
     template class SPANNIndex<uint8_t>;
-    template class SPANNIndex<uint16_t>;
-    template class SPANNIndex<uint32_t>;
-    template class SPANNIndex<uint64_t>;
     template class SPANNIndex<float>;
-    template class SPANNIndex<double>;
-
 }
