@@ -56,12 +56,6 @@ namespace mvdb {
          size_t bytes_processed = 0;
          for (size_t i = 0; i < n; i++){
              rocksdb::Slice value(values + bytes_processed, value_sizes[i]);
-//             std::cout << "bytes_processed: " << bytes_processed << std::endl;
-//             std::cout << "size: " << value_sizes[i] << std::endl;
-//             std::cout << "pos: " << bytes_processed + value_sizes[i] << std::endl;
-//             std::cout << "putting: " << value.ToString() << std::endl << std::endl;
-//             std::cout << "putting_size: " << value.size() << std::endl << std::endl;
-//             std::cout << "key: " << std::to_string(keys[i]) << std::endl << std::endl;
              batch.Put(std::to_string(keys[i]), value);
              bytes_processed += value_sizes[i];
          }
