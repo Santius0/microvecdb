@@ -29,39 +29,6 @@ namespace mvdb {
     #define MAX_KEY_CHARS 21
     #define MAX_KEY_SIZE_BYTES (sizeof(char) * MAX_KEY_CHARS) // (2^64 - 1) is a number with 20 digits
 
-    enum DataFormat {
-        RAW_TEXT,
-
-        // Image formats
-        JPEG,
-        PNG,
-        GIF,
-        BMP,
-        TIFF,
-
-        // Text formats
-        TXT,
-        PDF,
-        DOC,
-        HTML,
-        RTF,
-
-        // Audio formats
-        MP3,
-        WAV,
-        AAC,
-        FLAC,
-        OGG,
-
-        // Video formats
-        MP4,
-        AVI,
-        MOV,
-        WMV,
-        MKV
-    };
-
     using idx_t = int64_t; // all vector indices within an index are counted using a 64-bit unsigned int => can store up to 2^64 vectors per index
-    using value_t = float;  // all actual values stored in a vector are represented using 32-bit floating point values
 }
 #endif //CONTSTANTS_H

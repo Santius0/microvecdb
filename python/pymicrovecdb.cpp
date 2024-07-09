@@ -164,8 +164,8 @@ static PyObject* MVDB_create(PyObject* self, PyObject* args) {
     unsigned char data_type, index_type;
     PyObject *mvdb_capsule, *initial_data, *named_args_capsule, *data_array;
     uint64_t dims, initial_data_size;
-    const char *path, *initial_data_path;
-    if (!PyArg_ParseTuple(args, "BOBlssO!OlO", &data_type, &mvdb_capsule, &index_type, &dims, &path, &initial_data_path, &PyArray_Type, &initial_data, &data_array, &initial_data_size, &named_args_capsule)) return nullptr;
+    const char *path;
+    if (!PyArg_ParseTuple(args, "BBOlsO!OlO", &data_type, &index_type, &mvdb_capsule, &dims, &path, &PyArray_Type, &initial_data, &data_array, &initial_data_size, &named_args_capsule)) return nullptr;
 
     void* vector_data;
     mvdb::NamedArgs *c_args = extract_named_args(index_type, named_args_capsule);
@@ -334,12 +334,9 @@ static PyObject* MVDB_get_num_items(PyObject* self, PyObject* args) {
 static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
     uint8_t data_type, index_type;
     PyObject *mvdb_capsule, *query_array_obj, *named_args_capsule;
-    uint64_t nq, k;
-    double c;
-    const char *query_path, *result_path;
-    mvdb::index::DISTANCE_METRIC metric;
+    int64_t nq, k;
 
-    if (!PyArg_ParseTuple(args, "BBOO!KssKBdO", &index_type, &data_type, &mvdb_capsule, &PyArray_Type, &query_array_obj, &nq, &query_path, &result_path, &k, &metric, &c, &named_args_capsule)) return nullptr;
+    if (!PyArg_ParseTuple(args, "BBOO!LLO", &index_type, &data_type, &mvdb_capsule, &PyArray_Type, &query_array_obj, &nq, &k, &named_args_capsule)) return nullptr;
 
     mvdb::NamedArgs* c_args = extract_named_args(index_type, named_args_capsule);
 
@@ -373,7 +370,7 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
         }
 
         auto *mvdb_ = static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
-        mvdb_->knn(nq, data_arr, "", "", ids, distances, peak_wss_mb, k, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, (float)c, c_args);
+        mvdb_->knn(nq, data_arr, "", "", ids, distances, peak_wss_mb, k, c_args);
 
         PyObject *ids_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, ids);
         if(ids_npArray == nullptr){
@@ -438,7 +435,7 @@ static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
         }
 
         auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
-        mvdb_->knn(nq, data_arr, "", "", ids, distances, peak_wss_mb, k, mvdb::index::DISTANCE_METRIC::L2_DISTANCE, (float)c, c_args);
+        mvdb_->knn(nq, data_arr, "", "", ids, distances, peak_wss_mb, k, c_args);
 
         PyObject *ids_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, ids);
         if(ids_npArray == nullptr){

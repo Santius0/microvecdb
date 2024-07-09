@@ -1,4 +1,3 @@
-import gc
 import csv
 import os
 import time
@@ -24,9 +23,9 @@ DATASET_CONFIGS = {
         'query_path': f'{BASE_DATA_DIR}/deep/deep1B_queries.fvecs',
         'sizes': [10000, 100000, 500000, 1000000],
         'dimensions': [96],
-        'dtype': ['float32', 'int8'],
+        'dtype': ['float32'],
         'index_types': ['annoy', 'spann'],
-        'annoy_index_params': {'n_trees': 10, 'n_threads': 3, 'search_k': 6500},
+        'annoy_index_params': {'n_trees': 10, 'n_threads': 10, 'search_k': 6500},
         'spann_index_params': {
             'build_config_path': "buildconfig.ini",
             'BKTKmeansK': 8,
@@ -40,7 +39,7 @@ DATASET_CONFIGS = {
             'GraphNeighborhoodScale': 2,
             'NumberOfOtherDynamicPivots': 2,
             'batch_size': 2000,
-            'thread_num': 3,
+            'thread_num': 10,
         }
     },
     'sift': {
@@ -48,9 +47,9 @@ DATASET_CONFIGS = {
         'query_path': f'{BASE_DATA_DIR}/sift/sift_query.fvecs',
         'sizes': [10000, 100000, 500000, 1000000],
         'dimensions': [128],
-        'dtype': ['float32', 'int8'],
+        'dtype': ['float32'],
         'index_types': ['annoy', 'spann'],
-        'annoy_index_params': {'n_trees': 10, 'n_threads': 3, 'search_k': 6500},
+        'annoy_index_params': {'n_trees': 10, 'n_threads': 10, 'search_k': 6500},
         'spann_index_params': {
             'build_config_path': "buildconfig.ini",
             'BKTKmeansK': 8,
@@ -64,7 +63,7 @@ DATASET_CONFIGS = {
             'GraphNeighborhoodScale': 2,
             'NumberOfOtherDynamicPivots': 2,
             'batch_size': 2000,
-            'thread_num': 3,
+            'thread_num': 10,
         }
     },
     # 'gist': {
@@ -72,9 +71,9 @@ DATASET_CONFIGS = {
     #     'query_path': f'{BASE_DATA_DIR}/gist/gist_query.fvecs',
     #     'sizes': [10000, 100000, 500000, 1000000],
     #     'dimensions': [256, 512, 960],
-    #     'dtype': ['float32', 'int8'],
+    #     'dtype': ['float32'],
     #     'index_types': ['annoy', 'spann'],
-    #     'annoy_index_params': {'n_trees': 10, 'n_threads': 3, 'search_k': 6500},
+    #     'annoy_index_params': {'n_trees': 10, 'n_threads': 10, 'search_k': 6500},
     #     'spann_index_params': {
     #         'build_config_path': "buildconfig.ini",
     #         'BKTKmeansK': 8,
@@ -88,7 +87,7 @@ DATASET_CONFIGS = {
     #         'GraphNeighborhoodScale': 2,
     #         'NumberOfOtherDynamicPivots': 2,
     #         'batch_size': 2000,
-    #         'thread_num': 3,
+    #         'thread_num': 10,
     #     }
     # },
 }
@@ -107,7 +106,7 @@ def short_code(num):
 def topk_wrapper(db_, q, k, params=None):
     if params is None:
         params = {}
-    results = db_.topk(query=q, k=k, **params)
+    results = db_.knn(query=q, k=k, **params)
     print('DONE')
     return results
 
@@ -118,10 +117,7 @@ def recall1(qr, gt, k = 100):
         for id in qr[i][:k]:
             if id in gt[i][:k]:
                 actual += 1
-        # recalls[i] = actual/float(k)
         recalls[i] = actual
-    # return np.mean(recalls), np.std(recalls), recalls
-    # return np.mean(recalls) / float(k), np.std(recalls) / float(k), recalls
     return np.mean(recalls) / float(k)
 
 def recall2(qr, gt, k = 100):
@@ -222,9 +218,10 @@ def benchmark():
                         index_path = os.path.join(BASE_INDEX_DIR, index_name)
 
                         db = mvdb.MVDB(dtype=mvdb.str_to_data_type(dtype))
+                        print(f'INDEX PATH: {index_path}')
                         db.open(index_path)
 
-                        queries = mv_utils.read_vector_file(config['query_path']).astype(np.int8) if dtype == "int8" else mv_utils.read_vector_file(config['query_path'])
+                        queries = mv_utils.read_vector_file(config['query_path'])
                         ground = mv_utils.read_vector_file(f'{data_path}/{dataset_name}_base.fvecs_groundtruth.ivecs')
 
                         for q_size in query_sizes:
@@ -240,8 +237,12 @@ def benchmark():
 
                                 start_time = time.time()
 
+                                params = config['annoy_index_params'] if index_type == "annoy" else config['spann_index_params']
+
                                 # optimal search_k for SPANN = 6500
                                 peak_dram, results = memory_usage((topk_wrapper, (db, q, k, config['annoy_index_params'] if index_type == "annoy" else config['spann_index_params'])), retval=True, max_usage=True)
+
+                                # results = memory_usage((topk_wrapper, (db, q, k, config['annoy_index_params'] if index_type == "annoy" else config['spann_index_params'])), retval=True, max_usage=True)
 
                                 query_time = time.time() - start_time
 
@@ -282,6 +283,4 @@ def benchmark():
     print("**DONE**")
 
 if __name__ == '__main__':
-    # parsed = parse_tegrastats('./results_sunday/tegrastats/deep10K_96D_float32.spann_10000_100')
-    # print(parsed)
     benchmark()

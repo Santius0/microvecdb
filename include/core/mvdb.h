@@ -40,15 +40,13 @@ namespace mvdb {
                     const T *v = nullptr) const;
 
         void knn(const idx_t& nq,
-                       T* query,
-                       std::string query_path,
-                       std::string result_path,
-                       idx_t* ids, T* distances,
-                       double& peak_wss_mb,
-                       const idx_t& k = 5,
-                       const index::DISTANCE_METRIC& distance_metric = index::DISTANCE_METRIC::L2_DISTANCE,
-                       const float& c = 100.0f,
-                       const NamedArgs* args = nullptr) const;
+                 T* query,
+                 std::string query_path,
+                 std::string result_path,
+                 idx_t* ids, T* distances,
+                 double& peak_wss_mb,
+                 const int64_t& k = 5,
+                 const NamedArgs* args = nullptr) const;
 
         DB_<T> * get_db_() const;
     };

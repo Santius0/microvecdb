@@ -128,9 +128,12 @@ namespace mvdb::index {
     }
 
     template<typename T>
-    void MVDBAnnoyIndex<T>::topk(const idx_t &nq, T *query, idx_t *ids, T *distances,
-                                 double& peak_wss_mb, const idx_t &k, const DISTANCE_METRIC &distance_metric,
-                                 const float &c, const NamedArgs* args) const {
+    void MVDBAnnoyIndex<T>::topk(const idx_t &nq,
+                                 T *query, idx_t *ids,
+                                 T *distances,
+                                 double& peak_wss_mb,
+                                 const int64_t &k,
+                                 const NamedArgs* args) const {
 
         const auto *annoy_args = parse_annoy_named_args(args);
 

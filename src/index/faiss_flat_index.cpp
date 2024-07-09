@@ -140,12 +140,10 @@ namespace mvdb::index {
                                  idx_t* ids,
                                  T* distances,
                                  double& peak_wss_mb,
-                                 const idx_t& k,
-                                 const DISTANCE_METRIC& distance_metric,
-                                 const float& c,
+                                 const int64_t& k,
                                  const NamedArgs* args) const {
 
-        faiss_index_->search(static_cast<long>(nq), (float*)(query), k, (float*)(distances), reinterpret_cast<faiss::idx_t*>(ids));
+        faiss_index_->search(static_cast<long>(nq), (float*)(query), (faiss::idx_t)k, (float*)(distances), reinterpret_cast<faiss::idx_t*>(ids));
 
         peak_wss_mb = peakWSS();
     }

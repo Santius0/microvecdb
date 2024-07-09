@@ -73,12 +73,10 @@ namespace mvdb::index {
                           idx_t* ids,
                           T* distances,
                           double& peak_wss_mb,
-                          const idx_t& k,
-                          const DISTANCE_METRIC& distance_metric,
-                          const float& c,
+                          const int64_t& k,
                           const NamedArgs* args) const = 0;
-        virtual T* get(idx_t& n, idx_t* ids) const = 0;               // reconstruct and return the n vectors specified by ids
-        virtual T* get_all() const = 0;                     // reconstruct and return all vectors
+        virtual T* get(idx_t& n, idx_t* ids) const = 0;                     // reconstruct and return the n vectors specified by ids
+        virtual T* get_all() const = 0;                                     // reconstruct and return all vectors
         [[nodiscard]] virtual idx_t dims() const = 0;                       // returns dimensions of index
         [[nodiscard]] virtual idx_t ntotal() const  = 0;                    // returns current number of values in index
         [[nodiscard]] virtual bool built() const = 0;

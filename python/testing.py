@@ -66,8 +66,8 @@ queries = utils.read_vector_file(f"{BASE_DATA_DIR}/deep/deep1B_queries.fvecs")
 def main():
     # mvdb.process_image('./Screenshot 2024-05-24 074314.png')
 
-    if os.path.exists("./test_annoy_idx"):
-        shutil.rmtree("./test_annoy_idx")
+    if os.path.exists("./test_idx"):
+        shutil.rmtree("./test_idx")
 
     image_path = './Screenshot 2024-05-24 074314.png'
     audio_path = './file_example_WAV_10MG.wav'
@@ -94,36 +94,55 @@ def main():
         # image_data
     ]
 
+    spann_index_params = {
+        'build_config_path': "./benchmark/buildconfig.ini",
+        'BKTKmeansK': 8,
+        'Samples': 4000,
+        'TPTNumber': 112,
+        'RefineIterations': 2,
+        'NeighborhoodSize': 144,
+        'CEF': 1800,
+        'MaxCheckForRefineGraph': 7168,
+        'NumberOfInitialDynamicPivots': 30,
+        'GraphNeighborhoodScale': 2,
+        'NumberOfOtherDynamicPivots': 2,
+        'batch_size': 2000,
+        'thread_num': 10,
+    }
+
     serialized_data_list = [pickle.dumps(data) for data in data_list]
     serialized_data = np.array(serialized_data_list, dtype=object)
 
-    annoy_db = mvdb.MVDB(dtype=mvdb.DataType.INT8)
-    annoy_db.create(
-        index_type=mvdb.IndexType.ANNOY,
-        dims=5,
-        path="./test_annoy_idx",
-        initial_data=np.array([
-            [1, 2, 3, 4, 5],
-            [0, 44, 55, 3, 1],
-            [0, 44, 55, 3, 1],
-        ], dtype=np.int8),
-        initial_objs=serialized_data,
-        n_trees=10,
-        n_threads=12
-    )
+    annoy_db = mvdb.MVDB(dtype=mvdb.DataType.FLOAT32)
+    annoy_db.open('/home/santius/ann_indices/deep10K_96D_float32.spann')
+    # annoy_db.create(
+    #     index_type=mvdb.IndexType.SPANN,
+    #     dims=utils.get_fvecs_dim_size(SIFT10K),
+    #     path="./test_idx",
+    #     # initial_data=np.array([
+    #     #     [1, 2, 3, 4, 5],
+    #     #     [0, 44, 55, 3, 1],
+    #     #     [0, 44, 55, 3, 1],
+    #     # ], dtype=np.float32),
+    #     initial_data=utils.read_vector_file(SIFT10K),
+    #     # initial_objs=serialized_data,
+    #     # n_trees=10,
+    #     # n_threads=12
+    #     **spann_index_params
+    # )
 
-    keys = np.array([0, 1, 2])
-    a = annoy_db.get(keys)
-
-    for i in range(len(keys)):
-        try:
-            thing = pickle.loads(a[i])
-            if thing is not None:
-                print(thing['type'])
-            else:
-                print(f'{i} is None')
-        except Exception as e:
-            print(f"Error unpickling data for key {keys[i]}: {e}")
+    # keys = np.array([0, 1, 2])
+    # a = annoy_db.get(keys)
+    #
+    # for i in range(len(keys)):
+    #     try:
+    #         thing = pickle.loads(a[i])
+    #         if thing is not None:
+    #             print(thing['type'])
+    #         else:
+    #             print(f'{i} is None')
+    #     except Exception as e:
+    #         print(f"Error unpickling data for key {keys[i]}: {e}")
 
     # print(a)
     # image_stream = io.BytesIO(a[2])
@@ -150,8 +169,8 @@ def main():
 #     # db2 = mvdb.MVDB()
 #     # db2.open("./indices/spann_sift1M_float32")
 #     # print(f'python num items {db2.num_items}')
-#     res = annoy_db.topk(query=queries.astype(np.int8), k=100)
-#     print(res[0])
+    res = annoy_db.knn(query=queries.astype(np.float32), k=5, **spann_index_params)
+    print(res[0])
 #     # print(utils.read_vector_file("../../ann_data/deep1M/deep1M_groundtruth.ivecs"))
 # # test_create_function(db)
 #     # test_topk_function(db)

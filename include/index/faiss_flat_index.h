@@ -44,9 +44,7 @@ namespace mvdb::index {
                   idx_t* ids,
                   T* distances,
                   double& peak_wss_mb,
-                  const idx_t& k,
-                  const DISTANCE_METRIC& distance_metric,
-                  const float& c,
+                  const int64_t& k,
                   const NamedArgs* args) const override;
         T* get(idx_t& n, idx_t* keys) const override;
         [[nodiscard]] T* get_all() const override;

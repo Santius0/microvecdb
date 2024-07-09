@@ -139,18 +139,18 @@ namespace mvdb {
         auto *ids = new idx_t[n];
 
         _index->build(dims, _index_path, v, ids, n, args);
-//        std::cout << "HERE = " << const_cast<char *>(binary_data.c_str()) << std::endl;
-        _storage->put(n, (uint64_t*)ids, const_cast<char *>(bin.c_str()), const_cast<size_t *>(bin_sizes));
+        if(!bin.empty() && bin_sizes && n > 0)
+            _storage->put(n, (uint64_t*)ids, const_cast<char *>(bin.c_str()), const_cast<size_t *>(bin_sizes));
 
         _save(_db_path);
+
+        delete[] ids;
 
         return true;
     }
 
     template <typename T>
     void DB_<T>::_save(const std::string& save_path) {
-//        _index->save_(_index_path);
-        // we don't actually save storage metadata, and the actual data part is kept up by rocksdb
         std::string path = save_path.empty() ? _db_path : save_path;
         std::ofstream file(path, std::ios::binary | std::ios::out);
         if (!file) throw std::runtime_error("Error opening file for writing: \"" + path + "\"\n");

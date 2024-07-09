@@ -77,13 +77,11 @@ namespace mvdb {
                             idx_t* ids,
                             T* distances,
                             double& peak_wss_mb,
-                            const idx_t& k,
-                            const index::DISTANCE_METRIC& distance_metric,
-                            const float& c,
+                            const int64_t& k,
                             const NamedArgs* args) const {
         remove_trailing_slashes(query_path);
         remove_trailing_slashes(result_path);
-        db_->index()->topk(nq, query, ids, distances, peak_wss_mb, k, distance_metric, c, args);
+        db_->index()->topk(nq, query, ids, distances, peak_wss_mb, k, args);
     }
 
     template <typename T>

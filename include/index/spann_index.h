@@ -456,11 +456,10 @@ namespace mvdb::index {
         [[nodiscard]] bool remove(const idx_t& n, const idx_t* ids) override;
         void topk(const idx_t& nq,
                   T* query,
-                  idx_t* ids, T* distances,
+                  idx_t* ids,
+                  T* distances,
                   double& peak_wss_mb,
-                  const idx_t& k,
-                  const DISTANCE_METRIC& distance_metric,
-                  const float& c,
+                  const int64_t& k,
                   const NamedArgs* args) const override;
         T* get(idx_t& n, idx_t* keys) const override;
         [[nodiscard]] T* get_all() const override;

@@ -6,16 +6,12 @@ import nni
 import numpy as np
 from pymicrovecdb import mvdb, utils as mv_utils
 from memory_profiler import memory_usage
-import json
 import re
 
 datasets = [
-    # {'name': 'sift1M', 'base': '../../../ann_data/sift1M/sift/sift_base.fvecs', 'query': '../../../ann_data/sift1M/sift/sift_query.fvecs', 'ground': '../../../ann_data/sift1M/sift/sift_groundtruth.ivecs'},
-    # {'name': 'gist1M', 'base': '../../../ann_data/gist1M/gist/gist_base.fvecs', 'query': '../../../ann_data/gist1M/gist/gist_query.fvecs', 'ground': '../../../ann_data/gist1M/gist/gist_groundtruth.ivecs'},
-    # {'name': 'deep1M', 'base': '../../../ann_data/deep1M/deep1M_base.fvecs', 'query': '../../../ann_data/deep10M/deep1B_queries.fvecs', 'ground': '../../../ann_data/deep1M/deep1M_groundtruth.ivecs'},
-    {'name': 'sift10K', 'base': '../../../ann_data/sift10K/sift10K_base.fvecs', 'query': '../../../ann_data/sift1M/sift/sift_query.fvecs', 'ground': '../../../ann_data/sift10K/sift10K_groundtruth.ivecs'},
-    {'name': 'gist10K', 'base': '../../../ann_data/gist10K/gist10K_base.fvecs', 'query': '../../../ann_data/gist1M/gist/gist_query.fvecs', 'ground': '../../../ann_data/gist10K/gist10K_groundtruth.ivecs'},
-    {'name': 'deep10K', 'base': '../../../ann_data/deep10K/deep10K_base.fvecs', 'query': '../../../ann_data/deep10M/deep1B_queries.fvecs', 'ground': '../../../ann_data/deep10K/deep10K_groundtruth.ivecs'},
+    {'name': 'sift1M', 'base': '../../../ann_data/sift1M/sift/sift_base.fvecs', 'query': '../../../ann_data/sift1M/sift/sift_query.fvecs', 'ground': '../../../ann_data/sift1M/sift/sift_groundtruth.ivecs'},
+    {'name': 'gist1M', 'base': '../../../ann_data/gist1M/gist/gist_base.fvecs', 'query': '../../../ann_data/gist1M/gist/gist_query.fvecs', 'ground': '../../../ann_data/gist1M/gist/gist_groundtruth.ivecs'},
+    {'name': 'deep1M', 'base': '../../../ann_data/deep1M/deep1M_base.fvecs', 'query': '../../../ann_data/deep10M/deep1B_queries.fvecs', 'ground': '../../../ann_data/deep1M/deep1M_groundtruth.ivecs'},
 ]
 
 k_values = [1, 10, 50, 100]
@@ -92,8 +88,7 @@ def evaluate_spann(params):
                 index_type=mvdb.IndexType.SPANN,
                 dims=mv_utils.get_fvecs_dim_size(dataset['query']),
                 path=index_path,
-                # initial_data=mv_utils.read_vector_file(dataset['base']),
-                initial_data_path=dataset['base'],
+                initial_data=mv_utils.read_vector_file(dataset['base']),
                 thread_num=10,
                 build_config_path='buildconfig.ini',
                 **params

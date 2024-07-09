@@ -140,43 +140,6 @@ def read_binary_file(filepath):
     with open(filepath, 'rb') as f:
         return f.read()
 
-def process_image(img_path):
-    # Example file paths
-    image_path = './Screenshot 2024-05-24 074314.png'
-    audio_path = './file_example_WAV_10MG.wav'
-    # text_path = 'path/to/text.txt'
-
-    # Read binary data from the files
-    image_data = read_binary_file(image_path)
-    audio_data = read_binary_file(audio_path)
-    # with open(text_path, 'r', encoding='utf-8') as f:
-    #     text_data = f.read().encode('utf-8')
-
-    # Create a list of mixed data types
-    data_list = [
-        {'type': 'image', 'data': image_data},
-        {'type': 'audio', 'data': audio_data},
-        # {'type': 'text', 'data': text_data}
-    ]
-
-    # Serialize each data item
-    serialized_data_list = [pickle.dumps(data) for data in data_list]
-
-    # Convert the list of serialized objects to a NumPy array
-    serialized_data = np.array(serialized_data_list, dtype=object)
-
-    # Get the number of data items
-    num_data = len(serialized_data_list)
-
-    # Call the C++ function to store the data in RocksDB
-    db_path = "path/to/rocksdb"  # Adjust the path as necessary
-    success = mvdb_c.process_data(serialized_data, num_data, db_path)
-
-    if success:
-        print("Data successfully stored in RocksDB.")
-    else:
-        print("Failed to store data in RocksDB.")
-
 class MVDB:
     def __init__(self, dtype: DataType = DataType.FLOAT32):
         self.dtype = dtype
@@ -192,14 +155,9 @@ class MVDB:
         return mvdb_c.MVDB_get_dims(self.dtype.value, self.mvdb_obj)
 
     def create(self, index_type: IndexType, dims: int, path: str,
-               initial_data: np.array = None, initial_data_path: str = None,
-               initial_objs: np.array = None, **kwargs):
+               initial_data: np.array = None, initial_objs: np.array = None, **kwargs):
         if dims <= 0:
             raise ValueError("dims must be a positive integer")
-        if initial_data is not None and initial_data_path is not None:
-            raise ValueError("Specify only one of initial_data or initial_data_path")
-        if initial_data is None and initial_data_path is None:
-            raise ValueError("Either initial_data or initial_data_path must be specified")
 
         if initial_data is not None:
             if initial_data.size % dims != 0:
@@ -210,20 +168,14 @@ class MVDB:
         else:
             initial_data_size = 0
 
-        if initial_data_path:
-            if not initial_data_path.endswith('.fvec') and not initial_data_path.endswith('.ivec') \
-                    and not initial_data_path.endswith('.fvecs') and not initial_data_path.endswith('.ivecs'):
-                raise ValueError("Unsupported file format, only .xvecs (fvecs or ivecs) files are allowed")
-
         named_args = create_named_args(index_type, **kwargs)
 
         mvdb_c.MVDB_create(
             self.dtype.value,
-            self.mvdb_obj,
             index_type.value,
+            self.mvdb_obj,
             dims,
             path,
-            initial_data_path if initial_data_path else "",
             initial_data if initial_data is not None else np.array([], dtype=np.float32),
             initial_objs,
             initial_data_size,
@@ -233,24 +185,18 @@ class MVDB:
     def open(self, path: str):
         mvdb_c.MVDB_open(self.dtype.value, self.mvdb_obj, path)
 
-    def topk(self, query: np.array = None, query_file: str = None, k: np.uint64 = 5,
-             metric: DistanceMetric = DistanceMetric.L2_DISTANCE, c: np.float32 = 10000.0, **kwargs):
+    def knn(self, query: np.array, k: np.int64 = 5, **kwargs):
         assert mvdb_c.MVDB_get_built, "cannot search index. db not built"
-        if (query is not None and len(query) > 0) and (query_file != "" and query_file is not None):
-            raise ValueError("Specify only one of query or query_file")
-        if (query is None or len(query) == 0) and (query_file == "" or query_file is None):
-            raise ValueError("Either query or query_file must be specified")
 
-        if query is not None:
-            if query.size % self.dims != 0:
-                raise ValueError("The total size of initial_data must be a multiple of dims")
-            if query.ndim > 1:
-                num_queries = query.shape[0]
-                query = query.flatten(order='C')
-            else:
-                num_queries = int(query.shape[0]/self.dims)
+        print(query.size)
+        print(self.dims)
+        if query.size % self.dims != 0:
+            raise ValueError("The total size of initial_data must be a multiple of dims")
+        if query.ndim > 1:
+            num_queries = query.shape[0]
+            query = query.flatten(order='C')
         else:
-            num_queries = 0
+            num_queries = int(query.shape[0]/self.dims)
 
         result_path = None
 
@@ -262,11 +208,7 @@ class MVDB:
             self.mvdb_obj,
             query if query is not None else np.array([], dtype=np.float32),
             num_queries,
-            query_file if query_file else "",
-            result_path if result_path else "",
             k,
-            metric.value,
-            c,
             named_args
         )
         if result_path == "" or result_path is None:
