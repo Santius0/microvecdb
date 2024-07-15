@@ -188,8 +188,6 @@ class MVDB:
     def knn(self, query: np.array, k: np.int64 = 5, **kwargs):
         assert mvdb_c.MVDB_get_built, "cannot search index. db not built"
 
-        print(query.size)
-        print(self.dims)
         if query.size % self.dims != 0:
             raise ValueError("The total size of initial_data must be a multiple of dims")
         if query.ndim > 1:

@@ -24,26 +24,11 @@ def short_code(num):
         num_str = f"{num:.1f}".rstrip('0').rstrip('.') + suffix
     return num_str
 
-def dataset_make(base_path, output_path, n, dims=None, dtype="float32", quant_mul=1):
-    """
-    Creates a new dataset from the original dataset.
-
-    Args:
-        base_path (str): Path to the original dataset.
-        n (int): Number of vectors.
-        dims (int): Number of dimensions.
-        output_path (str): Path to save the new dataset.
-    """
+def dataset_make(base_path, output_path, n, dims=None):
     if not os.path.exists(output_path):
         print(f"Building {output_path}")
         vecs = mv_utils.read_vector_file(base_path, n)
         vecs = vecs[:, :dims]
-
-        if dtype == "int8":
-            vecs = np.clip(vecs, -128, 127)
-            vecs *= quant_mul
-            vecs = vecs.astype(np.int8).astype(np.float32)
-
         mv_utils.write_vector_file(vecs, output_path)
         print(f'{output_path} successfully built')
     else:
@@ -77,35 +62,11 @@ DATASET_CONFIGS = {
     #         'thread_num': 10,
     #     }
     # },
-    'sift': {
-        'base_path': f'{BASE_DATA_DIR}/sift/sift_base.fvecs',
-        'query_path': f'{BASE_DATA_DIR}/sift/sift_query.fvecs',
-        'sizes': [10000, 100000, 500000, 1000000],
-        'dimensions': [128],
-        'dtype': ['float32'],
-        'index_types': ['annoy', 'spann'],
-        'annoy_index_params': {'n_trees': 10, 'n_threads': 10},
-        'spann_index_params': {
-            'build_config_path': "buildconfig.ini",
-            'BKTKmeansK': 8,
-            'Samples': 4000,
-            'TPTNumber': 112,
-            'RefineIterations': 2,
-            'NeighborhoodSize': 144,
-            'CEF': 1800,
-            'MaxCheckForRefineGraph': 7168,
-            'NumberOfInitialDynamicPivots': 30,
-            'GraphNeighborhoodScale': 2,
-            'NumberOfOtherDynamicPivots': 2,
-            'batch_size': 2000,
-            'thread_num': 10,
-        }
-    },
-    # 'gist': {
-    #     'base_path': f'{BASE_DATA_DIR}/gist/gist_base.fvecs',
-    #     'query_path': f'{BASE_DATA_DIR}/gist/gist_query.fvecs',
+    # 'sift': {
+    #     'base_path': f'{BASE_DATA_DIR}/sift/sift_base.fvecs',
+    #     'query_path': f'{BASE_DATA_DIR}/sift/sift_query.fvecs',
     #     'sizes': [10000, 100000, 500000, 1000000],
-    #     'dimensions': [960],
+    #     'dimensions': [128],
     #     'dtype': ['float32'],
     #     'index_types': ['annoy', 'spann'],
     #     'annoy_index_params': {'n_trees': 10, 'n_threads': 10},
@@ -125,6 +86,55 @@ DATASET_CONFIGS = {
     #         'thread_num': 10,
     #     }
     # },
+    'gist': {
+        'base_path': f'{BASE_DATA_DIR}/gist/gist_base.fvecs',
+        'query_path': f'{BASE_DATA_DIR}/gist/gist_query.fvecs',
+        'sizes': [
+            # 10000,
+            # 25000,
+            # 50000,
+            # 75000,
+            # 100000,
+            # 200000,
+            # 300000,
+            # 400000,
+            # 500000,
+            # 600000,
+            700000,
+            # 800000,
+            # 900000,
+            # 1000000
+        ],
+        'dimensions': [
+            64,
+            96,
+            128,
+            192,
+            256,
+            384,
+            512,
+            768,
+            960
+        ],
+        'dtype': ['float32'],
+        'index_types': ['annoy', 'spann'],
+        'annoy_index_params': {'n_trees': 10, 'n_threads': 10, 'search_k': 6500},
+        'spann_index_params': {
+            'build_config_path': "buildconfig.ini",
+            'BKTKmeansK': 8,
+            'Samples': 4000,
+            'TPTNumber': 112,
+            'RefineIterations': 2,
+            'NeighborhoodSize': 144,
+            'CEF': 1800,
+            'MaxCheckForRefineGraph': 7168,
+            'NumberOfInitialDynamicPivots': 30,
+            'GraphNeighborhoodScale': 2,
+            'NumberOfOtherDynamicPivots': 2,
+            'batch_size': 2000,
+            'thread_num': 10,
+        }
+    },
 }
 
 def build_indices():
@@ -182,11 +192,8 @@ def build_datasets():
                     )
                     print(f'{faiss_index_path} successfully built')
                     query = mv_utils.read_vector_file(config['query_path'])
-                    if dtype == "int8":
-                        query = np.clip(query, -128, 127)
-                        query *= 10 if key == "deep" or key == "gist" else 1
-                        query = query.astype(np.int8).astype(np.float32)
-                    ids, dists, _ = db.topk(query=query, k=100)
+                    query = query[:, :dims]
+                    ids, dists, _ = db.knn(query=query, k=100)
                     mv_utils.write_vector_file(ids, f'{output_path}_groundtruth.ivecs')
                     mv_utils.write_vector_file(dists, f'{output_path}_groundtruth_dists.fvecs')
                     print(f'{output_path}_groundtruth and distances successfully built')
