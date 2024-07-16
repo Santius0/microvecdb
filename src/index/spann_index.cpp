@@ -211,6 +211,9 @@ namespace mvdb::index {
                                                builder_options_->m_metaMapping,
                                                builder_options_->m_normalized, true);
 
+        for(int i = 0; i < n; i++)
+            ids[i] = i;
+
         if (code == SPTAG::ErrorCode::Success)
             save_(builder_options_->m_outputFolder);
         else
@@ -220,7 +223,7 @@ namespace mvdb::index {
 
     template<typename T>
     void SPANNIndex<T>::save_(const std::string &path) const {
-        sptag_vector_index_->SaveIndex(builder_options_->m_outputFolder);
+        sptag_vector_index_->SaveIndex(path);
     }
 
     template<typename T>
@@ -232,6 +235,7 @@ namespace mvdb::index {
 
     template<typename T>
     bool SPANNIndex<T>::add(const idx_t &n, T *data, idx_t *ids) {
+//        sptag_vector_index_->AddIndex()
         return false;
     }
 
@@ -359,7 +363,6 @@ namespace mvdb::index {
                         }
                     }
                 }
-
                 peak_wss_mb = peakWSS();
             }
 

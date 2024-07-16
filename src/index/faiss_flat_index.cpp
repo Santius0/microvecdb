@@ -69,10 +69,13 @@ namespace mvdb::index {
         if(fs::exists(path))
             throw std::runtime_error("'" + path + "' is invalid. make sure no file or dir exists at that location");
 
+        std::cout << "adding vals" << std::endl;
         if(n > 0) {
             if (!v) throw std::invalid_argument("Initial data pointer cannot be null when n > 0.");
-            faiss_index_->add((faiss::idx_t)n, (float*)n);
+            faiss_index_->add((faiss::idx_t)n, (float*)v);
+            for(int i = 0; i < n; i++) ids[i] = i;
         }
+        std::cout << "finished adding vals" << std::endl;
         this->save_(path);
         this->built_ = true;
     }
