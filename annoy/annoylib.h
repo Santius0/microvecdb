@@ -385,6 +385,100 @@ inline int8_t euclidean_distance<int8_t>(const int8_t* x, const int8_t* y, int f
     return result;
 }
 
+
+// Horizontal single sum of 256bit vector for int16.
+inline int16_t hsum256_epi16_avx(__m256i v) {
+    const __m128i v128 = _mm_add_epi16(_mm256_extracti128_si256(v, 1), _mm256_castsi256_si128(v));
+    const __m128i v64 = _mm_add_epi16(v128, _mm_srli_si128(v128, 8));
+    const __m128i v32 = _mm_add_epi16(v64, _mm_srli_si128(v64, 4));
+    const __m128i v16 = _mm_add_epi16(v32, _mm_srli_si128(v32, 2));
+    const __m128i v8 = _mm_add_epi16(v16, _mm_srli_si128(v16, 1));
+    return _mm_extract_epi16(v8, 0);
+}
+
+template<>
+inline int16_t dot<int16_t>(const int16_t* x, const int16_t* y, int f) {
+    int16_t result = 0;
+    if (f > 15) {
+        __m256i d = _mm256_setzero_si256();
+        for (; f > 15; f -= 16) {
+            __m256i xv = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(x));
+            __m256i yv = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(y));
+            __m256i prod = _mm256_mullo_epi16(xv, yv); // Multiply low 16-bit integers
+            d = _mm256_add_epi16(d, prod);
+            x += 16;
+            y += 16;
+        }
+        // Sum all int16 in dot register.
+        result += hsum256_epi16_avx(d);
+    }
+    // Don't forget the remaining values.
+    for (; f > 0; f--) {
+        result += (*x) * (*y);
+        x++;
+        y++;
+    }
+    return result;
+}
+
+template<>
+inline int16_t manhattan_distance<int16_t>(const int16_t* x, const int16_t* y, int f) {
+    int16_t result = 0;
+    int i = f;
+    if (f > 15) {
+        __m256i manhattan = _mm256_setzero_si256();
+        for (; i > 15; i -= 16) {
+            __m256i xv = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(x));
+            __m256i yv = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(y));
+            __m256i diff = _mm256_sub_epi16(xv, yv); // Subtract 16-bit integers
+            __m256i abs_diff = _mm256_abs_epi16(diff); // Absolute value of differences
+            manhattan = _mm256_add_epi16(manhattan, abs_diff);
+            x += 16;
+            y += 16;
+        }
+        // Sum all int16 in manhattan register.
+        result = hsum256_epi16_avx(manhattan);
+    }
+    // Don't forget the remaining values.
+    for (; i > 0; i--) {
+        result += abs(*x - *y);
+        x++;
+        y++;
+    }
+    return result;
+}
+
+template<>
+inline int16_t euclidean_distance<int16_t>(const int16_t* x, const int16_t* y, int f) {
+    int16_t result = 0;
+    if (f > 15) {
+        __m256i d = _mm256_setzero_si256();
+        for (; f > 15; f -= 16) {
+            __m256i xv = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(x));
+            __m256i yv = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(y));
+            __m256i diff = _mm256_sub_epi16(xv, yv); // Subtract 16-bit integers
+
+            // Square the differences
+            __m256i square = _mm256_mullo_epi16(diff, diff);
+
+            d = _mm256_add_epi16(d, square);
+
+            x += 16;
+            y += 16;
+        }
+        // Sum all int16 in dot register.
+        result = hsum256_epi16_avx(d);
+    }
+    // Don't forget the remaining values.
+    for (; f > 0; f--) {
+        int16_t tmp = *x - *y;
+        result += tmp * tmp;
+        x++;
+        y++;
+    }
+    return result;
+}
+
 #endif
 
 #if defined(ANNOYLIB_USE_NEON) // equivalent NEON specific computations
@@ -563,6 +657,102 @@ inline int8_t euclidean_distance<int8_t>(const int8_t* x, const int8_t* y, int f
   }
   return result;
 }
+
+
+// Horizontal single sum of 128bit vector for int16.
+inline int16_t hsum128_epi16_neon(int16x8_t v) {
+    int16x4_t v64 = vadd_s16(vget_low_s16(v), vget_high_s16(v));
+    int16x4_t v32 = vpadd_s16(v64, v64);
+    int16x4_t v16 = vpadd_s16(v32, v32);
+    return vget_lane_s16(v16, 0);
+}
+
+template<>
+inline int16_t dot<int16_t>(const int16_t* x, const int16_t* y, int f) {
+    int16_t result = 0;
+    if (f > 7) {
+        int32x4_t d = vdupq_n_s32(0);
+        for (; f > 7; f -= 8) {
+            int16x8_t xv = vld1q_s16(x);
+            int16x8_t yv = vld1q_s16(y);
+            int32x4_t prod_low = vmull_s16(vget_low_s16(xv), vget_low_s16(yv));
+            int32x4_t prod_high = vmull_s16(vget_high_s16(xv), vget_high_s16(yv));
+            d = vaddq_s32(d, prod_low);
+            d = vaddq_s32(d, prod_high);
+            x += 8;
+            y += 8;
+        }
+        // Sum all int16 in dot register.
+        result += hsum128_epi16_neon(vcombine_s16(vmovn_s32(d), vmovn_s32(d)));
+    }
+    // Don't forget the remaining values.
+    for (; f > 0; f--) {
+        result += (*x) * (*y);
+        x++;
+        y++;
+    }
+    return result;
+}
+
+template<>
+inline int16_t manhattan_distance<int16_t>(const int16_t* x, const int16_t* y, int f) {
+    int16_t result = 0;
+    int i = f;
+    if (f > 7) {
+        int16x8_t manhattan = vdupq_n_s16(0);
+        for (; i > 7; i -= 8) {
+            int16x8_t xv = vld1q_s16(x);
+            int16x8_t yv = vld1q_s16(y);
+            int16x8_t diff = vabdq_s16(xv, yv);
+            manhattan = vaddq_s16(manhattan, diff);
+            x += 8;
+            y += 8;
+        }
+        // Sum all int16 in manhattan register.
+        result = hsum128_epi16_neon(manhattan);
+    }
+    // Don't forget the remaining values.
+    for (; i > 0; i--) {
+        result += abs(*x - *y);
+        x++;
+        y++;
+    }
+    return result;
+}
+
+template<>
+inline int16_t euclidean_distance<int16_t>(const int16_t* x, const int16_t* y, int f) {
+    int16_t result = 0;
+    if (f > 7) {
+        int32x4_t d = vdupq_n_s32(0);
+        for (; f > 7; f -= 8) {
+            int16x8_t xv = vld1q_s16(x);
+            int16x8_t yv = vld1q_s16(y);
+            int16x8_t diff = vsubq_s16(xv, yv);
+
+            // Square the differences
+            int32x4_t diff_lo = vmull_s16(vget_low_s16(diff), vget_low_s16(diff));
+            int32x4_t diff_hi = vmull_s16(vget_high_s16(diff), vget_high_s16(diff));
+
+            d = vaddq_s32(d, diff_lo);
+            d = vaddq_s32(d, diff_hi);
+
+            x += 8;
+            y += 8;
+        }
+        // Sum all int16 in dot register.
+        result = hsum128_epi16_neon(vcombine_s16(vmovn_s32(d), vmovn_s32(d)));
+    }
+    // Don't forget the remaining values.
+    for (; f > 0; f--) {
+        int16_t tmp = *x - *y;
+        result += tmp * tmp;
+        x++;
+        y++;
+    }
+    return result;
+}
+
 #endif
 
 #ifdef ANNOYLIB_USE_AVX512

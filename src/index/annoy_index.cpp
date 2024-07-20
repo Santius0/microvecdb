@@ -128,7 +128,7 @@ namespace mvdb::index {
     }
 
     template<typename T>
-    void MVDBAnnoyIndex<T>::topk(const idx_t &nq,
+    void MVDBAnnoyIndex<T>::knn(const idx_t &nq,
                                  T *query, idx_t *ids,
                                  T *distances,
                                  double& peak_wss_mb,

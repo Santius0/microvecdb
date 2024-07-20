@@ -454,7 +454,7 @@ namespace mvdb::index {
         void open(const std::string& path) override;
         [[nodiscard]] bool add(const idx_t& n, T* data, idx_t* ids) override;
         [[nodiscard]] bool remove(const idx_t& n, const idx_t* ids) override;
-        void topk(const idx_t& nq,
+        void knn(const idx_t& nq,
                   T* query,
                   idx_t* ids,
                   T* distances,

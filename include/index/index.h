@@ -68,7 +68,7 @@ namespace mvdb::index {
         virtual void open(const std::string& path) = 0;                     // open current index state and data from location specified via index_path_
         virtual bool add(const idx_t& n, T* data, idx_t* ids) = 0;          // add n to elements to index
         virtual bool remove(const idx_t& n, const idx_t* ids) = 0;          // remove n elements from index
-        virtual void topk(const idx_t& nq,
+        virtual void knn(const idx_t& nq,
                           T* query,                      // perform searches for nq queries in parallel
                           idx_t* ids,
                           T* distances,

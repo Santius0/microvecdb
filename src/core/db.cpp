@@ -134,8 +134,6 @@ namespace mvdb {
 
         index_make(index_type);
 
-        _records = std::vector<Record>(n);
-
         auto *ids = new idx_t[n];
 
         _index->build(dims, _index_path, v, ids, n, args);
@@ -147,6 +145,26 @@ namespace mvdb {
         delete[] ids;
 
         return true;
+    }
+
+    template <typename T>
+    bool DB_<T>::insert(const idx_t &n,
+                const T *v,
+                const std::string& bin,
+                size_t *bin_sizes) {
+
+        auto *ids = new idx_t[n];
+
+        bool success = _index->add(n, const_cast<T *>(v), ids);
+
+        if(!bin.empty() && bin_sizes && n > 0)
+            _storage->put(n, (uint64_t*)ids, const_cast<char *>(bin.c_str()), const_cast<size_t *>(bin_sizes));
+
+        _save(_db_path);
+
+        delete[] ids;
+
+        return success;
     }
 
     template <typename T>

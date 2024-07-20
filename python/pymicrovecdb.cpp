@@ -195,7 +195,6 @@ static PyObject* MVDB_create(PyObject* self, PyObject* args) {
 
             PyObject *serialized_obj_bytes = PyBytes_FromObject(obj);
             const char *serialized_obj = PyBytes_AS_STRING(serialized_obj_bytes);
-            std::cout << serialized_obj << std::endl;
             Py_ssize_t serialized_obj_size = PyBytes_GET_SIZE(serialized_obj_bytes);
 
             binary_data.append(serialized_obj, serialized_obj_size);
@@ -203,7 +202,6 @@ static PyObject* MVDB_create(PyObject* self, PyObject* args) {
 
             Py_DECREF(serialized_obj_bytes);
         }
-        std::cout << binary_data.c_str() << std::endl;
     }
 
     switch (data_type) {
@@ -331,7 +329,7 @@ static PyObject* MVDB_get_num_items(PyObject* self, PyObject* args) {
     }
 }
 
-static PyObject* MVDB_topk(PyObject* self, PyObject* args) {
+static PyObject* MVDB_knn(PyObject* self, PyObject* args) {
     uint8_t data_type, index_type;
     PyObject *mvdb_capsule, *query_array_obj, *named_args_capsule;
     int64_t nq, k;
@@ -496,12 +494,6 @@ static PyObject* MVDB_get(PyObject* self, PyObject* args) {
 
     auto *data = (uint64_t *)PyArray_DATA(array);
 
-    printf("Array keys:\n");
-    for (npy_intp i = 0; i < size; ++i) {
-        std::cout << data[i] << std::endl;
-    }
-    printf("\n");
-
     auto* values = new std::string[size];
     if(data_type == INT8) {
         auto *mvdb_ = static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
@@ -528,61 +520,80 @@ static PyObject* MVDB_get(PyObject* self, PyObject* args) {
 }
 
 static PyObject* MVDB_add(PyObject *self, PyObject *args) {
-
-    PyErr_SetString(PyExc_BaseException, "MVDB_add not yet implemented");
-    return nullptr;
-
     unsigned char data_type;
-    PyObject *mvdb_capsule, *input_array;
-    int nv;
+    PyObject *mvdb_capsule, *data_v, *data_bin;
+    uint64_t initial_data_size;
 
-    if(!PyArg_ParseTuple(args, "BOO!i", &data_type, &mvdb_capsule, &PyArray_Type, &input_array, &nv)) return nullptr;
+    if (!PyArg_ParseTuple(args, "BOO!Ol", &data_type, &mvdb_capsule, &PyArray_Type, &data_v, &data_bin, &initial_data_size)) return nullptr;
 
-    npy_intp return_arr_dims[1] = {static_cast<npy_intp>(nv)};
-    auto *ids = (mvdb::idx_t*)malloc(nv * sizeof(mvdb::idx_t));
-//    auto* input_pyarray = (PyArrayObject*)input_array;
-    PyObject *ids_npArray;
+    void* vector_data;
+
+    std::string binary_data;
+    size_t binary_data_sizes[initial_data_size > 0 ? initial_data_size : 1]; // stop seg fault if no initial data is passed
+    if(data_bin != Py_None) {
+        auto *binary_data_pyarray_obj = (PyArrayObject*)data_bin;
+
+        if (!PyArray_Check(binary_data_pyarray_obj)) {
+            PyErr_SetString(PyExc_TypeError, "Initial binary data must be a NumPy array");
+            return nullptr;
+        }
+
+        if (PyArray_TYPE(binary_data_pyarray_obj) != NPY_OBJECT) {
+            PyErr_SetString(PyExc_TypeError, "Expected an array of objects for initial binary data");
+            return nullptr;
+        }
+
+        for (int i = 0; i < initial_data_size; ++i) {
+            PyObject *obj = PyArray_GETITEM(binary_data_pyarray_obj, (char *)PyArray_GETPTR1(binary_data_pyarray_obj, i));
+            if (!obj) continue;
+
+            PyObject *serialized_obj_bytes = PyBytes_FromObject(obj);
+            const char *serialized_obj = PyBytes_AS_STRING(serialized_obj_bytes);
+            Py_ssize_t serialized_obj_size = PyBytes_GET_SIZE(serialized_obj_bytes);
+
+            binary_data.append(serialized_obj, serialized_obj_size);
+            binary_data_sizes[i] = serialized_obj_size;
+
+            Py_DECREF(serialized_obj_bytes);
+        }
+    }
 
     switch (data_type) {
         case INT8: {
             auto *mvdb_ = static_cast<mvdb::MVDB<int8_t>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_int8_t));
-            break;
+            if (initial_data_size > 0) vector_data = extract_int8_arr(data_v);
+            if (initial_data_size > 0 && !vector_data) {
+                PyErr_SetString(PyExc_TypeError, "Failed to extract initial data");
+                return nullptr;
+            }
+            mvdb_->insert(
+                    initial_data_size,
+                    (int8_t*)vector_data,
+                    binary_data,
+                    binary_data_sizes
+            );
+            Py_RETURN_TRUE;
         }
         case FLOAT32: {
             auto *mvdb_ = static_cast<mvdb::MVDB<float>*>(PyCapsule_GetPointer(mvdb_capsule, MVDB_NAME_float));
-            float *input = extract_float_arr(input_array);
-//            idx_t* keys = mvdb_->insert();
-            break;
+            if (initial_data_size > 0) vector_data = extract_float_arr(data_v);
+            if (initial_data_size > 0 && !vector_data) {
+                PyErr_SetString(PyExc_TypeError, "Failed to extract initial data");
+                return nullptr;
+            }
+            mvdb_->insert(
+                    initial_data_size,
+                    (float*)vector_data,
+                    binary_data,
+                    binary_data_sizes
+            );
+            Py_RETURN_TRUE;
         }
         default: {
             PyErr_SetString(PyExc_ValueError, "Unsupported data type");
             return nullptr;
         }
     }
-
-//    auto* db = static_cast<mvdb::DB*>(PyCapsule_GetPointer(capsule, DB_NAME));
-//    auto* input_pyarray = (PyArrayObject*)input_array;
-//    npy_intp return_arr_dims[1] = {nv};
-//    if(PyArray_TYPE(input_pyarray) != NPY_FLOAT){
-//        PyErr_SetString(PyExc_TypeError, "input data must be of type float32");
-//        return nullptr;
-//    }
-//    auto* v = (float*)PyArray_DATA(input_pyarray);
-//    int64_t* keys = db->add_vector(nv, v);
-//    if (!keys){
-//        PyErr_SetString(PyExc_TypeError, "keys = nullptr => vector add failed");
-//        return nullptr;
-//    }
-//    PyObject* keys_npArray = PyArray_SimpleNewFromData(1, return_arr_dims, NPY_INT64, (void*)keys);
-//    if (!keys_npArray){
-//        PyErr_SetString(PyExc_TypeError, "keys_npArray = nullptr => failed to generate keys nparray");
-//        return nullptr;
-//    }
-//    // If your data should not be freed by NumPy when the array is deleted,
-//    // you should set the WRITEABLE flag to ensure Python code doesn't change the data.
-//    // PyArray_CLEARFLAGS((PyArrayObject*)np_array, NPY_ARRAY_WRITEABLE);
-//    return keys_npArray;
-    Py_RETURN_NONE;
 }
 
 #ifdef FAISS
@@ -653,7 +664,7 @@ static PyMethodDef ExtensionMethods[] = {
         { "MVDB_init", MVDB_init, METH_VARARGS, "Initialise an MVDB object" },
         { "MVDB_create", MVDB_create, METH_VARARGS, "Create an MVDB database" },
         { "MVDB_open", MVDB_open, METH_VARARGS, "Open an MVDB database" },
-        { "MVDB_topk", MVDB_topk, METH_VARARGS, "Find topk results" },
+        { "MVDB_knn", MVDB_knn, METH_VARARGS, "Find top-k results" },
         { "MVDB_get", MVDB_get, METH_VARARGS, "Find topk results" },
         { "MVDB_add", MVDB_add, METH_VARARGS, "Add vectors to the vector database" },
         { "MVDB_get_index_type", MVDB_get_index_type, METH_VARARGS, "Returns number of dimensions in db index" },

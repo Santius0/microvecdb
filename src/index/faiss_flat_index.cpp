@@ -138,7 +138,7 @@ namespace mvdb::index {
     }
 
     template <typename T>
-    void FaissFlatIndex<T>::topk(const idx_t& nq,
+    void FaissFlatIndex<T>::knn(const idx_t& nq,
                                  T* query,
                                  idx_t* ids,
                                  T* distances,

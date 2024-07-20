@@ -8,10 +8,9 @@ from pymicrovecdb import mvdb, utils as mv_utils
 from memory_profiler import memory_usage
 import re
 
+BASE_DATA_PATH = '~/ann_data'
 datasets = [
-    {'name': 'sift1M', 'base': '../../../ann_data/sift1M/sift/sift_base.fvecs', 'query': '../../../ann_data/sift1M/sift/sift_query.fvecs', 'ground': '../../../ann_data/sift1M/sift/sift_groundtruth.ivecs'},
-    {'name': 'gist1M', 'base': '../../../ann_data/gist1M/gist/gist_base.fvecs', 'query': '../../../ann_data/gist1M/gist/gist_query.fvecs', 'ground': '../../../ann_data/gist1M/gist/gist_groundtruth.ivecs'},
-    {'name': 'deep1M', 'base': '../../../ann_data/deep1M/deep1M_base.fvecs', 'query': '../../../ann_data/deep10M/deep1B_queries.fvecs', 'ground': '../../../ann_data/deep1M/deep1M_groundtruth.ivecs'},
+    {'name': 'gist1M', 'base': f'{BASE_DATA_PATH}/ann_data/gist1M/gist/gist_base.fvecs', 'query': f'{BASE_DATA_PATH}/gist1M/gist/gist_query.fvecs', 'ground': f'{BASE_DATA_PATH}/gist1M/gist/gist_groundtruth.ivecs'},
 ]
 
 k_values = [1, 10, 50, 100]

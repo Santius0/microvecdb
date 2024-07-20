@@ -16,12 +16,6 @@
 
 namespace mvdb {
 
-    struct Record {
-        std::string id;
-        std::string rdb_key;
-        int64_t idx_key;
-    };
-
     class Status {
     public:
         Status() {
@@ -104,7 +98,6 @@ namespace mvdb {
         index::IndexType _index_type;
         std::unique_ptr<Storage> _storage;
         std::unique_ptr<index::Index<T>> _index;
-        std::vector<Record> _records;
         friend std::ostream& operator<<(std::ostream& os, const DB_<T>& obj);
         friend std::ostream& operator<<(std::ostream& os, const DB_<T>* obj);
         void _save(const std::string& save_path = "");
@@ -124,6 +117,11 @@ namespace mvdb {
                     const size_t *bin_sizes = nullptr,
                     const uint64_t &initial_data_size = 0,
                     const NamedArgs* args = nullptr);
+
+        bool insert(const idx_t &n,
+                    const T *v,
+                    const std::string &bin,
+                    size_t *bin_sizes);
 
         Storage* storage();
         index::Index<T>* index();

@@ -193,23 +193,33 @@ namespace mvdb::index {
         }
 
         SPTAG::ErrorCode code;
-        std::shared_ptr<SPTAG::VectorSet> vec_set;
-        std::shared_ptr<SPTAG::MetadataSet> metadata_set;
+//        std::shared_ptr<SPTAG::VectorSet> vec_set;
+//        std::shared_ptr<SPTAG::MetadataSet> metadata_set;
 
-        if(n > 0) {
-            if (!v) throw std::invalid_argument("Initial data pointer cannot be null when n > 0.");
+//        if(n > 0) {
+//            if (!v) throw std::invalid_argument("Initial data pointer cannot be null when n > 0.");
+//
+//            uint64_t vec_size_bytes = sizeof(T) * this->dims_ * n;
+//            SPTAG::ByteArray vec_set_byte_arr = SPTAG::ByteArray::Alloc(vec_size_bytes);
+//            char *vecBuf = reinterpret_cast<char *>(vec_set_byte_arr.Data());
+//            memcpy(vecBuf, v, vec_size_bytes);
+//            vec_set.reset(new SPTAG::BasicVectorSet(vec_set_byte_arr, builder_options_->m_inputValueType, this->dims_, n));
+//        }
+//        metadata_set = nullptr;
 
-            uint64_t vec_size_bytes = sizeof(T) * this->dims_ * n;
-            SPTAG::ByteArray vec_set_byte_arr = SPTAG::ByteArray::Alloc(vec_size_bytes);
-            char *vecBuf = reinterpret_cast<char *>(vec_set_byte_arr.Data());
-            memcpy(vecBuf, v, vec_size_bytes);
-            vec_set.reset(new SPTAG::BasicVectorSet(vec_set_byte_arr, builder_options_->m_inputValueType, this->dims_, n));
+        std::cout << "n here = " << n << std::endl;
+//        code = sptag_vector_index_->BuildIndex(vec_set, metadata_set,
+//                                               builder_options_->m_metaMapping,
+//                                               builder_options_->m_normalized, true);
+        if(n == 0) {
+            T *data = new T[this->dims_];
+            for(int i = 0; i < this->dims_; i++) data[i] = 0;
+            code = sptag_vector_index_->BuildIndex(data, 1, this->dims_, builder_options_->m_normalized, false);
+            delete[] data;
+        } else {
+            code = sptag_vector_index_->BuildIndex(v, n, this->dims_, builder_options_->m_normalized, false);
         }
-        metadata_set = nullptr;
-
-        code = sptag_vector_index_->BuildIndex(vec_set, metadata_set,
-                                               builder_options_->m_metaMapping,
-                                               builder_options_->m_normalized, true);
+        std::cout << "n down here = " << n << std::endl;
 
         for(int i = 0; i < n; i++)
             ids[i] = i;
@@ -235,8 +245,52 @@ namespace mvdb::index {
 
     template<typename T>
     bool SPANNIndex<T>::add(const idx_t &n, T *data, idx_t *ids) {
-//        sptag_vector_index_->AddIndex()
-        return false;
+        SPTAG::ErrorCode code;
+//        std::shared_ptr<SPTAG::VectorSet> vec_set;
+        std::shared_ptr<SPTAG::MetadataSet> metadata_set = nullptr;
+
+        int base = sptag_vector_index_->GetNumSamples() + 1;
+
+//        virtual ErrorCode AddIndex(const void* p_data, SizeType p_vectorNum, DimensionType p_dimension, std::shared_ptr<MetadataSet> p_metadataSet, bool p_withMetaIndex = false, bool p_normalized = false) = 0;
+        code  = sptag_vector_index_->AddIndex(data, n, this->dims_, metadata_set, builder_options_->m_metaMapping, builder_options_->m_normalized);
+//        code = sptag_vector_index_->AddIndex(vec_set, metadata_set, builder_options_->m_metaMapping, builder_options_->m_normalized);
+
+        std::cout << "\n\n\n\n";
+        if (code == SPTAG::ErrorCode::Success) std::cout << "success" << std::endl;
+        else if (code == SPTAG::ErrorCode::Fail) std::cout << "fail" << std::endl;
+        else if (code == SPTAG::ErrorCode::FailedOpenFile) std::cout << "failed open file" << std::endl;
+        else if (code == SPTAG::ErrorCode::FailedCreateFile) std::cout << "failed create file" << std::endl;
+        else if (code == SPTAG::ErrorCode::ParamNotFound) std::cout << "param not found" << std::endl;
+        else if (code == SPTAG::ErrorCode::FailedParseValue) std::cout << "failed parse value" << std::endl;
+        else if (code == SPTAG::ErrorCode::MemoryOverFlow) std::cout << "memory overflow" << std::endl;
+        else if (code == SPTAG::ErrorCode::LackOfInputs) std::cout << "lack of inputs" << std::endl;
+        else if (code == SPTAG::ErrorCode::VectorNotFound) std::cout << "vector not found" << std::endl;
+        else if (code == SPTAG::ErrorCode::EmptyIndex) std::cout << "empty index" << std::endl;
+        else if (code == SPTAG::ErrorCode::EmptyData) std::cout << "empty data" << std::endl;
+        else if (code == SPTAG::ErrorCode::DimensionSizeMismatch) std::cout << "dimension size mismatch" << std::endl;
+        else if (code == SPTAG::ErrorCode::ExternalAbort) std::cout << "external abort" << std::endl;
+        else if (code == SPTAG::ErrorCode::EmptyDiskIO) std::cout << "empty disk IO" << std::endl;
+        else if (code == SPTAG::ErrorCode::DiskIOFail) std::cout << "disk IO fail" << std::endl;
+        else if (code == SPTAG::ErrorCode::ReadIni_FailedParseSection) std::cout << "read ini failed parse section" << std::endl;
+        else if (code == SPTAG::ErrorCode::ReadIni_FailedParseParam) std::cout << "read ini failed parse param" << std::endl;
+        else if (code == SPTAG::ErrorCode::ReadIni_DuplicatedSection) std::cout << "read ini duplicated section" << std::endl;
+        else if (code == SPTAG::ErrorCode::ReadIni_DuplicatedParam) std::cout << "read ini duplicated param" << std::endl;
+        else if (code == SPTAG::ErrorCode::Socket_FailedResolveEndPoint) std::cout << "socket failed resolve end point" << std::endl;
+        else if (code == SPTAG::ErrorCode::Socket_FailedConnectToEndPoint) std::cout << "socket failed connect to end point" << std::endl;
+        else std::cout << "unknown error code" << std::endl;
+        std::cout << "\n\n\n\n";
+
+
+        if (code == SPTAG::ErrorCode::Success) {
+            save_(builder_options_->m_outputFolder);
+        }
+        else throw std::runtime_error("failed to update adding vectors, '" + builder_options_->m_outputFolder + "'");
+
+        for(int i = 0; i < n; i++) {
+            std::cout << "new id" << base + i << std::endl;
+            ids[i] = base + i;
+        }
+        return true;
     }
 
     template<typename T>
@@ -245,7 +299,7 @@ namespace mvdb::index {
     }
 
     template<typename T>
-    void SPANNIndex<T>::topk(const idx_t &nq,
+    void SPANNIndex<T>::knn(const idx_t &nq,
                              T *query,
                              idx_t *ids,
                              T *distances,
