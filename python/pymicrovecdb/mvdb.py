@@ -182,6 +182,24 @@ class MVDB:
             named_args
         )
 
+    def add(self, data: np.array = None, objs: np.array = None):
+        if data is not None:
+            if data.size % self.dims != 0:
+                raise ValueError("The total size of initial_data must be a multiple of dims")
+            n = data.shape[0]
+            if data.shape[0] > 1:
+                data = data.flatten(order='C')
+        else:
+            n = 0
+
+        mvdb_c.MVDB_add(
+            self.dtype.value,
+            self.mvdb_obj,
+            data if data is not None else np.array([], dtype=np.float32),
+            objs,
+            n,
+        )
+
     def open(self, path: str):
         mvdb_c.MVDB_open(self.dtype.value, self.mvdb_obj, path)
 
@@ -200,7 +218,7 @@ class MVDB:
 
         named_args = create_named_args(self.index_type, **kwargs)
 
-        res = mvdb_c.MVDB_topk(
+        res = mvdb_c.MVDB_knn(
             self.index_type.value,
             self.dtype.value,
             self.mvdb_obj,

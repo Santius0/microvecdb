@@ -1,7 +1,6 @@
 import os
 import random
 import shutil
-
 import torch
 from facenet_pytorch import InceptionResnetV1, MTCNN
 from PIL import Image
@@ -12,7 +11,7 @@ import time
 import io
 import csv
 
-# Initialize face detection and recognition models
+# initialize face detection and recognition models
 mtcnn = MTCNN(image_size=160, margin=0)
 model = InceptionResnetV1(pretrained='vggface2').eval()
 
