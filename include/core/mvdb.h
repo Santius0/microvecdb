@@ -27,11 +27,9 @@ namespace mvdb {
         void open(const std::string& path) const;
 
         bool insert(const idx_t &n,
-                    const idx_t &d,
-                    const void *v = nullptr,
-                    const char *bin = nullptr,
-                    size_t *sizes = nullptr,
-                    const std::string *fp = nullptr) const;
+                    const T *v,
+                    const std::string &bin,
+                    size_t *bin_sizes) const;
 
         void get_obj(const uint64_t& n, const uint64_t* keys, std::string* values) const;
 

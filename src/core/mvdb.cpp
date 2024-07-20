@@ -12,12 +12,12 @@ namespace mvdb {
     void MVDB<T>::create(index::IndexType index_type,
                          const uint64_t &dims,
                          const std::string &path,
-                         const T *initial_data,
-                         const std::string& binary_data,
-                         const size_t *binary_data_sizes,
-                         const uint64_t& initial_data_size,
+                         const T *v,
+                         const std::string& bin,
+                         const size_t *bin_sizes,
+                         const uint64_t& n,
                          const NamedArgs *args) const {
-        db_->create(index_type, dims, const_cast<std::string&>(path), initial_data, binary_data, binary_data_sizes, initial_data_size, args);
+        db_->create(index_type, dims, const_cast<std::string&>(path), v, bin, bin_sizes, n, args);
     }
 
     template<typename T>
@@ -27,34 +27,10 @@ namespace mvdb {
 
     template <typename T>
     bool MVDB<T>::insert(const idx_t &n,
-                         const idx_t &d,
-                         const void *v,
-                         const char *bin,
-                         size_t *sizes,
-                         const std::string *fp) const {
-//        if(input_data_type == operators::InsertOperatorDataType::VECTOR) {
-//            operators::insert_(db_.get(), n, d, v, bin, input_data_type, sizes, fp);
-//            return db_->status()->success();
-//        }
-//        else if(input_data_type == operators::InsertOperatorDataType::BINARY) {
-//            operators::insert_(db_.get(), n, d, v, bin, input_data_type, sizes, fp);
-//            if(db_->status()->ok())
-//                operators::insert_(db_.get(), n, d, v, bin, operators::InsertOperatorDataType::VECTOR, sizes, fp);
-//            else
-//                return db_->status()->success();
-//        }
-//        else if(input_data_type == operators::InsertOperatorDataType::FILE) {
-//            operators::insert_(db_.get(), n, d, v, bin, input_data_type, sizes, fp);
-//            if(db_->status()->success())
-//                operators::insert_(db_.get(), n, d, v, bin, operators::InsertOperatorDataType::BINARY, sizes, fp);
-//            else
-//                return db_->status()->success();
-//            if(db_->status()->success())
-//                operators::insert_(db_.get(), n, d, v, bin, operators::InsertOperatorDataType::VECTOR, sizes, fp);
-//            else
-//                return db_->status()->success();
-//        }
-        return db_->status()->success() && db_->status()->ok();
+                         const T *v,
+                         const std::string &bin,
+                         size_t *bin_sizes) const {
+        return db_->insert(n, v, bin, bin_sizes);
     }
 
     template <typename T>
@@ -81,7 +57,7 @@ namespace mvdb {
                             const NamedArgs* args) const {
         remove_trailing_slashes(query_path);
         remove_trailing_slashes(result_path);
-        db_->index()->topk(nq, query, ids, distances, peak_wss_mb, k, args);
+        db_->index()->knn(nq, query, ids, distances, peak_wss_mb, k, args);
     }
 
     template <typename T>
