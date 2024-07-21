@@ -20,6 +20,12 @@ import pickle
 import time
 import csv
 
+seed = 42
+random.seed(seed)
+torch.manual_seed(seed)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(seed)
+    
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
