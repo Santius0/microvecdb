@@ -5,10 +5,9 @@ import torch
 from facenet_pytorch import InceptionResnetV1, MTCNN
 from PIL import Image
 import numpy as np
-from pymicrovecdb import mvdb, utils as mv_utils
+from pymicrovecdb import mvdb
 import pickle
 import time
-import io
 import csv
 
 # initialize face detection and recognition models
