@@ -1,3 +1,8 @@
+# pip install torch
+# pip install facenet-pytorch
+# pip install Pillow
+# pip install numpy
+
 import os
 import random
 import shutil

@@ -23,10 +23,10 @@ DATASET_CONFIGS = {
         'query_path': f'{BASE_DATA_DIR}/gist/gist_query.fvecs',
         'sizes': [
             10000,
-            # 25000,
-            # 50000,
-            # 75000,
-            # 100000,
+            25000,
+            50000,
+            75000,
+            100000,
             # 200000,
             # 300000,
             # 400000,
@@ -50,7 +50,7 @@ DATASET_CONFIGS = {
         ],
         'dtype': ['float32'],
         'index_types': ['annoy', 'spann'],
-        'annoy_index_params': {'n_trees': 10, 'n_threads': 10, 'search_k': 6500},
+        'annoy_index_params': {'n_trees': 10, 'n_threads': 3, 'search_k': 6500},
         'spann_index_params': {
             'build_config_path': "buildconfig.ini",
             'BKTKmeansK': 8,
@@ -64,7 +64,7 @@ DATASET_CONFIGS = {
             'GraphNeighborhoodScale': 2,
             'NumberOfOtherDynamicPivots': 2,
             'batch_size': 2000,
-            'thread_num': 10,
+            'thread_num': 3,
         }
     },
 }
