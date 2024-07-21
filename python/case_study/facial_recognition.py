@@ -20,9 +20,13 @@ import pickle
 import time
 import csv
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+
 # Initialize face detection and recognition models
 mtcnn = MTCNN(image_size=160, margin=0)
-model = InceptionResnetV1(pretrained='vggface2').eval()
+model = InceptionResnetV1(pretrained='vggface2').eval().to(device)
+
 
 DB_PATH = './facesDB'
 FACE_DIR = './lfw/lfw-deepfunneled/lfw-deepfunneled'  # LFW dataset
