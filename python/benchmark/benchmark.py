@@ -22,11 +22,11 @@ DATASET_CONFIGS = {
         'base_path': f'{BASE_DATA_DIR}/gist/gist_base.fvecs',
         'query_path': f'{BASE_DATA_DIR}/gist/gist_query.fvecs',
         'sizes': [
-            10000,
-            # 25000,
+            # 10000,
+            25000,
             # 50000,
             # 75000,
-            # 100000,
+            100000,
             # 200000,
             # 300000,
             # 400000,
@@ -38,12 +38,12 @@ DATASET_CONFIGS = {
             # 1000000
         ],
         'dimensions': [
-            # 64,
-            # 96,
-            # 128,
-            # 192,
-            # 256,
-            # 384,
+            64,
+            96,
+            128,
+            192,
+            256,
+            384,
             512,
             768,
             960
