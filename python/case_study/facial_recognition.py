@@ -54,6 +54,13 @@ spann_index_params = {
     'thread_num': 3,
 }
 
+annoy_index_params = {
+    'n_trees': 10,
+    'n_threads': 3,
+    'search_k': 6500
+}
+
+
 
 def preprocess_image(image_path):
     img = Image.open(image_path)
@@ -105,12 +112,13 @@ if not os.path.exists(DB_PATH):
     binary_data = np.array(binary_data, dtype=object)
 
     face_db.create(
-        index_type=mvdb.IndexType.SPANN,
+        index_type=mvdb.IndexType.ANNOY,
         dims=512,
         path=DB_PATH,
         initial_data=embeddings,
         initial_objs=binary_data,
-        **spann_index_params,
+        # **spann_index_params,
+        **annoy_index_params,
     )
 
     # save test images
@@ -127,7 +135,7 @@ def validate_performance(test_images_):
     total_latency = 0
     total_recall = 0
     num_images = len(test_images_)
-    result_file = "./results.csv"
+    result_file = "spann/results.csv"
 
     for image_path in test_images_:
         query_embedding = get_embedding(image_path)
