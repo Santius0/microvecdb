@@ -10,9 +10,13 @@ from pymicrovecdb import mvdb, utils as mv_utils
 import nano_utils
 
 
-query_sizes = [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 3840, 5120, 6400, 7680, 8960, 10000]
+query_sizes = [
+    # 10, 20, 40, 80, 160, 320, 640, 1280, 2560, 3840, 5120, 6400, 7680, 8960,
+    10000]
 
-k_values = [1, 10, 50, 100]
+k_values = [
+    # 1, 10, 50,
+    100]
 
 BASE_DATA_DIR = '/home/santius/ann_data'
 BASE_INDEX_DIR = '/home/santius/ann_indices'
@@ -38,19 +42,19 @@ DATASET_CONFIGS = {
             1000000
         ],
         'dimensions': [
-            64,
-            96,
-            128,
-            192,
-            256,
-            384,
-            512,
-            768,
+            # 64,
+            # 96,
+            # 128,
+            # 192,
+            # 256,
+            # 384,
+            # 512,
+            # 768,
             960
         ],
         'dtype': ['float32'],
         'index_types': ['annoy', 'spann'],
-        'annoy_index_params': {'n_trees': 10, 'n_threads': 10, 'search_k': 6500},
+        'annoy_index_params': {'n_trees': 10, 'n_threads': 3, 'search_k': 6500},
         'spann_index_params': {
             'build_config_path': "buildconfig.ini",
             'BKTKmeansK': 8,
@@ -64,7 +68,7 @@ DATASET_CONFIGS = {
             'GraphNeighborhoodScale': 2,
             'NumberOfOtherDynamicPivots': 2,
             'batch_size': 2000,
-            'thread_num': 10,
+            'thread_num': 3,
         }
     },
 }
