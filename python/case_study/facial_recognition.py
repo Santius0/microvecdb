@@ -112,13 +112,13 @@ if not os.path.exists(DB_PATH):
     binary_data = np.array(binary_data, dtype=object)
 
     face_db.create(
-        index_type=mvdb.IndexType.ANNOY,
+        index_type=mvdb.IndexType.SPANN,
         dims=512,
         path=DB_PATH,
         initial_data=embeddings,
         initial_objs=binary_data,
-        # **spann_index_params,
-        **annoy_index_params,
+        **spann_index_params,
+        # **annoy_index_params,
     )
 
     # save test images
