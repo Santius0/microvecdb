@@ -10,7 +10,9 @@ from pymicrovecdb import mvdb, utils as mv_utils
 import nano_utils
 
 
-query_sizes = [10, 20, 40, 80, 160, 320, 640, 1000
+query_sizes = [
+    # 10, 20, 40, 80, 160, 320, 640,
+    1000
                # 1280, 2560, 3840, 5120, 6400, 7680, 8960, 10000
                ]
 
