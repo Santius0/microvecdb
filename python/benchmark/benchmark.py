@@ -214,8 +214,8 @@ def benchmark():
                                 internal_config = f"{index_name}_{q_size}_{k}"
                                 print(f'Processing {index_name}:\n\tq_size={q_size}, k={k}')
 
-                                if is_nano:
-                                    nano_utils.start_tegrastats(f"{tegrastats_dir}/{internal_config}")
+                                # if is_nano:
+                                #     nano_utils.start_tegrastats(f"{tegrastats_dir}/{internal_config}")
 
                                 start_time = time.time()
 
@@ -228,14 +228,14 @@ def benchmark():
 
                                 query_time = time.time() - start_time
 
-                                tegrastats = {}
-                                if is_nano:
-                                    nano_utils.stop_tegrastats()
-                                    tegrastats = parse_tegrastats(f"{tegrastats_dir}/{internal_config}")
+                                # tegrastats = {}
+                                # if is_nano:
+                                #     nano_utils.stop_tegrastats()
+                                #     tegrastats = parse_tegrastats(f"{tegrastats_dir}/{internal_config}")
 
                                 row = {
                                     **get_cpu_env(),
-                                    **tegrastats,
+                                    # **tegrastats,
                                     'dataset': f'{key}{short_code(size)}',
                                     'dims': db.dims,
                                     'index_size': db.num_items,
