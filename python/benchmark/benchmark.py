@@ -248,6 +248,7 @@ def benchmark():
                                     'index_type': str(index_type),
                                     'dtype': str(dtype),
                                     'latency_(s)': query_time,
+                                    'latency_(s)_avg': query_time/q_size,
                                     'recall1': recall1(qr=results[0], gt=gt, k=k),
                                     'recall2': recall2(qr=results[0], gt=gt, k=k)
                                 }
