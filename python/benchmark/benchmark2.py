@@ -233,7 +233,7 @@ def benchmark():
                                     'recall1': recall1(qr=ids, gt=gt, k=k),
                                     'recall2': recall2(qr=ids, gt=gt, k=k)
                                 }
-                                print(f"{internal_config} complete: time = {query_time} (s), recall1 = {row['recall1']}, recall2 = {row['recall2']}")
+                                print(f"{internal_config} complete: time = {query_time} (s), recall1 = {row['recall1']}, recall2 = {row['recall2']}, peak_dram = {peak_dram}")
 
                                 file_exists = os.path.isfile(result_file)
                                 with open(result_file, mode='a', newline='') as file:
