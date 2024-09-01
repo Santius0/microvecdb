@@ -54,7 +54,9 @@ DATASET_CONFIGS = {
             960
         ],
         'dtype': ['float32'],
-        'index_types': ['annoy', 'spann'],
+        'index_types': [
+            # 'annoy',
+            'spann'],
         'annoy_index_params': {'n_trees': 10, 'n_threads': 3, 'search_k': 6500},
         'spann_index_params': {
             'build_config_path': "buildconfig.ini",
