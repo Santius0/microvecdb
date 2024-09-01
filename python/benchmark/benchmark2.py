@@ -38,8 +38,8 @@ DATASET_CONFIGS = {
             # 600000,
             # 700000,
             # 800000,
-            # 900000,
-            1000000
+            900000,
+            # 1000000
         ],
         'dimensions': [
             64,
@@ -180,8 +180,8 @@ def parse_tegrastats(file_path):
 
 def benchmark():
     get_cpu_env() # run once at the beginning so script immediately asks for sudo password
-    result_dir = '../results'
-    tegrastats_dir = '../tegrastats'
+    result_dir = './results'
+    tegrastats_dir = './tegrastats'
     result_file = f'{result_dir}/results.csv'
     os.makedirs(tegrastats_dir, exist_ok=True)
     os.makedirs(result_dir, exist_ok=True)
@@ -213,7 +213,7 @@ def benchmark():
                                 internal_config = f"{index_name}_{k}"
                                 print(f'{idx}. {index_name}:\n\t k={k}')
                                 start_time = time.time()
-                                peak_dram, results = memory_usage((topk_wrapper, (db, q, k, config['annoy_index_params'] if index_type == "annoy" else config['spann_index_params'])), retval=True, max_usage=True)
+                                ids, dists, peak_dram = topk_wrapper(db, q, k, config['annoy_index_params'] if index_type == "annoy" else config['spann_index_params'])
                                 query_time = time.time() - start_time
 
                                 row = {
@@ -225,14 +225,13 @@ def benchmark():
                                     'distance_metric': 'L2',
                                     'query_size': 1,
                                     'peak_dram_(MB)': peak_dram,
-                                    'peak_WSS_(MB)': results[2],
                                     'index': index_name,
                                     'index_type': str(index_type),
                                     'dtype': str(dtype),
                                     'latency_(s)': query_time,
                                     'latency_(s)_avg': query_time/1,
-                                    'recall1': recall1(qr=results[0], gt=gt, k=k),
-                                    'recall2': recall2(qr=results[0], gt=gt, k=k)
+                                    'recall1': recall1(qr=ids, gt=gt, k=k),
+                                    'recall2': recall2(qr=ids, gt=gt, k=k)
                                 }
                                 print(f"{internal_config} complete: time = {query_time} (s), recall1 = {row['recall1']}, recall2 = {row['recall2']}")
 

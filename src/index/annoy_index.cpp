@@ -138,9 +138,8 @@ namespace mvdb::index {
         const auto *annoy_args = parse_annoy_named_args(args);
 
         std::cout << "Searching MVDBAnnoyIndex with:" << std::endl
-        << "Dimensions = "
-        << this->dims_ << " | n_trees = " << annoy_args->n_trees << " | search_k = " << annoy_args->search_k
-        << " | Number of Threads = " << annoy_args->n_threads << std::endl;
+        << "num_queries = " << nq << " | dimensions = " << this->dims_ << " | n_trees = " << annoy_args->n_trees
+        << " | search_k = " << annoy_args->search_k << " | Number of Threads = " << annoy_args->n_threads << std::endl;
 
         if(annoy_args->n_threads > 0) omp_set_num_threads(annoy_args->n_threads);
 
