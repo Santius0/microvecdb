@@ -38,8 +38,8 @@ DATASET_CONFIGS = {
             # 600000,
             # 700000,
             # 800000,
-            # 900000,
-            1000000
+            900000,
+            # 1000000
         ],
         'dimensions': [
             64,
@@ -206,7 +206,8 @@ def benchmark():
                         ground = mv_utils.read_vector_file(f'{data_path}/{dataset_name}_base.fvecs_groundtruth.ivecs')
 
                         for idx, q in enumerate(queries):
-                            gt = ground[idx]
+                            q = np.array([q])
+                            gt = np.array([ground[idx]])
 
                             for k in k_values:
                                 internal_config = f"{index_name}_{k}"
@@ -233,8 +234,7 @@ def benchmark():
                                     'recall1': recall1(qr=results[0], gt=gt, k=k),
                                     'recall2': recall2(qr=results[0], gt=gt, k=k)
                                 }
-
-                                print(f"{internal_config} completed in {query_time} seconds")
+                                print(f"{internal_config} complete: time = {query_time} (s), recall1 = {row['recall1']}, recall2 = {row['recall2']}")
 
                                 file_exists = os.path.isfile(result_file)
                                 with open(result_file, mode='a', newline='') as file:
