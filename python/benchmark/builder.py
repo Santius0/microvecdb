@@ -41,20 +41,20 @@ DATASET_CONFIGS = {
         'base_path': f'{BASE_DATA_DIR}/gist/gist_base.fvecs',
         'query_path': f'{BASE_DATA_DIR}/gist/gist_query.fvecs',
         'sizes': [
-            10000,
-            25000,
-            50000,
-            75000,
-            100000,
-            200000,
-            300000,
-            400000,
-            500000,
-            600000,
-            700000,
+            # 10000,
+            # 25000,
+            # 50000,
+            # 75000,
+            # 100000,
+            # 200000,
+            # 300000,
+            # 400000,
+            # 500000,
+            # 600000,
+            # 700000,
             800000,
-            900000,
-            1000000
+            # 900000,
+            # 1000000
         ],
         'dimensions': [
             64,
@@ -68,7 +68,9 @@ DATASET_CONFIGS = {
             960
         ],
         'dtype': ['float32'],
-        'index_types': ['annoy', 'spann'],
+        'index_types': [
+            # 'annoy',
+            'spann'],
         'annoy_index_params': {'n_trees': 10, 'n_threads': 10, 'search_k': 6500},
         'spann_index_params': {
             'build_config_path': "buildconfig.ini",
