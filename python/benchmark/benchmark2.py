@@ -4,18 +4,15 @@ import time
 import re
 
 import numpy as np
-from memory_profiler import memory_usage
+# from memory_profiler import memory_usage
 
 from pymicrovecdb import mvdb, utils as mv_utils
 import nano_utils
 
 
-query_sizes = [
-    10,
-    # 20, 40, 80, 160, 320, 640,
-    # 1000
-               # 1280, 2560, 3840, 5120, 6400, 7680, 8960, 10000
-               ]
+# query_sizes = [1, 10, 20, 40, 80, 160, 320, 640, 1000
+#                # 1280, 2560, 3840, 5120, 6400, 7680, 8960, 10000
+#                ]
 
 k_values = [1, 10, 50, 100]
 
@@ -43,14 +40,14 @@ DATASET_CONFIGS = {
             1000000
         ],
         'dimensions': [
-            # 64,
-            # 96,
-            # 128,
-            # 192,
-            # 256,
-            # 384,
-            # 512,
-            # 768,
+            64,
+            96,
+            128,
+            192,
+            256,
+            384,
+            512,
+            768,
             960
         ],
         'dtype': ['float32'],
@@ -206,7 +203,7 @@ def benchmark():
                         db.open(index_path)
 
                         queries = mv_utils.read_vector_file(config['query_path'])[:, :dims]
-                        queries = queries[:10]
+                        # queries = queries[:10]
                         ground = mv_utils.read_vector_file(f'{data_path}/{dataset_name}_base.fvecs_groundtruth.ivecs')
 
                         for idx, q in enumerate(queries):
