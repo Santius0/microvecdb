@@ -41,7 +41,7 @@ DATASET_CONFIGS = {
         ],
         'dimensions': [
             # 64,
-            96,
+            # 96,
             128,
             192,
             256,
