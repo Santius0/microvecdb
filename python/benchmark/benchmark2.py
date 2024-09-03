@@ -40,7 +40,7 @@ DATASET_CONFIGS = {
             # 1000000
         ],
         'dimensions': [
-            64,
+            # 64,
             96,
             128,
             192,
