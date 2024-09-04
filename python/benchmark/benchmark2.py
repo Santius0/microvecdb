@@ -26,12 +26,12 @@ DATASET_CONFIGS = {
         'sizes': [
             # 10000,
             25000,
-            # 50000,
-            # 75000,
-            # 100000,
-            # 200000,
-            # 300000,
-            # 400000,
+            50000,
+            75000,
+            100000,
+            200000,
+            300000,
+            400000,
             # 500000,
             # 600000,
             # 700000,
@@ -40,7 +40,7 @@ DATASET_CONFIGS = {
             # 1000000
         ],
         'dimensions': [
-            # 64,
+            64,
             96,
             128,
             192,
@@ -203,7 +203,7 @@ def benchmark():
                         db.open(index_path)
 
                         queries = mv_utils.read_vector_file(config['query_path'])[:, :dims]
-                        # queries = queries[:10]
+                        queries = queries[:10]
                         ground = mv_utils.read_vector_file(f'{data_path}/{dataset_name}_base.fvecs_groundtruth.ivecs')
 
                         for idx, q in enumerate(queries):
