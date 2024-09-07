@@ -24,20 +24,20 @@ DATASET_CONFIGS = {
         'base_path': f'{BASE_DATA_DIR}/gist/gist_base.fvecs',
         'query_path': f'{BASE_DATA_DIR}/gist/gist_query.fvecs',
         'sizes': [
-            # 10000,
-            # 25000,
+            10000,
+            25000,
             50000,
             75000,
             100000,
-            # 200000,
-            # 300000,
-            # 400000,
-            # 500000,
-            # 600000,
-            # 700000,
-            # 800000,
-            # 900000,
-            # 1000000
+            200000,
+            300000,
+            400000,
+            500000,
+            600000,
+            700000,
+            800000,
+            900000,
+            1000000
         ],
         'dimensions': [
             64,
@@ -203,7 +203,6 @@ def benchmark():
                         db.open(index_path)
 
                         queries = mv_utils.read_vector_file(config['query_path'])[:, :dims]
-                        # queries = queries[:10]
                         ground = mv_utils.read_vector_file(f'{data_path}/{dataset_name}_base.fvecs_groundtruth.ivecs')
 
                         for idx, q in enumerate(queries):
